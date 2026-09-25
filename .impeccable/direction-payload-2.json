@@ -1,0 +1,114 @@
+{
+  "title": "Choose the visual world for BukSU Market",
+  "question": "Fresh hand. The roll assigned Campus ID Card. Keep it, take an alternate, or re-roll. Navy + green stays fixed in every option.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Campus ID Card",
+      "kicker": "THE ROLL",
+      "lineage": "The student ID every BukSUan wears on a lanyard: photo left, labeled fields, a number strip",
+      "thesis": "Every listing is issued like a campus ID: photo, labeled fields, a number. It belongs here, so you can trust it.",
+      "palette": ["#1E3A8A", "#FFFFFF", "#F9FAFB", "#10B981", "#111827"],
+      "materials": ["laminated card stock", "printed field labels", "lanyard slot punch", "number strip"],
+      "viewport": "Search and filters sit in a navy header band like the ID's top strip; below, listings are ID-proportioned cards: photo, then SIZE / SCHOOL / CONDITION as labeled fields, and the price printed large as the card's number.",
+      "risk": "Could read as official if it borrows real university marks; it won't use any seal, crest or official naming.",
+      "raised": [
+        { "from": "challenger-boarding-pass", "raise": "Every fact sits in a labeled segment with tabular figures, so cards scan like documents, not ads." },
+        { "from": "challenger-teletext", "raise": "Each listing prints a short No. (e.g. No. 5DCEAB) that buyers can quote on Messenger." },
+        { "from": "challenger-arcade", "raise": "State is palette law: green means available or act, gray means sold, never decorative." },
+        { "from": "challenger-racing", "raise": "The price is the hull number: the one oversized numeral on every card." }
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "Bulletin Board Notice",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "The campus corkboard where students pinned FOR SALE notes with tear-off contact tabs",
+      "thesis": "Every listing is a pinned notice; the tear-off tab is the Message Seller button.",
+      "palette": ["#1E3A8A", "#FFFFFF", "#F9FAFB", "#10B981", "#E5E7EB"],
+      "materials": ["pinned paper notices", "tear-off tab strips", "push pins"],
+      "viewport": "A board of slightly overlapping notices sorted into columns by category; each notice's tear-off strip is the contact action.",
+      "risk": "Familiar corkboard nostalgia that many campus apps reach for, and overlap costs density on phones."
+    },
+    {
+      "id": "challenger-boarding-pass",
+      "label": "Boarding Pass + Gate Board",
+      "verdict": "competitive",
+      "lineage": "Airline boarding passes and departure boards",
+      "thesis": "Listings as segmented passes on a board ranked by what's newest or cheapest.",
+      "palette": ["#111827", "#FFFFFF", "#1E3A8A", "#10B981"],
+      "materials": ["segmented pass stock", "tabular board figures"],
+      "viewport": "A live board of listing rows, each opening into a pass with labeled segments.",
+      "case": "Clear and dense for scanning, but few students fly, so it identifies less than an ID card.",
+      "risk": "Row-based board undersells the photos that sell the item."
+    },
+    {
+      "id": "challenger-teletext",
+      "label": "Teletext Service",
+      "verdict": "declined",
+      "lineage": "Broadcast teletext magazines",
+      "thesis": "Three-digit pages of block mosaic on black.",
+      "palette": ["#111827", "#FFFFFF", "#10B981"],
+      "materials": ["block mosaic", "bitmap type"],
+      "viewport": "A P100 index of listings.",
+      "case": "Breaks the light palette and students have never seen teletext.",
+      "risk": "Retro novelty.",
+      "kept": "Every listing gets a short quotable number.",
+      "hero": "https://impeccable.style/worlds/cards/broadcast-programming-teletext-service-hero.webp"
+    },
+    {
+      "id": "challenger-arcade",
+      "label": "CRT Arcade",
+      "verdict": "declined",
+      "lineage": "Pixel-art arcade cabinets",
+      "thesis": "Fat pixels and phosphor glow.",
+      "palette": ["#111827", "#10B981", "#1E3A8A"],
+      "materials": ["scanlines", "sprite tiles"],
+      "viewport": "A tile-grid playfield of listings.",
+      "case": "Hides real photos behind pixel style; no task fit.",
+      "risk": "Gimmick.",
+      "kept": "State as palette law.",
+      "hero": "https://impeccable.style/worlds/cards/medium-native-crt-arcade-pixel-glow-hero.webp"
+    },
+    {
+      "id": "challenger-racing",
+      "label": "Racing League Livery",
+      "verdict": "declined",
+      "lineage": "Anti-aliased racing identities",
+      "thesis": "Liveried crafts racing left to right.",
+      "palette": ["#111827", "#FFFFFF", "#10B981"],
+      "materials": ["decals", "extended caps"],
+      "viewport": "A grid of liveried listing crafts.",
+      "case": "High energy, nothing to do with a campus market.",
+      "risk": "Loud where the task needs calm.",
+      "kept": "One oversized numeral per item.",
+      "hero": "https://impeccable.style/worlds/cards/digital-design-canon-antialiased-racing-league-hero.webp"
+    },
+    {
+      "id": "challenger-cyclorama",
+      "label": "Cyclorama Dawn",
+      "verdict": "declined",
+      "lineage": "Theater lighting",
+      "thesis": "Light bands from night to day.",
+      "palette": ["#111827", "#1E3A8A", "#FFFFFF"],
+      "materials": ["light bands"],
+      "viewport": "Content in horizon bands.",
+      "case": "Atmosphere without a buying task.",
+      "risk": "Mood over clarity.",
+      "kept": "Structure from horizontal bands.",
+      "hero": "https://impeccable.style/worlds/cards/stagecraft-theater-lighting-cyclorama-dawn-hero.webp"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code" },
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "A Carousell / Facebook Marketplace-style clean card grid, executed with full craft.",
+    "palette": ["#FFFFFF", "#1E3A8A", "#10B981", "#F9FAFB"],
+    "materials": ["clean grid", "rounded cards", "product photos"],
+    "viewport": "Search bar, category chips and a rounded photo-card grid, exactly as students expect.",
+    "risk": "Indistinguishable from every other marketplace by design."
+  },
+  "steer": true
+}

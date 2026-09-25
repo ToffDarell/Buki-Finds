@@ -1,0 +1,347 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import { useUser } from '@/lib/useAuth'
+import {
+  IMAGE_BUCKET,
+  LISTING_WITH_IMAGES,
+  fallbackToFull,
+  formatPrice,
+  listingNumber,
+  messengerUrl,
+  sortedImages,
+} from '@/lib/listings'
+import { imageStoragePaths, thumbUrl } from '@/lib/images'
+import {
+  ArrowLeftIcon,
+  CameraIcon,
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MailIcon,
+  MessengerIcon,
+  PencilIcon,
+  TrashIcon,
+  UndoIcon,
+} from '@/app/components/icons'
+
+function Gallery({ images, title, sold }) {
+  const [index, setIndex] = useState(0)
+  const touchStartX = useRef(null)
+
+  if (images.length === 0) {
+    return (
+      <div className="flex h-28 items-center justify-center gap-2 rounded-[10px] border border-dashed border-line bg-white text-muted lg:aspect-square lg:h-auto lg:flex-col">
+        <CameraIcon className="h-6 w-6 lg:h-8 lg:w-8" />
+        <span className="text-sm">The seller didn’t add photos</span>
+      </div>
+    )
+  }
+
+  const go = (delta) => setIndex((i) => (i + delta + images.length) % images.length)
+  const arrow =
+    'absolute top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-ink shadow-card-lift transition hover:bg-white'
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div
+        className="relative aspect-square touch-pan-y overflow-hidden rounded-[10px] border border-line bg-white p-2.5 shadow-card"
+        onTouchStart={(e) => {
+          touchStartX.current = e.touches[0].clientX
+        }}
+        onTouchEnd={(e) => {
+          if (touchStartX.current === null) return
+          const dx = e.changedTouches[0].clientX - touchStartX.current
+          if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1)
+          touchStartX.current = null
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowLeft') go(-1)
+          if (e.key === 'ArrowRight') go(1)
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={images[index].image_url}
+          alt={`${title}, photo ${index + 1} of ${images.length}`}
+          className={`h-full w-full rounded-sm bg-surface object-contain ring-1 ring-line ${sold ? 'grayscale' : ''}`}
+        />
+        {images.length > 1 && (
+          <>
+            <button onClick={() => go(-1)} className={`${arrow} left-3`} aria-label="Previous photo">
+              <ChevronLeftIcon />
+            </button>
+            <button onClick={() => go(1)} className={`${arrow} right-3`} aria-label="Next photo">
+              <ChevronRightIcon />
+            </button>
+            <span className="tabular absolute bottom-3 right-3 rounded-full bg-ink/75 px-2.5 py-0.5 text-xs font-medium text-white">
+              {index + 1} / {images.length}
+            </span>
+          </>
+        )}
+      </div>
+
+      {images.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {images.map((img, i) => (
+            <button
+              key={img.id}
+              onClick={() => setIndex(i)}
+              className={`h-16 w-16 shrink-0 overflow-hidden rounded-md ring-2 ring-offset-2 transition sm:h-20 sm:w-20 ${
+                i === index ? 'ring-primary' : 'ring-transparent opacity-70 hover:opacity-100'
+              }`}
+              aria-label={`Show photo ${i + 1}`}
+              aria-current={i === index}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={thumbUrl(img.image_url)} onError={fallbackToFull(img.image_url)} alt="" className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Field({ label, value }) {
+  return (
+    <div className="border-line px-3.5 py-2.5 odd:border-r nth-[n+3]:border-t">
+      <dt className="text-xs font-medium text-muted">{label}</dt>
+      <dd className="mt-0.5 text-base font-semibold leading-snug text-ink">{value || '—'}</dd>
+    </div>
+  )
+}
+
+function ContactAction({ listing, number, compact = false }) {
+  if (listing.seller_facebook_username) {
+    return (
+      <a
+        href={messengerUrl(listing.seller_facebook_username)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`flex items-center justify-center gap-2 rounded-md bg-primary font-semibold text-white transition-colors hover:bg-primary-hover ${
+          compact ? 'px-4 py-2.5 text-sm' : 'w-full px-4 py-3'
+        }`}
+      >
+        <MessengerIcon />
+        {compact ? 'Message Seller' : 'Message Seller on Messenger'}
+      </a>
+    )
+  }
+  if (listing.seller_email) {
+    return (
+      <a
+        href={`mailto:${listing.seller_email}?subject=${encodeURIComponent(`Baligya Bukidnon No. ${number}: ${listing.title}`)}`}
+        className={`flex items-center justify-center gap-2 rounded-md bg-primary font-semibold text-white transition-colors hover:bg-primary-hover ${
+          compact ? 'px-4 py-2.5 text-sm' : 'w-full px-4 py-3'
+        }`}
+      >
+        <MailIcon />
+        Email Seller
+      </a>
+    )
+  }
+  return null
+}
+
+export default function ItemPage() {
+  const { id } = useParams()
+  const router = useRouter()
+  const { user } = useUser()
+  const [result, setResult] = useState({ loaded: false, listing: null, error: '' })
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    supabase
+      .from('listings')
+      .select(LISTING_WITH_IMAGES)
+      .eq('id', id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (!cancelled) setResult({ loaded: true, listing: data, error: error?.message ?? '' })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [id])
+
+  const listing = result.listing
+
+  async function toggleSold() {
+    setBusy(true)
+    const status = listing.status === 'sold' ? 'available' : 'sold'
+    const { data, error } = await supabase
+      .from('listings')
+      .update({ status })
+      .eq('id', listing.id)
+      .select(LISTING_WITH_IMAGES)
+      .single()
+    if (error) alert(`Couldn’t update the listing: ${error.message}`)
+    else setResult((prev) => ({ ...prev, listing: data }))
+    setBusy(false)
+  }
+
+  async function handleDelete() {
+    if (!confirm('Delete this listing? This can’t be undone.')) return
+    setBusy(true)
+    // listing_images rows go with ON DELETE CASCADE; the files in storage are removed separately.
+    const { error } = await supabase.from('listings').delete().eq('id', listing.id)
+    if (error) {
+      alert(`Couldn’t delete the listing: ${error.message}`)
+      setBusy(false)
+      return
+    }
+    const paths = imageStoragePaths(sortedImages(listing).map((img) => img.image_url))
+    if (paths.length) await supabase.storage.from(IMAGE_BUCKET).remove(paths)
+    router.push('/my-listings')
+  }
+
+  if (!result.loaded) {
+    return (
+      <main className="mx-auto grid w-full max-w-7xl flex-1 animate-pulse gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[1.1fr_0.9fr]" aria-busy="true">
+        <div className="aspect-square rounded-[10px] bg-surface" />
+        <div className="h-96 rounded-xl bg-surface" />
+      </main>
+    )
+  }
+  if (result.error) {
+    return (
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-10 sm:px-6">
+        <p className="text-red-700">Couldn’t load this listing: {result.error}</p>
+      </main>
+    )
+  }
+  if (!listing) {
+    return (
+      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col items-start gap-3 px-4 py-16 sm:px-6">
+        <p className="card-type text-3xl font-bold text-ink">This listing is gone.</p>
+        <p className="text-muted">The seller may have deleted it.</p>
+        <Link href="/" className="font-semibold text-primary hover:underline">Browse other items</Link>
+      </main>
+    )
+  }
+
+  const isOwner = user?.id === listing.seller_id
+  const isSold = listing.status === 'sold'
+  const number = listingNumber(listing)
+  const hasContact = Boolean(listing.seller_facebook_username || listing.seller_email)
+  const showMobileBar = !isOwner && !isSold && hasContact
+
+  return (
+    <main className={`w-full flex-1 bg-surface ${showMobileBar ? 'pb-28 lg:pb-10' : 'pb-10'}`}>
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+      <Link href="/" className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+        <ArrowLeftIcon className="h-4 w-4" />
+        Back to browse
+      </Link>
+
+      <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+        <Gallery images={sortedImages(listing)} title={listing.title} sold={isSold} />
+
+        <article className="overflow-hidden rounded-xl border border-line bg-white shadow-card lg:sticky lg:top-6">
+          <div className="relative bg-primary px-5 pb-3 pt-6">
+            <span aria-hidden="true" className="absolute left-1/2 top-2.5 h-2 w-14 -translate-x-1/2 rounded-full bg-white shadow-[inset_0_1px_2px_rgb(15_29_69/0.35)]" />
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-sm font-semibold text-white">{listing.category}</span>
+              <span className="font-mono text-xs text-on-primary-muted">No. {number}</span>
+            </div>
+          </div>
+
+          <div className="p-5">
+            <h1 className="text-xl font-semibold leading-snug text-ink sm:text-2xl">{listing.title}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <p className={`card-type tabular text-5xl font-bold leading-none ${isSold ? 'text-muted line-through decoration-[3px]' : 'text-primary'}`}>
+                {formatPrice(listing.price)}
+              </p>
+              {isSold && (
+                <span className="rounded-sm bg-ink px-2 py-0.5 text-sm font-bold uppercase tracking-[0.15em] text-white">
+                  Sold
+                </span>
+              )}
+            </div>
+
+            <dl className="mt-5 grid grid-cols-2 rounded-md border border-line">
+              <Field label="Condition" value={listing.condition} />
+              <Field label="Size" value={listing.size} />
+              <Field label="School" value={listing.school} />
+              <Field label="Posted" value={new Date(listing.created_at).toLocaleDateString('en-PH', { dateStyle: 'medium' })} />
+            </dl>
+
+            {listing.description && (
+              <p className="mt-5 max-w-[65ch] whitespace-pre-line text-[15px] leading-relaxed text-ink">{listing.description}</p>
+            )}
+
+            <div className="mt-6 border-t border-dashed border-line pt-5">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-sm text-muted">
+                  Sold by <span className="font-semibold text-ink">{listing.seller_name || 'a student seller'}</span>
+                </p>
+                {!isOwner && listing.seller_email && listing.seller_facebook_username && (
+                  <a href={`mailto:${listing.seller_email}`} className="truncate text-sm text-primary hover:underline">
+                    {listing.seller_email}
+                  </a>
+                )}
+              </div>
+
+              {isOwner ? (
+                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                  <Link
+                    href={`/item/${listing.id}/edit`}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-white px-3 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-surface"
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                    Edit
+                  </Link>
+                  <button
+                    onClick={toggleSold}
+                    disabled={busy}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+                  >
+                    {isSold ? <UndoIcon className="h-4 w-4" /> : <CheckIcon className="h-4 w-4" />}
+                    {isSold ? 'Mark as Available' : 'Mark as Sold'}
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={busy}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-md border border-red-200 bg-white px-3 py-2.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:opacity-60"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                    Delete Listing
+                  </button>
+                </div>
+              ) : isSold ? (
+                <p className="mt-3 text-sm text-muted">This item has been sold.</p>
+              ) : hasContact ? (
+                <div className="mt-4">
+                  <ContactAction listing={listing} number={number} />
+                  <p className="mt-2 text-center text-xs text-muted">
+                    Mention <span className="font-mono font-semibold text-ink">No. {number}</span> so the seller knows which item.
+                  </p>
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-muted">The seller hasn’t shared a way to contact them.</p>
+              )}
+            </div>
+          </div>
+        </article>
+      </div>
+      </div>
+
+      {showMobileBar && (
+        <div className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-white px-4 py-3 shadow-[0_-4px_12px_rgb(15_29_69/0.06)] lg:hidden">
+          <div className="mx-auto flex max-w-7xl items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="card-type tabular text-2xl font-bold leading-none text-primary">{formatPrice(listing.price)}</p>
+              <p className="truncate text-xs text-muted">No. {number} · {listing.title}</p>
+            </div>
+            <ContactAction listing={listing} number={number} compact />
+          </div>
+        </div>
+      )}
+    </main>
+  )
+}

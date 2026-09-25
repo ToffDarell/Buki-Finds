@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T00:00:00Z",
+  "title": "Design System: Baligya Bukidnon",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Lanyard Navy", "canonical": "#1e3a8a", "tonalRamp": ["#0b1533", "#111f4d", "#172e6e", "#1e3a8a", "#3a56a6", "#6f86c4", "#c9d3f0", "#e8edf8"] },
+      "primary-hover": { "role": "primary", "displayName": "Pressed Navy", "canonical": "#172e6e", "tonalRamp": ["#0b1533", "#111f4d", "#172e6e", "#1e3a8a", "#3a56a6", "#6f86c4", "#c9d3f0", "#e8edf8"] },
+      "primary-soft": { "role": "primary", "displayName": "Wash Navy", "canonical": "#e8edf8", "tonalRamp": ["#0b1533", "#111f4d", "#172e6e", "#1e3a8a", "#3a56a6", "#6f86c4", "#c9d3f0", "#e8edf8"] },
+      "on-primary-muted": { "role": "primary", "displayName": "Strip Frost", "canonical": "#c9d3f0", "tonalRamp": ["#0b1533", "#111f4d", "#172e6e", "#1e3a8a", "#3a56a6", "#6f86c4", "#c9d3f0", "#e8edf8"] },
+      "card-white": { "role": "neutral", "displayName": "Card Stock", "canonical": "#ffffff", "tonalRamp": ["#0f1d45", "#26345c", "#4b5a7d", "#7a87a4", "#aab4ca", "#dce2ef", "#f5f7fc", "#ffffff"] },
+      "surface": { "role": "neutral", "displayName": "Campus Paper", "canonical": "#f5f7fc", "tonalRamp": ["#0f1d45", "#26345c", "#4b5a7d", "#7a87a4", "#aab4ca", "#dce2ef", "#f5f7fc", "#ffffff"] },
+      "ink": { "role": "neutral", "displayName": "Navy Ink", "canonical": "#0f1d45", "tonalRamp": ["#0f1d45", "#26345c", "#4b5a7d", "#7a87a4", "#aab4ca", "#dce2ef", "#f5f7fc", "#ffffff"] },
+      "muted": { "role": "neutral", "displayName": "Faded Ink", "canonical": "#4b5a7d", "tonalRamp": ["#0f1d45", "#26345c", "#4b5a7d", "#7a87a4", "#aab4ca", "#dce2ef", "#f5f7fc", "#ffffff"] },
+      "line": { "role": "neutral", "displayName": "Ruled Line", "canonical": "#dce2ef", "tonalRamp": ["#0f1d45", "#26345c", "#4b5a7d", "#7a87a4", "#aab4ca", "#dce2ef", "#f5f7fc", "#ffffff"] },
+      "error-text": { "role": "error", "displayName": "Error Red", "canonical": "oklch(50.5% 0.213 27.518)", "tonalRamp": ["#460809", "#82181a", "#9f0712", "#c10007", "#e7000b", "#ffa2a2", "#ffc9c9", "#fef2f2"] },
+      "error-text-strong": { "role": "error", "displayName": "Error Red Deep", "canonical": "oklch(44.4% 0.177 26.899)", "tonalRamp": ["#460809", "#82181a", "#9f0712", "#c10007", "#e7000b", "#ffa2a2", "#ffc9c9", "#fef2f2"] },
+      "error-border": { "role": "error", "displayName": "Error Rule", "canonical": "oklch(88.5% 0.062 18.334)", "tonalRamp": ["#460809", "#82181a", "#9f0712", "#c10007", "#e7000b", "#ffa2a2", "#ffc9c9", "#fef2f2"] },
+      "error-bg": { "role": "error", "displayName": "Error Wash", "canonical": "oklch(97.1% 0.013 17.38)", "tonalRamp": ["#460809", "#82181a", "#9f0712", "#c10007", "#e7000b", "#ffa2a2", "#ffc9c9", "#fef2f2"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page headings (36px desktop, 30px phone) and empty-state lines at 24px. Bold, tight, sentence case." },
+      "price-hero": { "displayName": "Price hero", "purpose": "The price on the item detail panel; tabular, navy." },
+      "price-card": { "displayName": "Price card", "purpose": "The one big number on each listing card and the mobile contact bar." },
+      "headline": { "displayName": "Headline", "purpose": "Item title on the detail panel (20px phone, 24px desktop)." },
+      "title": { "displayName": "Title", "purpose": "Form section headings (navy) and the wordmark (white)." },
+      "body": { "displayName": "Body", "purpose": "Descriptions (max 65ch), form inputs, card titles clamped to 2 lines." },
+      "body-sm": { "displayName": "Body small", "purpose": "Helper lines, nav links, buttons, the Showing line." },
+      "field-value": { "displayName": "Field value", "purpose": "Bold value under a label; 14px on cards, 16px on the detail panel." },
+      "label": { "displayName": "Label", "purpose": "Muted sentence-case field and filter labels." },
+      "listing-number": { "displayName": "Listing No.", "purpose": "The quotable No. only; the sole use of Geist Mono." }
+    },
+    "shadows": [
+      { "name": "card", "value": "0 1px 2px rgb(15 29 69 / 0.06), 0 2px 6px rgb(15 29 69 / 0.04)", "purpose": "Resting cards, panels, filter rail, search field." },
+      { "name": "card-lift", "value": "0 6px 14px rgb(15 29 69 / 0.1), 0 2px 4px rgb(15 29 69 / 0.06)", "purpose": "Hovered or focused listing card; gallery arrow buttons." },
+      { "name": "slot-punch", "value": "inset 0 1px 1px rgb(15 29 69 / 0.35)", "purpose": "The white slot punch cut into each ID strip (inset 0 1px 2px on large strips)." },
+      { "name": "bottom-bar", "value": "0 -4px 12px rgb(15 29 69 / 0.06)", "purpose": "Fixed mobile contact bar on the item page." }
+    ],
+    "motion": [
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Easing for the lanyard swing and shadow lift." },
+      { "name": "id-swing", "value": "transform: rotate(-1.25deg) translateY(2px) (even cards +1.25deg), origin 50% 0; transform 500ms, box-shadow 300ms", "purpose": "Listing cards swing from their slot punch on hover, focus-visible and active; disabled under prefers-reduced-motion." },
+      { "name": "color-transition", "value": "Tailwind transition-colors, 150ms", "purpose": "Button, link, tab and field border state changes." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Solid navy action: Message Seller on Messenger, Mark as Sold, Save Changes, Post Item on light grounds.",
+      "html": "<button class=\"ds-btn-primary\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m5 12.5 4.5 4.5L19 7.5\"/></svg>Mark as Sold</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--color-primary, #1e3a8a); color: #fff; font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; font-size: 14px; font-weight: 600; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; transition: background-color 150ms; } .ds-btn-primary svg { width: 16px; height: 16px; } .ds-btn-primary:hover { background: var(--color-primary-hover, #172e6e); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-primary, #1e3a8a); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.6; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "White outlined button for Edit and third-party sign-in.",
+      "html": "<button class=\"ds-btn-secondary\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z\"/><path d=\"m14.5 7.5 2 2\"/></svg>Edit</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #fff; color: var(--color-ink, #0f1d45); font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; font-size: 14px; font-weight: 600; padding: 10px 12px; border: 1px solid var(--color-line, #dce2ef); border-radius: 6px; cursor: pointer; transition: background-color 150ms; } .ds-btn-secondary svg { width: 16px; height: 16px; } .ds-btn-secondary:hover { background: var(--color-surface, #f5f7fc); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--color-primary, #1e3a8a); outline-offset: 2px; }"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Delete Listing; the only red button.",
+      "html": "<button class=\"ds-btn-destructive\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4.5 7h15M10 11v6M14 11v6M6.5 7l1 12.5h9l1-12.5M9.5 7V4.5h5V7\"/></svg>Delete Listing</button>",
+      "css": ".ds-btn-destructive { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #fff; color: #c10007; font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; font-size: 14px; font-weight: 600; padding: 10px 12px; border: 1px solid #ffc9c9; border-radius: 6px; cursor: pointer; transition: background-color 150ms; } .ds-btn-destructive svg { width: 16px; height: 16px; } .ds-btn-destructive:hover { background: #fef2f2; } .ds-btn-destructive:focus-visible { outline: 2px solid var(--color-primary, #1e3a8a); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Sentence-case labeled field; border shifts to navy on focus.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Size <span class=\"ds-field-opt\">optional</span></span><input class=\"ds-input\" placeholder=\"e.g. M, 7.5\" /></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; } .ds-field-label { font-size: 14px; font-weight: 600; color: var(--color-ink, #0f1d45); } .ds-field-opt { margin-left: 6px; font-weight: 400; color: var(--color-muted, #4b5a7d); } .ds-input { width: 100%; background: #fff; color: var(--color-ink, #0f1d45); font: inherit; font-size: 15px; padding: 10px 12px; border: 1px solid var(--color-line, #dce2ef); border-radius: 4px; transition: border-color 150ms; } .ds-input::placeholder { color: var(--color-muted, #4b5a7d); } .ds-input:hover { border-color: rgb(75 90 125 / 0.6); } .ds-input:focus { border-color: var(--color-primary, #1e3a8a); outline: none; } .ds-input:focus-visible { outline: 2px solid var(--color-primary, #1e3a8a); outline-offset: 2px; }"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "filter-chip",
+      "description": "Removable active filter in the Showing line.",
+      "html": "<button class=\"ds-chip\">Size M<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M6 6l12 12M18 6 6 18\"/></svg></button>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--color-primary-soft, #e8edf8); color: var(--color-primary, #1e3a8a); font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; font-size: 13px; font-weight: 500; padding: 2px 6px 2px 10px; border: 1px solid rgb(30 58 138 / 0.2); border-radius: 9999px; cursor: pointer; transition: border-color 150ms; } .ds-chip svg { width: 14px; height: 14px; } .ds-chip:hover { border-color: rgb(30 58 138 / 0.5); } .ds-chip:focus-visible { outline: 2px solid var(--color-primary, #1e3a8a); outline-offset: 2px; }"
+    },
+    {
+      "name": "Navigation Strip",
+      "kind": "nav",
+      "refersTo": "nav-strip",
+      "description": "Navy header with ID-glyph wordmark, sentence links, and the white Post Item button.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-brand\" href=\"#\"><svg viewBox=\"0 0 24 30\" aria-hidden=\"true\"><rect x=\"1\" y=\"1\" width=\"22\" height=\"28\" rx=\"3\" fill=\"#fff\"/><rect x=\"8\" y=\"3.5\" width=\"8\" height=\"2\" rx=\"1\" fill=\"#1e3a8a\"/><rect x=\"5\" y=\"13\" width=\"14\" height=\"8\" rx=\"1\" fill=\"#1e3a8a\" opacity=\".18\"/><rect x=\"5\" y=\"23.5\" width=\"9\" height=\"2\" rx=\"1\" fill=\"#1e3a8a\"/></svg>Baligya Bukidnon</a><a class=\"ds-nav-link\" aria-current=\"page\" href=\"#\">Browse</a><a class=\"ds-nav-link\" href=\"#\">My Listings</a><a class=\"ds-nav-post\" href=\"#\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg>Post Item</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 32px; background: var(--color-primary, #1e3a8a); padding: 12px 24px; font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; } .ds-nav-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-size: 18px; font-weight: 700; letter-spacing: -0.015em; text-decoration: none; } .ds-nav-brand svg { height: 28px; width: auto; } .ds-nav-link { position: relative; padding: 4px 0; font-size: 14px; font-weight: 500; color: var(--color-on-primary-muted, #c9d3f0); text-decoration: none; transition: color 150ms; } .ds-nav-link:hover { color: #fff; } .ds-nav-link[aria-current=page] { color: #fff; } .ds-nav-link[aria-current=page]::after { content: ''; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; border-radius: 9999px; background: #fff; } .ds-nav-post { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; background: #fff; color: var(--color-primary, #1e3a8a); font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 6px; text-decoration: none; transition: background-color 150ms; } .ds-nav-post svg { width: 16px; height: 16px; } .ds-nav-post:hover { background: var(--color-primary-soft, #e8edf8); } .ds-nav a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }"
+    },
+    {
+      "name": "Listing ID Card",
+      "kind": "card",
+      "refersTo": "id-card",
+      "description": "Signature vertical lanyard ID: navy strip with slot punch and No., framed photo, navy price, labeled fields; swings on hover/focus.",
+      "html": "<a class=\"ds-idcard\" href=\"#\"><div class=\"ds-idcard-strip\"><span class=\"ds-idcard-punch\"></span><div class=\"ds-idcard-strip-row\"><span class=\"ds-idcard-cat\">Uniforms</span><span class=\"ds-idcard-no\">No. 5DCEAB</span></div></div><div class=\"ds-idcard-photo-wrap\"><div class=\"ds-idcard-photo\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.5-2h6l1.5 2h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z\"/><circle cx=\"12\" cy=\"13\" r=\"3.5\"/></svg><span>No photo</span></div></div><div class=\"ds-idcard-body\"><p class=\"ds-idcard-price\">₱350</p><h3 class=\"ds-idcard-title\">COT polo uniform, barely used</h3><dl class=\"ds-idcard-fields\"><div><dt>Size</dt><dd>M</dd></div><div class=\"ds-wide\"><dt>School</dt><dd>Technologies</dd></div></dl></div></a>",
+      "css": ".ds-idcard { display: flex; flex-direction: column; width: 232px; overflow: hidden; background: #fff; border: 1px solid var(--color-line, #dce2ef); border-radius: 10px; box-shadow: 0 1px 2px rgb(15 29 69 / 0.06), 0 2px 6px rgb(15 29 69 / 0.04); color: var(--color-ink, #0f1d45); font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; text-decoration: none; transform-origin: 50% 0; transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-idcard:hover, .ds-idcard:focus-visible, .ds-idcard:active { transform: rotate(-1.25deg) translateY(2px); box-shadow: 0 6px 14px rgb(15 29 69 / 0.1), 0 2px 4px rgb(15 29 69 / 0.06); } .ds-idcard:focus-visible { outline: 2px solid var(--color-primary, #1e3a8a); outline-offset: 2px; } @media (prefers-reduced-motion: reduce) { .ds-idcard, .ds-idcard:hover, .ds-idcard:focus-visible, .ds-idcard:active { transform: none; transition: none; } } .ds-idcard-strip { position: relative; background: var(--color-primary, #1e3a8a); padding: 16px 12px 8px; } .ds-idcard-punch { position: absolute; left: 50%; top: 6px; width: 36px; height: 6px; transform: translateX(-50%); border-radius: 9999px; background: #fff; box-shadow: inset 0 1px 1px rgb(15 29 69 / 0.35); } .ds-idcard-strip-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; } .ds-idcard-cat { font-size: 13px; font-weight: 600; color: #fff; } .ds-idcard-no { font-family: var(--font-geist-mono), ui-monospace, monospace; font-size: 12px; color: var(--color-on-primary-muted, #c9d3f0); } .ds-idcard-photo-wrap { padding: 10px 10px 0; } .ds-idcard-photo { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border-radius: 4px; background: var(--color-surface, #f5f7fc); box-shadow: 0 0 0 1px var(--color-line, #dce2ef); color: var(--color-muted, #4b5a7d); font-size: 12px; } .ds-idcard-photo svg { width: 24px; height: 24px; } .ds-idcard-body { padding: 8px 12px 12px; } .ds-idcard-price { margin: 0; font-size: 24px; font-weight: 700; line-height: 1; letter-spacing: -0.015em; font-variant-numeric: tabular-nums; color: var(--color-primary, #1e3a8a); } .ds-idcard-title { margin: 6px 0 0; font-size: 15px; font-weight: 400; line-height: 1.375; min-height: 2.8em; } .ds-idcard-fields { display: flex; gap: 12px; margin: 8px 0 0; padding-top: 8px; border-top: 1px dashed var(--color-line, #dce2ef); } .ds-idcard-fields .ds-wide { flex: 1; min-width: 0; } .ds-idcard-fields dt { font-size: 12px; color: var(--color-muted, #4b5a7d); } .ds-idcard-fields dd { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.375; }"
+    },
+    {
+      "name": "Sold Band",
+      "kind": "custom",
+      "refersTo": "sold-band",
+      "description": "Ink band across a sold listing's grayscale photo; the system's only uppercase text.",
+      "html": "<div class=\"ds-sold\"><div class=\"ds-sold-photo\"></div><span class=\"ds-sold-band\">Sold</span></div>",
+      "css": ".ds-sold { position: relative; width: 200px; aspect-ratio: 1; overflow: hidden; border-radius: 4px; box-shadow: 0 0 0 1px var(--color-line, #dce2ef); } .ds-sold-photo { position: absolute; inset: 0; background: #aab4ca; } .ds-sold-band { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); background: rgb(15 29 69 / 0.85); color: #fff; padding: 4px 0; text-align: center; font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Campus ID Card",
+    "overview": "Every listing is issued like a vertical lanyard ID: a navy top strip with a slot punch, a framed photo, the price printed as the card's one big number, then small labeled fields over bold values, and a quotable No. The world belongs on a Bukidnon student's phone. It reads as part of campus life, but it carries no university seal, crest, or official marks. This is an unofficial student project, and the ID is a form it borrows, not an emblem it claims.\n\nThe palette is navy and white only. Navy is the ink of action and identity: strips, primary buttons, prices, active tabs. White is the card stock. Every neutral is tinted toward navy, so greys never go warm or flat. Red appears only when something failed or is about to be destroyed. Density is task-first. The Browse grid runs 2, 3, then 4 columns, and fields do the reading work that captions do in a generic marketplace.\n\nThe type is one readable face, Geist at normal width. Field labels and body copy are in sentence case. Buttons and nav keep the owner's Title Case wording. Geist Mono appears only on the listing No., where it is the one mechanical, quotable string on the card.",
+    "keyCharacteristics": [
+      "Navy strip plus slot punch on every card-like container (listing cards, item detail panel, login card, filter rail header).",
+      "Price is the single oversized, tabular, navy numeral on each card.",
+      "Small muted labels over bold ink values, divided by dashed or solid navy-tinted rules.",
+      "Quiet elevation with a two-layer navy-tinted shadow, plus a lift on hover.",
+      "Cards swing from their slot punch on hover, focus, and press, and stay still for reduced motion."
+    ],
+    "rules": [
+      { "name": "The Navy and White Rule", "body": "The only hue is navy. No green, no second accent, no gradients. Any new state has to be said with navy, ink, tint, or weight.", "section": "colors" },
+      { "name": "The Red Means Loss Rule", "body": "Red appears only for a failure message or a destructive action. A red element that is neither is a bug.", "section": "colors" },
+      { "name": "The State Is Palette Rule", "body": "Navy means available and actionable. Ink means sold. A sold listing gets a grayscale photo, an ink SOLD band, and a muted struck-through price. Nothing else changes color to signal state.", "section": "colors" },
+      { "name": "The One Face Rule", "body": "Geist at normal width carries everything. Mono exists for the No. and nothing else.", "section": "typography" },
+      { "name": "The Sentence Case Rule", "body": "Labels, headings, and body copy are in sentence case. Buttons and nav keep the owner's Title Case wording exactly: Post Item, My Listings, Message Seller on Messenger, Mark as Sold, Mark as Available, Delete Listing, Email Seller, Save Changes. The only uppercase in the system is the SOLD stamp.", "section": "typography" },
+      { "name": "The One Big Number Rule", "body": "Each card has exactly one oversized numeral, the price, set tabular in navy. Nothing else on a card competes with it.", "section": "typography" },
+      { "name": "The Navy Shadow Rule", "body": "Shadows are always tinted with ink (15 29 69) and never go above 0.1 alpha per layer. No black shadows, and no hard offset shadows.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do give every card-like container a navy strip with a centered white slot punch and a No. where a listing is involved.",
+      "Do print item facts as fields: a 12px muted sentence-case label over a bold ink value.",
+      "Do set every price in Geist bold, tabular, navy, as the largest numeral on its card.",
+      "Do tint every neutral and shadow toward navy ink (15 29 69).",
+      "Do keep the owner's Title Case button wording exactly (Post Item, My Listings, Message Seller on Messenger, Mark as Sold, Mark as Available, Delete Listing, Email Seller, Save Changes).",
+      "Do guard every motion with prefers-reduced-motion."
+    ],
+    "donts": [
+      "Don't introduce green or any second accent color. The palette is navy and white only.",
+      "Don't use red for anything but errors and destructive actions.",
+      "Don't use gradients, glass or blur, or colored side borders on cards.",
+      "Don't show any school's or government seal, crest, or official mark. This is an unofficial student project.",
+      "Don't use uppercase or letter-spaced labels. The SOLD stamp is the only uppercase text.",
+      "Don't use Geist Mono for anything but the listing No.",
+      "Don't fall back to the rounded-photo-card marketplace look where price, size, and school are a caption under the image."
+    ]
+  }
+}

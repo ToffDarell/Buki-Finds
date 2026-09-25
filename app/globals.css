@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f1d45;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* BukSU Market palette: navy and white only (owner's choice), plus navy-tinted neutrals */
+@theme {
+  --color-primary: #1e3a8a;
+  --color-primary-hover: #172e6e;
+  --color-primary-soft: #e8edf8;
+  --color-on-primary-muted: #c9d3f0;
+  --color-surface: #f5f7fc;
+  --color-ink: #0f1d45;
+  --color-muted: #4b5a7d;
+  --color-line: #dce2ef;
+
+  --shadow-card: 0 1px 2px rgb(15 29 69 / 0.06), 0 2px 6px rgb(15 29 69 / 0.04);
+  --shadow-card-lift: 0 6px 14px rgb(15 29 69 / 0.1), 0 2px 4px rgb(15 29 69 / 0.06);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Browser surfaces carry the palette too */
+::selection {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+html {
+  accent-color: var(--color-primary);
+  caret-color: var(--color-primary);
+  scrollbar-color: #c9d3f0 transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+a {
+  text-underline-offset: 3px;
+}
+
+/* Card lettering: same readable face, set bold and slightly tight for prices and headings */
+.card-type {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  letter-spacing: -0.015em;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Signature interaction: cards swing from their slot punch like an ID on a lanyard */
+@media (prefers-reduced-motion: no-preference) {
+  .id-swing {
+    transform-origin: 50% 0;
+    transition:
+      transform 500ms var(--ease-out-expo),
+      box-shadow 300ms var(--ease-out-expo);
+  }
+  .id-swing:hover,
+  .id-swing:focus-visible,
+  .id-swing:active {
+    transform: rotate(-1.25deg) translateY(2px);
+  }
+  .id-swing:nth-child(even):hover,
+  .id-swing:nth-child(even):focus-visible,
+  .id-swing:nth-child(even):active {
+    transform: rotate(1.25deg) translateY(2px);
+  }
+}
