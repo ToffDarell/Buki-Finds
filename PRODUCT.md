@@ -8,7 +8,7 @@ web
 
 ## Users
 
-Students across the whole province of Bukidnon, from any school (universities, colleges, senior high and other schools, in any town or city), as both buyers and sellers. They use it on every device class they own: phones, tablets/iPads, laptops and PCs. Sellers are clearing out pre-loved uniforms, school shoes, books and supplies; buyers are hunting for a specific item in a specific size for their school. Hand-offs happen in person, usually at or near school.
+College students across the whole province of Bukidnon, from any school (universities and colleges in any town or city), as buyers, sellers and swappers. They use it on every device class they own: phones, tablets/iPads, laptops and PCs. Sellers are clearing out pre-loved uniforms, school shoes, books and supplies; some would rather swap an item for something they need; buyers are hunting for a specific item in a specific size for their school. Hand-offs happen in person, usually at or near school.
 
 ## Product Purpose
 
@@ -23,7 +23,7 @@ Built for Bukidnon students. Every listing is from a student in the province, an
 - Buyers browse without logging in; posting, editing and managing listings require login (email/password, Google, or Facebook).
 - Contact happens off-platform: a "Message Seller on Messenger" link (m.me/<username>) when the seller shares a Facebook username, otherwise the seller's email.
 - Items are handed over in person.
-- Listings: title, description, price (₱), category, condition, optional size, optional school (free text), up to 5 photos, status available/sold.
+- Listings: type (for sale or for swap; swaps have no price and say what the seller wants in return), title, description, price (₱, sale listings only), category, condition, optional size, optional school (free text), up to 5 photos, status available/sold.
 
 ## Capabilities and Constraints
 
@@ -35,11 +35,11 @@ Built for Bukidnon students. Every listing is from a student in the province, an
 
 ## Brand Commitments
 
-- Name: Baligya Bukidnon. Neutral branding, not tied to any single school.
+- Name: Buki-Finds, a collaboration with an existing entrepreneurship team that owns the brand. Neutral branding, not tied to any single school. The official logo is `public/LOGO BUKIFINDS.jpg`; the palette is measured from it.
 - Unofficial student project: it must not look like, or claim to be, an official site of any school or the government. No seals, crests or official marks.
 - Voice: plain, friendly English with a casual student feel.
-- Palette pinned by the owner: navy blue and white only (navy #1E3A8A as the brand color on white). No green or other accent colors; neutrals are navy-tinted. Red is used only for errors and destructive actions.
-- Type must be easy to read: one plain sans (Geist) at normal width, sentence-case labels, no condensed or tiny uppercase lettering. Buttons and nav use the owner's Title Case wording from their spec ("nav links: Browse, Post Item, My Listings, Login/Logout", "Message Seller on Messenger", "Mark as Sold", "Delete Listing"); related actions follow the same convention (Mark as Available, Email Seller, Save Changes). Sentence case applies to field labels and body copy.
+- Palette from the official logo: logo blue #00528A as the brand color on white, and logo green #0B813E as the accent for creating and trading (Post Item, swaps, available), used sparingly. Neutrals are blue-tinted. Red is used only for errors and destructive actions.
+- Type must be easy to read: one plain sans (Geist) at normal width for everything people read, sentence-case labels, no condensed or tiny uppercase lettering. One family everywhere (the owner asked for consistent type); no display face. Buttons and nav use the owner's Title Case wording from their spec ("nav links: Browse, Post Item, My Listings, Login/Logout", "Message Seller on Messenger", "Mark as Sold", "Delete Listing"); related actions follow the same convention (Mark as Available, Email Seller, Save Changes). Sentence case applies to field labels and body copy.
 
 ## Evidence on Hand
 

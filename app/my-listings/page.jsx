@@ -9,22 +9,24 @@ import {
   IMAGE_BUCKET,
   LISTING_WITH_IMAGES,
   coverImage,
-  formatPrice,
+  doneLabel,
   listingNumber,
   fallbackToFull,
+  priceOrSwap,
+  purgeDateLabel,
   sortedImages,
 } from '@/lib/listings'
 import { imageStoragePaths, thumbUrl } from '@/lib/images'
 import { CameraIcon, CheckIcon, PencilIcon, PlusIcon, TrashIcon, UndoIcon } from '@/app/components/icons'
 
-function StatusStamp({ status }) {
-  return status === 'sold' ? (
+function StatusStamp({ listing }) {
+  return listing.status === 'sold' ? (
     <span className="rounded-sm bg-ink px-2 py-0.5 text-xs font-semibold text-white">
-      Sold
+      {doneLabel(listing)}
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-sm border border-primary/25 bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary">
-      <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
+    <span className="inline-flex items-center gap-1.5 rounded-sm border border-accent/25 bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent-hover">
+      <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
       Available
     </span>
   )
@@ -69,12 +71,18 @@ export default function MyListingsPage() {
   async function toggleSold(listing) {
     setBusyId(listing.id)
     const status = listing.status === 'sold' ? 'available' : 'sold'
-    const { error } = await supabase.from('listings').update({ status }).eq('id', listing.id)
+    // sold_at is set by the database, so read it back for the "deleted on" date.
+    const { data, error } = await supabase
+      .from('listings')
+      .update({ status })
+      .eq('id', listing.id)
+      .select('status, sold_at')
+      .single()
     if (error) alert(`Couldn’t update the listing: ${error.message}`)
     else
       setResult((prev) => ({
         ...prev,
-        listings: prev.listings.map((l) => (l.id === listing.id ? { ...l, status } : l)),
+        listings: prev.listings.map((l) => (l.id === listing.id ? { ...l, ...data } : l)),
       }))
     setBusyId(null)
   }
@@ -113,7 +121,7 @@ export default function MyListingsPage() {
           <h1 className="card-type text-3xl font-bold leading-none text-ink sm:text-4xl">My Listings</h1>
           <Link
             href="/post"
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+            className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
           >
             <PlusIcon className="h-4 w-4" />
             Post Item
@@ -180,15 +188,18 @@ export default function MyListingsPage() {
 
                 <div className="flex min-w-0 flex-1 flex-col py-3 pr-3">
                   <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                    <StatusStamp status={listing.status} />
+                    <StatusStamp listing={listing} />
                     <span className="font-mono text-xs text-muted">No. {listingNumber(listing)}</span>
                   </div>
                   <Link href={`/item/${listing.id}`} className="mt-1 truncate font-medium text-ink hover:underline">
                     {listing.title}
                   </Link>
                   <p className={`card-type tabular text-xl font-bold leading-tight ${sold ? 'text-muted' : 'text-primary'}`}>
-                    {formatPrice(listing.price)}
+                    {priceOrSwap(listing)}
                   </p>
+                  {purgeDateLabel(listing) && (
+                    <p className="text-xs text-muted">Deletes automatically on {purgeDateLabel(listing)}</p>
+                  )}
 
                   <div className="-ml-2 mt-auto flex flex-wrap gap-x-1 pt-1.5">
                     <Link href={`/item/${listing.id}/edit`} className={`${action} text-primary hover:bg-primary-soft`}>
@@ -197,7 +208,7 @@ export default function MyListingsPage() {
                     </Link>
                     <button onClick={() => toggleSold(listing)} disabled={busy} className={`${action} text-ink hover:bg-surface`}>
                       {sold ? <UndoIcon className="h-4 w-4" /> : <CheckIcon className="h-4 w-4" />}
-                      {sold ? 'Mark as Available' : 'Mark as Sold'}
+                      {sold ? 'Mark as Available' : `Mark as ${doneLabel(listing)}`}
                     </button>
                     <button onClick={() => handleDelete(listing)} disabled={busy} className={`${action} text-red-700 hover:bg-red-50`}>
                       <TrashIcon className="h-4 w-4" />

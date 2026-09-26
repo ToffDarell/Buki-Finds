@@ -19,6 +19,11 @@ import { CameraIcon, CloseIcon, MessengerIcon } from '@/app/components/icons'
 const inputClass =
   'w-full rounded-sm border border-line bg-white px-3 py-2.5 text-[15px] text-ink transition-colors placeholder:text-muted hover:border-muted/60 focus:border-primary focus:outline-none'
 
+const TYPE_OPTIONS = [
+  ['sell', 'I want to Sell this', 'Set a price. Buyers pay you when you meet.'],
+  ['swap', 'I want to Swap this', 'No price. Trade it for something you need.'],
+]
+
 function Field({ label, hint, optional, children }) {
   return (
     <label className="flex flex-col gap-1.5">
@@ -86,7 +91,9 @@ export default function ListingForm({ user, listing, onSaved }) {
   const isEdit = Boolean(listing)
   const [title, setTitle] = useState(listing?.title ?? '')
   const [description, setDescription] = useState(listing?.description ?? '')
-  const [price, setPrice] = useState(listing ? String(listing.price) : '')
+  const [listingType, setListingType] = useState(listing?.listing_type ?? 'sell')
+  const [price, setPrice] = useState(listing?.price != null ? String(listing.price) : '')
+  const [swapFor, setSwapFor] = useState(listing?.swap_for ?? '')
   const [category, setCategory] = useState(listing?.category ?? '')
   const [condition, setCondition] = useState(listing?.condition ?? '')
   const [size, setSize] = useState(listing?.size ?? '')
@@ -173,7 +180,10 @@ export default function ListingForm({ user, listing, onSaved }) {
       const fields = {
         title: title.trim(),
         description: description.trim() || null,
-        price: Number(price),
+        listing_type: listingType,
+        // Swaps have no price; switching a listing to a swap clears it.
+        price: listingType === 'swap' ? null : Number(price),
+        swap_for: listingType === 'swap' ? swapFor.trim() || null : null,
         category,
         condition: condition || null,
         size: size.trim() || null,
@@ -241,6 +251,8 @@ export default function ListingForm({ user, listing, onSaved }) {
   const preview = {
     id: listing?.id,
     title: title.trim(),
+    listing_type: listingType,
+    swap_for: swapFor.trim(),
     price,
     category,
     condition,
@@ -303,6 +315,45 @@ export default function ListingForm({ user, listing, onSaved }) {
           </p>
         </Section>
 
+        <Section title="Sell or swap">
+          <div role="radiogroup" aria-label="Listing type" className="grid gap-2.5 sm:grid-cols-2">
+            {TYPE_OPTIONS.map(([value, label, hint]) => (
+              <label
+                key={value}
+                className={`flex cursor-pointer gap-2.5 rounded-md border px-3.5 py-3 transition-colors focus-within:border-primary ${
+                  listingType === value ? 'border-primary bg-primary-soft' : 'border-line hover:border-muted/60'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="listing_type"
+                  value={value}
+                  checked={listingType === value}
+                  onChange={() => setListingType(value)}
+                  className="mt-0.5 accent-primary"
+                />
+                <span>
+                  <span className="block text-[15px] font-semibold text-ink">{label}</span>
+                  <span className="block text-xs text-muted">{hint}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          {listingType === 'swap' && (
+            <Field label="What I’m looking for in return" hint="Be specific so the right person messages you.">
+              <textarea
+                required
+                rows={2}
+                maxLength={300}
+                value={swapFor}
+                onChange={(e) => setSwapFor(e.target.value)}
+                placeholder="e.g. Female nursing uniform size M, or a Calculus 1 book"
+                className={inputClass}
+              />
+            </Field>
+          )}
+        </Section>
+
         <Section title="The item">
           <Field label="Title">
             <input
@@ -325,21 +376,23 @@ export default function ListingForm({ user, listing, onSaved }) {
           </Field>
         </Section>
 
-        <Section title="Price and fit">
+        <Section title={listingType === 'swap' ? 'Details and fit' : 'Price and fit'}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Price (₱)">
-              <input
-                type="number"
-                required
-                min="0"
-                step="0.01"
-                inputMode="decimal"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="0"
-                className={`${inputClass} tabular`}
-              />
-            </Field>
+            {listingType === 'sell' && (
+              <Field label="Price (₱)">
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="0"
+                  className={`${inputClass} tabular`}
+                />
+              </Field>
+            )}
             <Field label="Category">
               <select required value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
                 <option value="" disabled>Choose a category</option>
@@ -374,14 +427,14 @@ export default function ListingForm({ user, listing, onSaved }) {
           </Field>
         </Section>
 
-        <Section title="How buyers reach you">
+        <Section title="How students reach you">
           <Field
             label="Facebook username"
             optional={Boolean(user.email)}
             hint={
               user.email
-                ? `Adds a “Message Seller on Messenger” button. Leave it blank and buyers will see your email (${user.email}) instead.`
-                : 'Required: your account has no email, so buyers will contact you through Messenger.'
+                ? `Adds a “Message Seller on Messenger” button. Leave it blank and students will see your email (${user.email}) instead.`
+                : 'Required: your account has no email, so students will contact you through Messenger.'
             }
           >
             <div className="relative">
@@ -415,11 +468,9 @@ export default function ListingForm({ user, listing, onSaved }) {
         <button
           type="submit"
           disabled={saving}
-          className={`rounded-md py-3 text-[15px] font-semibold transition-colors disabled:opacity-60 ${
-            'bg-primary text-white hover:bg-primary-hover'
-          }`}
+          className="rounded-md bg-accent py-3 text-[15px] font-semibold text-white transition-colors hover:bg-accent-hover disabled:opacity-60"
         >
-          {saving ? (images.some((i) => i.file) ? 'Resizing and uploading photos…' : 'Saving…') : isEdit ? 'Save Changes' : 'Post Item'}
+          {saving ? (images.some((i) => i.file) ? 'Resizing and uploading photos…' : 'Saving…') : isEdit ? 'Save Changes' : listingType === 'swap' ? 'Post Swap' : 'Post Item'}
         </button>
       </div>
 

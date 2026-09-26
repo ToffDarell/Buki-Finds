@@ -3,15 +3,17 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { CATEGORIES, LISTING_WITH_IMAGES, cleanSearchText, formatPrice } from '@/lib/listings'
+import { CATEGORIES, LISTING_TYPES, LISTING_WITH_IMAGES, cleanSearchText, formatPrice } from '@/lib/listings'
 import ListingCard, { ListingCardSkeleton } from '@/app/components/ListingCard'
 import SchoolInput from '@/app/components/SchoolInput'
-import { CloseIcon, FiltersIcon, SearchIcon } from '@/app/components/icons'
+import { CloseIcon, FiltersIcon, PlusIcon, SearchIcon } from '@/app/components/icons'
 
 const fieldClass =
   'w-full rounded-sm border border-line bg-white px-2.5 py-2 text-sm text-ink transition-colors placeholder:text-muted hover:border-muted/60 focus:border-primary focus:outline-none'
 
-const DEFAULT_FILTERS = { category: '', school: '', size: '', minPrice: '', maxPrice: '', sort: 'newest' }
+const DEFAULT_FILTERS = { listingType: '', category: '', school: '', size: '', minPrice: '', maxPrice: '', sort: 'newest' }
+
+const TYPE_OPTIONS = [['', 'All'], ...Object.entries(LISTING_TYPES)]
 
 const SORTS = {
   newest: { label: 'Newest first', column: 'created_at', ascending: false },
@@ -25,8 +27,10 @@ function fetchListings(filters, search) {
     .from('listings')
     .select(LISTING_WITH_IMAGES)
     .eq('status', 'available')
-    .order(sort.column, { ascending: sort.ascending })
+    // Swaps have no price, so they go after priced listings when sorting by price.
+    .order(sort.column, { ascending: sort.ascending, nullsFirst: false })
 
+  if (filters.listingType) query = query.eq('listing_type', filters.listingType)
   if (filters.category) query = query.eq('category', filters.category)
   // Partial, case-insensitive match: "nurs" finds any school with "Nursing" in its name.
   if (filters.school) query = query.ilike('school', `%${filters.school}%`)
@@ -44,6 +48,90 @@ function FieldBox({ label, children }) {
       <span className="text-xs font-medium text-muted">{label}</span>
       {children}
     </label>
+  )
+}
+
+// One active filter. The whole chip removes it; the x is the visible affordance.
+function FilterChip({ label, onRemove }) {
+  return (
+    <button
+      onClick={onRemove}
+      className="chip-in group inline-flex min-h-8 shrink-0 items-center gap-1 rounded-full border border-primary/20 bg-primary-soft py-1 pl-3 pr-1.5 text-[13px] font-medium text-primary transition-colors hover:border-primary/50"
+      aria-label={`Remove filter ${label}`}
+    >
+      {label}
+      <span className="flex h-5 w-5 items-center justify-center rounded-full transition-colors group-hover:bg-primary/10">
+        <CloseIcon className="h-3.5 w-3.5" />
+      </span>
+    </button>
+  )
+}
+
+// A blank ID card hanging from its lanyard: the empty state's picture, in the card's own vocabulary.
+function BlankIdCard({ searching }) {
+  return (
+    <svg viewBox="0 0 120 170" className="id-sway h-36 w-auto" aria-hidden="true">
+      <path d="M60 0v22" stroke="#00528a" strokeWidth="2" strokeLinecap="round" />
+      <rect x="10" y="20" width="100" height="146" rx="8" fill="#fff" stroke="#d6e2ec" strokeWidth="1.5" />
+      <path d="M10 28a8 8 0 0 1 8-8h84a8 8 0 0 1 8 8v12H10z" fill="#00528a" />
+      <rect x="48" y="24" width="24" height="5" rx="2.5" fill="#fff" />
+      <rect x="20" y="48" width="80" height="62" rx="3" fill="#f3f7fa" stroke="#bcd5e8" strokeWidth="1.5" strokeDasharray="4 3" />
+      {searching ? (
+        <g stroke="#00528a" strokeWidth="2.5" strokeLinecap="round" fill="none">
+          <circle cx="57" cy="76" r="9" />
+          <path d="m64 83 7 7" />
+        </g>
+      ) : (
+        <path d="M60 70v18M51 79h18" stroke="#00528a" strokeWidth="2.5" strokeLinecap="round" />
+      )}
+      <rect x="20" y="120" width="34" height="9" rx="2" fill="#e6f0f7" />
+      <rect x="20" y="135" width="70" height="5" rx="2" fill="#d6e2ec" />
+      <path d="M20 150h80" stroke="#d6e2ec" strokeWidth="1.5" strokeDasharray="3 3" />
+    </svg>
+  )
+}
+
+// Two different situations, two different messages: nothing posted yet, or filters that match nothing.
+function EmptyState({ active, onClearAll }) {
+  const filtered = active.length > 0
+  return (
+    <div className="rise-in flex flex-col items-center rounded-[12px] border border-line bg-white px-6 pb-12 pt-8 text-center shadow-card">
+      <BlankIdCard searching={filtered} />
+      <h2 className="card-type mt-5 text-2xl font-extrabold leading-tight text-ink sm:text-[1.75rem]">
+        {filtered ? 'No matches for that.' : 'No listings yet.'}
+      </h2>
+      {filtered ? (
+        <>
+          <p className="mt-2 max-w-sm text-sm text-muted">Nothing fits every filter you picked. Remove one to see more:</p>
+          <div className="mt-4 flex max-w-md flex-wrap justify-center gap-2">
+            {active.map((f) => (
+              <FilterChip key={f.key} label={f.label} onRemove={f.clear} />
+            ))}
+          </div>
+          {active.length > 1 && (
+            <button
+              onClick={onClearAll}
+              className="mt-5 rounded-md border border-line bg-white px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-surface"
+            >
+              Clear all filters
+            </button>
+          )}
+        </>
+      ) : (
+        <>
+          <p className="mt-2 max-w-sm text-sm text-muted">
+            Be the first to sell or swap something with college students across Bukidnon. It takes about a minute.
+          </p>
+          <Link
+            href="/post"
+            className="mt-6 inline-flex items-center gap-2 rounded-md bg-accent px-5 py-3 text-[15px] font-semibold text-white shadow-card transition-colors hover:bg-accent-hover"
+          >
+            <PlusIcon className="h-4 w-4" />
+            Post Item
+          </Link>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -107,15 +195,21 @@ export default function BrowsePage() {
     setFilters((prev) => ({ ...prev, [name]: value }))
   }
 
+  // Swaps have no price, so picking "For Swap" drops any price range.
+  function setListingType(listingType) {
+    setFilters((prev) => ({ ...prev, listingType, ...(listingType === 'swap' && { minPrice: '', maxPrice: '' }) }))
+  }
+
   function clearAll() {
     setFilters(DEFAULT_FILTERS)
     setSearchInput('')
     setSchoolInput('')
   }
 
-  // Active filters, restated in the "Showing" line; each one can be removed on its own.
+  // Active filters, restated as chips above the grid; each one can be removed on its own.
   const active = [
     search && { key: 'search', label: `“${search}”`, clear: () => setSearchInput('') },
+    filters.listingType && { key: 'type', label: LISTING_TYPES[filters.listingType], clear: () => update('listingType', '') },
     filters.category && { key: 'category', label: filters.category, clear: () => update('category', '') },
     filters.size && { key: 'size', label: `Size ${filters.size}`, clear: () => update('size', '') },
     filters.school && {
@@ -133,6 +227,12 @@ export default function BrowsePage() {
     },
   ].filter(Boolean)
   const railFilterCount = ['school', 'size', 'minPrice', 'maxPrice'].filter((k) => filters[k] !== '').length
+
+  // Resets only what the rail owns; search, type, category and sort stay.
+  function resetRail() {
+    setSchoolInput('')
+    setFilters((prev) => ({ ...prev, school: '', size: '', minPrice: '', maxPrice: '' }))
+  }
   const count = result.listings.length
 
   const filterFields = (
@@ -141,7 +241,7 @@ export default function BrowsePage() {
         <SchoolInput
           value={schoolInput}
           onChange={setSchoolInput}
-          placeholder="Any school, e.g. Bukidnon State"
+          placeholder="Any school or university"
           className={fieldClass}
         />
       </FieldBox>
@@ -155,39 +255,69 @@ export default function BrowsePage() {
         </select>
       </FieldBox>
 
-      <FieldBox label="Price (₱)">
-        <div className="flex items-center gap-1.5">
-          <input
-            type="number"
-            min="0"
-            inputMode="decimal"
-            placeholder="Min"
-            value={filters.minPrice}
-            onChange={(e) => update('minPrice', e.target.value)}
-            className={`${fieldClass} tabular`}
-            aria-label="Minimum price"
-          />
-          <span className="text-muted" aria-hidden="true">–</span>
-          <input
-            type="number"
-            min="0"
-            inputMode="decimal"
-            placeholder="Max"
-            value={filters.maxPrice}
-            onChange={(e) => update('maxPrice', e.target.value)}
-            className={`${fieldClass} tabular`}
-            aria-label="Maximum price"
-          />
-        </div>
-      </FieldBox>
+      {filters.listingType !== 'swap' && (
+        <FieldBox label="Price (₱)">
+          <div className="flex items-center gap-1.5">
+            <input
+              type="number"
+              min="0"
+              inputMode="decimal"
+              placeholder="Min"
+              value={filters.minPrice}
+              onChange={(e) => update('minPrice', e.target.value)}
+              className={`${fieldClass} tabular`}
+              aria-label="Minimum price"
+            />
+            <span className="text-muted" aria-hidden="true">–</span>
+            <input
+              type="number"
+              min="0"
+              inputMode="decimal"
+              placeholder="Max"
+              value={filters.maxPrice}
+              onChange={(e) => update('maxPrice', e.target.value)}
+              className={`${fieldClass} tabular`}
+              aria-label="Maximum price"
+            />
+          </div>
+        </FieldBox>
+      )}
     </>
+  )
+
+  // Opening the panel from the stuck top bar may happen far down the feed, so bring the panel into view.
+  function toggleFilters() {
+    const opening = !showFilters
+    setShowFilters(opening)
+    if (opening) {
+      requestAnimationFrame(() => document.getElementById('filter-panel')?.scrollIntoView({ block: 'start', behavior: 'smooth' }))
+    }
+  }
+
+  const filtersButton = (
+    <button
+      onClick={toggleFilters}
+      aria-expanded={showFilters}
+      aria-controls="filter-panel"
+      className={`inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-colors md:rounded-md md:px-3 ${
+        showFilters ? 'border-primary bg-primary-soft text-primary' : 'border-line bg-white text-ink hover:border-muted/60'
+      }`}
+    >
+      <FiltersIcon className="h-4 w-4" />
+      Filters
+      {railFilterCount > 0 && (
+        <span className="tabular flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-white">
+          {railFilterCount}
+        </span>
+      )}
+    </button>
   )
 
   const sortSelect = (
     <select
       value={filters.sort}
       onChange={(e) => update('sort', e.target.value)}
-      className="rounded-sm border border-line bg-white py-2 pl-2.5 pr-8 text-sm text-ink transition-colors hover:border-muted/60 focus:border-primary focus:outline-none"
+      className="rounded-md border border-line bg-white py-2 pl-2.5 pr-7 text-sm text-ink transition-colors hover:border-muted/60 focus:border-primary focus:outline-none"
       aria-label="Sort listings"
     >
       {Object.entries(SORTS).map(([value, { label }]) => (
@@ -198,50 +328,83 @@ export default function BrowsePage() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <section className="border-b border-line bg-white">
-        <div className="mx-auto max-w-7xl px-4 pb-4 pt-6 sm:px-6 sm:pt-8">
-          <h1 className="card-type text-3xl font-bold leading-none text-ink sm:text-4xl">Find it in your size.</h1>
-          <p className="mt-2 max-w-xl text-sm text-muted">
-            Uniforms, school shoes, books and more, from students across Bukidnon.
+      {/* Phones hide the banner (the heading stays for screen readers) so the feed starts sooner. */}
+      <div className="bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 md:pt-9">
+          <h1 className="card-type sr-only text-[2.75rem] font-extrabold leading-[0.95] text-ink md:not-sr-only md:block">
+            Find it in your size.
+          </h1>
+          <p className="mt-2.5 hidden max-w-xl text-[15px] text-muted md:block">
+            Uniforms, school shoes, books and more. Buy, sell or swap with college students across Bukidnon.
           </p>
+        </div>
+      </div>
 
-          <div className="relative mt-5 max-w-3xl">
-            <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
-            <input
-              type="search"
-              placeholder="Search e.g. nursing uniform, black shoes, calculus book"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full rounded-md border border-line bg-white py-3 pl-11 pr-4 text-base text-ink shadow-card placeholder:text-muted focus:border-primary focus:outline-none"
-              aria-label="Search listings"
-            />
+      {/* Phones: search plus one condensed row stay stuck to the top of the screen while the feed scrolls.
+          It has to be a direct child of <main> so it sticks for the whole page, not just the header. */}
+      <div className="sticky top-0 z-20 border-b border-line bg-white md:static md:border-b-0">
+        <div className="mx-auto max-w-7xl px-4 pb-2.5 pt-3 sm:px-6 md:pb-0 md:pt-5">
+          <div className="flex max-w-4xl gap-2.5">
+            <div className="relative flex-1">
+              <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+              <input
+                type="search"
+                placeholder="Search uniforms, shoes, books…"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full rounded-md border border-line bg-surface py-2.5 pl-11 pr-4 text-base text-ink transition-colors placeholder:text-muted hover:border-muted/60 focus:border-primary focus:bg-white focus:outline-none md:bg-white md:py-3 md:shadow-card"
+                aria-label="Search listings"
+              />
+            </div>
+
+            <div role="group" aria-label="Listing type" className="hidden rounded-md border border-line bg-surface p-1 md:flex">
+              {TYPE_OPTIONS.map(([value, label]) => {
+                const selected = filters.listingType === value
+                return (
+                  <button
+                    key={value || 'all'}
+                    onClick={() => setListingType(value)}
+                    aria-pressed={selected}
+                    className={`whitespace-nowrap rounded-sm px-3.5 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary ${
+                      selected ? 'bg-primary text-white shadow-card' : 'text-muted hover:bg-white hover:text-ink'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
-          <div className="mt-3 flex min-h-8 flex-wrap items-center gap-x-2 gap-y-1.5 text-sm" aria-live="polite">
-            <span className="text-muted">
-              {loading ? 'Searching…' : `Showing ${count} ${count === 1 ? 'item' : 'items'}`}
-            </span>
-            {active.map((f) => (
-              <button
-                key={f.key}
-                onClick={f.clear}
-                className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary-soft py-0.5 pl-2.5 pr-1.5 text-sm font-medium text-primary transition-colors hover:border-primary/50"
-                aria-label={`Remove filter ${f.label}`}
-              >
-                {f.label}
-                <CloseIcon className="h-3.5 w-3.5" />
-              </button>
-            ))}
-            {active.length > 1 && (
-              <button onClick={clearAll} className="text-sm font-medium text-primary underline-offset-2 hover:underline">
-                Clear all
-              </button>
-            )}
+          <div className="-mx-4 mt-2.5 flex items-center gap-2 overflow-x-auto pl-4 pr-10 [mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] [scrollbar-width:none] sm:-mx-6 sm:pl-6 md:hidden">
+            {filtersButton}
+            <span className="h-5 w-px shrink-0 bg-line" aria-hidden="true" />
+            <div role="group" aria-label="Listing type" className="flex shrink-0 gap-1.5">
+              {TYPE_OPTIONS.map(([value, label]) => {
+                const selected = filters.listingType === value
+                return (
+                  <button
+                    key={value || 'all'}
+                    onClick={() => setListingType(value)}
+                    aria-pressed={selected}
+                    className={`min-h-9 whitespace-nowrap rounded-full border px-3.5 text-sm font-medium transition-colors ${
+                      selected ? 'border-primary bg-primary text-white' : 'border-line bg-white text-ink'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="shrink-0">{sortSelect}</div>
           </div>
         </div>
+      </div>
 
-        <nav aria-label="Categories" className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="-mx-4 -mb-px flex gap-5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
+      <section className="border-b border-line bg-white">
+        <nav aria-label="Categories" className="mx-auto max-w-7xl px-4 pt-1 sm:px-6 md:pt-5">
+          {/* Below desktop width the tabs fade out at the right edge so it's clear the row scrolls. */}
+          <div className="-mx-4 -mb-px flex gap-5 overflow-x-auto pl-4 pr-10 [mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] [scrollbar-width:none] sm:-mx-6 sm:pl-6 lg:mx-0 lg:px-0 lg:[mask-image:none]">
             {['', ...CATEGORIES].map((c) => {
               const selected = filters.category === c
               return (
@@ -262,86 +425,87 @@ export default function BrowsePage() {
       </section>
 
       <div className="flex-1 bg-surface">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:flex-row lg:gap-8">
-        <div className="flex items-center gap-2 lg:hidden">
-          <button
-            onClick={() => setShowFilters((v) => !v)}
-            aria-expanded={showFilters}
-            aria-controls="filter-panel"
-            className="inline-flex items-center gap-2 rounded-sm border border-line bg-white px-3 py-2 text-sm font-medium text-ink"
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 sm:py-6 lg:flex-row lg:items-start lg:gap-8">
+          {/* Phones: results bar, then the (toggled) filter panel, then the grid. Desktop: rail on the left. */}
+          <aside
+            id="filter-panel"
+            className={`${showFilters ? 'panel-drop block' : 'hidden'} order-2 scroll-mt-32 md:scroll-mt-4 lg:sticky lg:top-4 lg:order-none lg:block lg:w-60 lg:shrink-0`}
+            aria-label="Filters"
           >
-            <FiltersIcon className="h-4 w-4" />
-            Filters{railFilterCount > 0 && ` (${railFilterCount})`}
-          </button>
-          <div className="ml-auto">{sortSelect}</div>
+            <div className="rounded-[10px] border border-line bg-white shadow-card">
+              <div className="flex items-center justify-between border-b border-line px-4 py-3">
+                <span className="flex items-center gap-2 text-sm font-semibold text-ink">
+                  Filters
+                  {railFilterCount > 0 && (
+                    <span className="tabular flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-white">
+                      {railFilterCount}
+                    </span>
+                  )}
+                </span>
+                {railFilterCount > 0 && (
+                  <button onClick={resetRail} className="text-sm font-medium text-primary underline-offset-2 hover:underline">
+                    Reset
+                  </button>
+                )}
+              </div>
+              <div className="grid gap-4 p-4 sm:grid-cols-3 lg:grid-cols-1">{filterFields}</div>
+            </div>
+          </aside>
+
+          <section className="contents lg:block lg:min-w-0 lg:flex-1" aria-label="Listings">
+            <div className="order-1">
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* Phones have Filters and sort in the stuck top bar; tablets get them here; desktop has the rail. */}
+                <div className="hidden md:block lg:hidden">{filtersButton}</div>
+                <p className="text-sm text-muted" aria-live="polite">
+                  {loading ? (
+                    'Finding listings…'
+                  ) : (
+                    <>
+                      <span className="tabular font-semibold text-ink">{count}</span> {count === 1 ? 'item' : 'items'}
+                    </>
+                  )}
+                </p>
+                <div className="ml-auto hidden items-center gap-2 md:flex">
+                  <span className="hidden whitespace-nowrap text-sm text-muted lg:inline">Sort by</span>
+                  {sortSelect}
+                </div>
+              </div>
+
+              {active.length > 0 && (
+                <div className="-mx-4 mt-3 flex items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:-mx-6 sm:px-6 md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
+                  {active.map((f) => (
+                    <FilterChip key={f.key} label={f.label} onRemove={f.clear} />
+                  ))}
+                  {active.length > 1 && (
+                    <button onClick={clearAll} className="shrink-0 px-1 text-sm font-medium text-primary underline-offset-2 hover:underline">
+                      Clear all
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="order-3 lg:mt-5">
+              {result.error && (
+                <div role="alert" className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                  Couldn’t load listings: {result.error}. Check your connection and refresh.
+                </div>
+              )}
+
+              {!loading && !result.error && count === 0 && <EmptyState active={active} onClearAll={clearAll} />}
+
+              <div
+                className={`grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-x-4 md:gap-y-6 lg:grid-cols-4 ${loading && count > 0 ? 'opacity-60 transition-opacity duration-300' : ''}`}
+                aria-busy={loading}
+              >
+                {loading && count === 0 && !result.error
+                  ? Array.from({ length: 8 }, (_, i) => <ListingCardSkeleton key={i} index={i} />)
+                  : result.listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}
+              </div>
+            </div>
+          </section>
         </div>
-
-        <aside
-          id="filter-panel"
-          className={`${showFilters ? 'block' : 'hidden'} lg:block lg:w-56 lg:shrink-0`}
-          aria-label="Filters"
-        >
-          <div className="overflow-hidden rounded-[8px] border border-line bg-white shadow-card lg:sticky lg:top-4">
-            <div className="flex items-center justify-between bg-primary px-3.5 py-2">
-              <span className="text-sm font-semibold text-white">Filters</span>
-              {railFilterCount > 0 && (
-                <button
-                  onClick={() => {
-                    setSchoolInput('')
-                    setFilters((prev) => ({ ...DEFAULT_FILTERS, category: prev.category, sort: prev.sort }))
-                  }}
-                  className="text-xs font-medium text-on-primary-muted hover:text-white"
-                >
-                  Reset
-                </button>
-              )}
-            </div>
-            <div className="grid gap-4 p-3.5 sm:grid-cols-3 lg:grid-cols-1">{filterFields}</div>
-          </div>
-        </aside>
-
-        <section className="min-w-0 flex-1" aria-label="Listings">
-          <div className="mb-4 hidden items-center justify-end gap-2 lg:flex">
-            <span className="whitespace-nowrap text-sm text-muted">Sort by</span>
-            {sortSelect}
-          </div>
-
-          {result.error && (
-            <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-              Couldn’t load listings: {result.error}. Check your connection and refresh.
-            </div>
-          )}
-
-          {!loading && !result.error && count === 0 && (
-            <div className="flex flex-col items-center rounded-[10px] border border-dashed border-line px-6 py-14 text-center">
-              <p className="card-type text-2xl font-bold text-ink">Nothing here yet.</p>
-              <p className="mt-1 max-w-sm text-sm text-muted">
-                {active.length > 0
-                  ? 'No listings match these filters. Try another size or school, or widen the price range.'
-                  : 'Be the first to sell something to your fellow students.'}
-              </p>
-              {active.length > 0 ? (
-                <button onClick={clearAll} className="mt-4 text-sm font-semibold text-primary hover:underline">
-                  Clear all filters
-                </button>
-              ) : (
-                <Link href="/post" className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover">
-                  Post Item
-                </Link>
-              )}
-            </div>
-          )}
-
-          <div
-            className={`grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4 ${loading && count > 0 ? 'opacity-60 transition-opacity' : ''}`}
-            aria-busy={loading}
-          >
-            {loading && count === 0 && !result.error
-              ? Array.from({ length: 8 }, (_, i) => <ListingCardSkeleton key={i} />)
-              : result.listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}
-          </div>
-        </section>
-      </div>
       </div>
     </main>
   )

@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import AuthErrorBanner from "./components/AuthErrorBanner";
+import BottomNav from "./components/BottomNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,10 +15,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-
 export const metadata: Metadata = {
-  title: "Baligya Bukidnon",
-  description: "Buy and sell uniforms, school shoes, books and more with students across Bukidnon.",
+  title: "Buki-Finds",
+  description: "Buy, sell and swap uniforms, books and school supplies with college students across Bukidnon.",
+};
+
+// Lets fixed bottom bars pad for the iPhone home indicator with env(safe-area-inset-bottom).
+export const viewport: Viewport = {
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -26,10 +31,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-white text-ink">
+      <body className="min-h-full flex flex-col bg-surface text-ink">
         <Navbar />
         <AuthErrorBanner />
         {children}
+        <BottomNav />
       </body>
     </html>
   );

@@ -2,7 +2,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #0f1d45;
+  --foreground: #06243f;
 }
 
 @theme inline {
@@ -12,21 +12,29 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* BukSU Market palette: navy and white only (owner's choice), plus navy-tinted neutrals */
+/* Buki-Finds palette, measured from the official logo (public/LOGO BUKIFINDS.jpg).
+   Blue = the logo's B, ring and magnifier. Green = the logo's hills and bowl, used as the accent
+   for creating and trading (Post Item, swaps, available). Neutrals are tinted toward the logo blue. */
 @theme {
-  --color-primary: #1e3a8a;
-  --color-primary-hover: #172e6e;
-  --color-primary-soft: #e8edf8;
-  --color-on-primary-muted: #c9d3f0;
-  --color-surface: #f5f7fc;
-  --color-ink: #0f1d45;
-  --color-muted: #4b5a7d;
-  --color-line: #dce2ef;
+  --color-primary: #00528a;          /* logo blue (B stem, ring, magnifier rim) */
+  --color-primary-hover: #024273;    /* logo blue, darker end of its gradient */
+  --color-primary-soft: #e6f0f7;
+  --color-on-primary-muted: #bcd5e8; /* secondary text on blue, 5.4:1 */
 
-  --shadow-card: 0 1px 2px rgb(15 29 69 / 0.06), 0 2px 6px rgb(15 29 69 / 0.04);
-  --shadow-card-lift: 0 6px 14px rgb(15 29 69 / 0.1), 0 2px 4px rgb(15 29 69 / 0.06);
+  --color-accent: #0b813e;           /* logo green, darker end: white text reads at 5.0:1 */
+  --color-accent-hover: #096b33;    /* also the text colour on accent-soft (5.9:1) */
+  --color-accent-soft: #e7f4ea;
+
+  --color-surface: #f3f7fa;
+  --color-ink: #06243f;
+  --color-muted: #4a6076;
+  --color-line: #d6e2ec;
+
+  --shadow-card: 0 1px 2px rgb(6 36 63 / 0.06), 0 2px 6px rgb(6 36 63 / 0.04);
+  --shadow-card-lift: 0 6px 14px rgb(6 36 63 / 0.1), 0 2px 4px rgb(6 36 63 / 0.06);
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-sine: cubic-bezier(0.37, 0, 0.63, 1);
 }
 
 body {
@@ -44,7 +52,7 @@ body {
 html {
   accent-color: var(--color-primary);
   caret-color: var(--color-primary);
-  scrollbar-color: #c9d3f0 transparent;
+  scrollbar-color: #bcd5e8 transparent;
 }
 
 :focus-visible {
@@ -56,10 +64,9 @@ a {
   text-underline-offset: 3px;
 }
 
-/* Card lettering: same readable face, set bold and slightly tight for prices and headings */
+/* Prices and headings: the same Geist as everything else, just bold and slightly tight. */
 .card-type {
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
 }
 
 .tabular {
@@ -72,7 +79,8 @@ a {
     transform-origin: 50% 0;
     transition:
       transform 500ms var(--ease-out-expo),
-      box-shadow 300ms var(--ease-out-expo);
+      box-shadow 300ms var(--ease-out-expo),
+      border-color 300ms var(--ease-out-expo);
   }
   .id-swing:hover,
   .id-swing:focus-visible,
@@ -84,4 +92,70 @@ a {
   .id-swing:nth-child(even):active {
     transform: rotate(1.25deg) translateY(2px);
   }
+
+  /* The photo leans in slightly inside its frame while the card swings. */
+  .id-swing .id-photo {
+    transition: transform 700ms var(--ease-out-expo);
+  }
+  .id-swing:hover .id-photo,
+  .id-swing:focus-visible .id-photo {
+    transform: scale(1.04);
+  }
+
+  /* Loading: blank ID cards sway gently on their lanyards while listings load. */
+  .id-sway {
+    transform-origin: 50% 0;
+    animation: id-sway 2.8s var(--ease-in-out-sine) infinite;
+    animation-delay: calc(var(--i, 0) * -350ms);
+  }
+
+  .chip-in {
+    animation: chip-in 220ms var(--ease-out-expo);
+  }
+
+  .panel-drop {
+    animation: panel-drop 320ms var(--ease-out-expo);
+  }
+
+  .rise-in {
+    animation: rise-in 480ms var(--ease-out-expo) both;
+  }
+
+  /* Profile menu: the sheet slides up out of the tab bar; the desktop dropdown drops in. */
+  .sheet-up {
+    animation: sheet-up 280ms var(--ease-out-expo);
+  }
+
+  .backdrop-in {
+    animation: backdrop-in 200ms ease-out;
+  }
+
+  .menu-drop {
+    animation: panel-drop 200ms var(--ease-out-expo);
+  }
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+}
+
+@keyframes backdrop-in {
+  from { opacity: 0; }
+}
+
+@keyframes id-sway {
+  0%, 100% { transform: rotate(-0.8deg); }
+  50% { transform: rotate(0.8deg); }
+}
+
+@keyframes chip-in {
+  from { opacity: 0; transform: scale(0.92); }
+}
+
+@keyframes panel-drop {
+  from { opacity: 0; transform: translateY(-6px); }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(8px); }
 }

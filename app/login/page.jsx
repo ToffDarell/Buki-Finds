@@ -66,14 +66,14 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-surface px-4 py-10">
+    <main className="flex flex-1 items-start justify-center bg-surface px-4 py-6 sm:items-center sm:py-10">
       <div className="w-full max-w-sm overflow-hidden rounded-xl border border-line bg-white shadow-card">
         <div className="relative bg-primary px-6 pb-4 pt-7">
-          <span aria-hidden="true" className="absolute left-1/2 top-2.5 h-2 w-14 -translate-x-1/2 rounded-full bg-white shadow-[inset_0_1px_2px_rgb(15_29_69/0.35)]" />
+          <span aria-hidden="true" className="absolute left-1/2 top-2.5 h-2 w-14 -translate-x-1/2 rounded-full bg-white shadow-[inset_0_1px_2px_rgb(6_36_63/0.35)]" />
           <h1 className="card-type text-3xl font-bold leading-none text-white">
             {mode === 'login' ? 'Log in' : 'Create account'}
           </h1>
-          <p className="mt-1.5 text-sm text-on-primary-muted">Buy and sell with fellow students across Bukidnon.</p>
+          <p className="mt-1.5 text-sm text-on-primary-muted">Buy, sell and swap with college students across Bukidnon.</p>
         </div>
         <div className="p-6">
 

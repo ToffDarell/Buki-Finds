@@ -8,10 +8,14 @@ import { useUser } from '@/lib/useAuth'
 import {
   IMAGE_BUCKET,
   LISTING_WITH_IMAGES,
+  LISTING_TYPES,
+  doneLabel,
   fallbackToFull,
-  formatPrice,
+  isSwap,
   listingNumber,
   messengerUrl,
+  priceOrSwap,
+  purgeDateLabel,
   sortedImages,
 } from '@/lib/listings'
 import { imageStoragePaths, thumbUrl } from '@/lib/images'
@@ -34,8 +38,8 @@ function Gallery({ images, title, sold }) {
 
   if (images.length === 0) {
     return (
-      <div className="flex h-28 items-center justify-center gap-2 rounded-[10px] border border-dashed border-line bg-white text-muted lg:aspect-square lg:h-auto lg:flex-col">
-        <CameraIcon className="h-6 w-6 lg:h-8 lg:w-8" />
+      <div className="flex h-28 items-center justify-center gap-2 rounded-[10px] border border-dashed border-line bg-white text-muted md:aspect-square md:h-auto md:flex-col">
+        <CameraIcon className="h-6 w-6 md:h-8 md:w-8" />
         <span className="text-sm">The seller didn’t add photos</span>
       </div>
     )
@@ -127,14 +131,18 @@ function ContactAction({ listing, number, compact = false }) {
         }`}
       >
         <MessengerIcon />
-        {compact ? 'Message Seller' : 'Message Seller on Messenger'}
+        {/* Small phones and the tablet column are too narrow for the full label; the Messenger icon already says where it goes. */}
+        <span>
+          Message Seller
+          {!compact && <span className="hidden sm:inline md:hidden lg:inline"> on Messenger</span>}
+        </span>
       </a>
     )
   }
   if (listing.seller_email) {
     return (
       <a
-        href={`mailto:${listing.seller_email}?subject=${encodeURIComponent(`Baligya Bukidnon No. ${number}: ${listing.title}`)}`}
+        href={`mailto:${listing.seller_email}?subject=${encodeURIComponent(`Buki-Finds No. ${number}: ${listing.title}`)}`}
         className={`flex items-center justify-center gap-2 rounded-md bg-primary font-semibold text-white transition-colors hover:bg-primary-hover ${
           compact ? 'px-4 py-2.5 text-sm' : 'w-full px-4 py-3'
         }`}
@@ -202,7 +210,7 @@ export default function ItemPage() {
 
   if (!result.loaded) {
     return (
-      <main className="mx-auto grid w-full max-w-7xl flex-1 animate-pulse gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[1.1fr_0.9fr]" aria-busy="true">
+      <main className="mx-auto grid w-full max-w-7xl flex-1 animate-pulse gap-8 px-4 py-8 sm:px-6 md:grid-cols-[1.1fr_0.9fr]" aria-busy="true">
         <div className="aspect-square rounded-[10px] bg-surface" />
         <div className="h-96 rounded-xl bg-surface" />
       </main>
@@ -227,24 +235,26 @@ export default function ItemPage() {
 
   const isOwner = user?.id === listing.seller_id
   const isSold = listing.status === 'sold'
+  const swap = isSwap(listing)
+  const purgeDate = purgeDateLabel(listing)
   const number = listingNumber(listing)
   const hasContact = Boolean(listing.seller_facebook_username || listing.seller_email)
   const showMobileBar = !isOwner && !isSold && hasContact
 
   return (
-    <main className={`w-full flex-1 bg-surface ${showMobileBar ? 'pb-28 lg:pb-10' : 'pb-10'}`}>
+    <main className={`w-full flex-1 bg-surface ${showMobileBar ? 'pb-28 md:pb-10' : 'pb-10'}`}>
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
       <Link href="/" className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
         <ArrowLeftIcon className="h-4 w-4" />
         Back to browse
       </Link>
 
-      <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+      <div className="grid gap-8 md:grid-cols-[1.1fr_0.9fr] md:items-start md:gap-6 lg:gap-8">
         <Gallery images={sortedImages(listing)} title={listing.title} sold={isSold} />
 
-        <article className="overflow-hidden rounded-xl border border-line bg-white shadow-card lg:sticky lg:top-6">
+        <article className="overflow-hidden rounded-xl border border-line bg-white shadow-card md:sticky md:top-6">
           <div className="relative bg-primary px-5 pb-3 pt-6">
-            <span aria-hidden="true" className="absolute left-1/2 top-2.5 h-2 w-14 -translate-x-1/2 rounded-full bg-white shadow-[inset_0_1px_2px_rgb(15_29_69/0.35)]" />
+            <span aria-hidden="true" className="absolute left-1/2 top-2.5 h-2 w-14 -translate-x-1/2 rounded-full bg-white shadow-[inset_0_1px_2px_rgb(6_36_63/0.35)]" />
             <div className="flex items-baseline justify-between gap-3">
               <span className="text-sm font-semibold text-white">{listing.category}</span>
               <span className="font-mono text-xs text-on-primary-muted">No. {number}</span>
@@ -252,17 +262,37 @@ export default function ItemPage() {
           </div>
 
           <div className="p-5">
-            <h1 className="text-xl font-semibold leading-snug text-ink sm:text-2xl">{listing.title}</h1>
+            <span
+              className={`inline-block rounded-sm px-2 py-0.5 text-xs font-bold uppercase tracking-[0.12em] ${
+                swap ? 'bg-accent text-white' : 'border border-primary/25 bg-primary-soft text-primary'
+              }`}
+            >
+              {LISTING_TYPES[swap ? 'swap' : 'sell']}
+            </span>
+            <h1 className="mt-2 text-xl font-semibold leading-snug text-ink sm:text-2xl">{listing.title}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-3">
-              <p className={`card-type tabular text-5xl font-bold leading-none ${isSold ? 'text-muted line-through decoration-[3px]' : 'text-primary'}`}>
-                {formatPrice(listing.price)}
+              <p
+                className={`card-type tabular font-bold leading-none ${swap ? 'text-4xl' : 'text-5xl md:text-4xl lg:text-5xl'} ${
+                  isSold ? 'text-muted line-through decoration-[3px]' : swap ? 'text-accent' : 'text-primary'
+                }`}
+              >
+                {priceOrSwap(listing)}
               </p>
               {isSold && (
                 <span className="rounded-sm bg-ink px-2 py-0.5 text-sm font-bold uppercase tracking-[0.15em] text-white">
-                  Sold
+                  {doneLabel(listing)}
                 </span>
               )}
             </div>
+
+            {swap && (
+              <div className="mt-4 rounded-md border border-accent/25 bg-accent-soft px-3.5 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-accent-hover">Looking for in return</p>
+                <p className="mt-1 whitespace-pre-line text-[15px] leading-relaxed text-ink">
+                  {listing.swap_for || 'Open to offers. Message the seller with what you can trade.'}
+                </p>
+              </div>
+            )}
 
             <dl className="mt-5 grid grid-cols-2 rounded-md border border-line">
               <Field label="Condition" value={listing.condition} />
@@ -278,7 +308,7 @@ export default function ItemPage() {
             <div className="mt-6 border-t border-dashed border-line pt-5">
               <div className="flex items-baseline justify-between gap-3">
                 <p className="text-sm text-muted">
-                  Sold by <span className="font-semibold text-ink">{listing.seller_name || 'a student seller'}</span>
+                  {swap ? 'Posted by' : 'Sold by'} <span className="font-semibold text-ink">{listing.seller_name || 'a student seller'}</span>
                 </p>
                 {!isOwner && listing.seller_email && listing.seller_facebook_username && (
                   <a href={`mailto:${listing.seller_email}`} className="truncate text-sm text-primary hover:underline">
@@ -302,7 +332,7 @@ export default function ItemPage() {
                     className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
                   >
                     {isSold ? <UndoIcon className="h-4 w-4" /> : <CheckIcon className="h-4 w-4" />}
-                    {isSold ? 'Mark as Available' : 'Mark as Sold'}
+                    {isSold ? 'Mark as Available' : `Mark as ${doneLabel(listing)}`}
                   </button>
                   <button
                     onClick={handleDelete}
@@ -312,9 +342,15 @@ export default function ItemPage() {
                     <TrashIcon className="h-4 w-4" />
                     Delete Listing
                   </button>
+                  {purgeDate && (
+                    <p className="text-xs text-muted sm:col-span-3">
+                      This listing and its photos will be deleted automatically on{' '}
+                      <span className="font-semibold text-ink">{purgeDate}</span>. Mark it as available to keep it.
+                    </p>
+                  )}
                 </div>
               ) : isSold ? (
-                <p className="mt-3 text-sm text-muted">This item has been sold.</p>
+                <p className="mt-3 text-sm text-muted">This item has been {doneLabel(listing).toLowerCase()}.</p>
               ) : hasContact ? (
                 <div className="mt-4">
                   <ContactAction listing={listing} number={number} />
@@ -332,10 +368,10 @@ export default function ItemPage() {
       </div>
 
       {showMobileBar && (
-        <div className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-white px-4 py-3 shadow-[0_-4px_12px_rgb(15_29_69/0.06)] lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-white px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-4px_12px_rgb(6_36_63/0.06)] md:hidden">
           <div className="mx-auto flex max-w-7xl items-center gap-3">
             <div className="min-w-0 flex-1">
-              <p className="card-type tabular text-2xl font-bold leading-none text-primary">{formatPrice(listing.price)}</p>
+              <p className="card-type tabular text-2xl font-bold leading-none text-primary">{priceOrSwap(listing)}</p>
               <p className="truncate text-xs text-muted">No. {number} · {listing.title}</p>
             </div>
             <ContactAction listing={listing} number={number} compact />

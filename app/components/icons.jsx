@@ -103,6 +103,43 @@ export const CameraIcon = (p) => (
   </Icon>
 )
 
+// Navigation set: the same glyph stands for the same place on the phone tab bar and the desktop navbar.
+export const BrowseIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="m15.2 8.8-1.9 4.5-4.5 1.9 1.9-4.5z" />
+  </Icon>
+)
+
+export const ListingsIcon = (p) => (
+  <Icon {...p}>
+    <path d="M3.5 12.1V5a1.5 1.5 0 0 1 1.5-1.5h7.1a1.5 1.5 0 0 1 1.06.44l7.4 7.4a1.5 1.5 0 0 1 0 2.12l-7.1 7.1a1.5 1.5 0 0 1-2.12 0l-7.4-7.4a1.5 1.5 0 0 1-.44-1.06Z" />
+    <circle cx="8.25" cy="8.25" r="1.25" />
+  </Icon>
+)
+
+export const UserIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="8" r="3.75" />
+    <path d="M4.75 20a7.25 7.25 0 0 1 14.5 0" />
+  </Icon>
+)
+
+export const LogOutIcon = (p) => (
+  <Icon {...p}>
+    <path d="M14 4.5H6.5A1.5 1.5 0 0 0 5 6v12a1.5 1.5 0 0 0 1.5 1.5H14" />
+    <path d="M10 12h10M16.5 8.5 20 12l-3.5 3.5" />
+  </Icon>
+)
+
+// Two arrows trading places: marks listings that are for swap.
+export const SwapIcon = (p) => (
+  <Icon {...p}>
+    <path d="M4 8h13M13.5 4.5 17 8l-3.5 3.5" />
+    <path d="M20 16H7M10.5 12.5 7 16l3.5 3.5" />
+  </Icon>
+)
+
 // Brand glyph: filled, not stroked.
 export const MessengerIcon = ({ className = 'h-5 w-5' }) => (
   <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">

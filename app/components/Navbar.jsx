@@ -1,35 +1,35 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { usePathname } from 'next/navigation'
 import { useUser } from '@/lib/useAuth'
-import { PlusIcon } from '@/app/components/icons'
+import { ProfileDropdown } from '@/app/components/ProfileMenu'
+import { BrowseIcon, ListingsIcon, PlusIcon, UserIcon } from '@/app/components/icons'
 
-// Wordmark glyph: a lanyard ID with its slot punch.
+// The official Buki-Finds logo: a round mark on white, so it sits in a white circle on the blue strip.
 function Mark() {
   return (
-    <svg viewBox="0 0 24 30" aria-hidden="true" className="h-7 w-auto">
-      <rect x="1" y="1" width="22" height="28" rx="3" fill="#fff" />
-      <rect x="8" y="3.5" width="8" height="2" rx="1" fill="#1e3a8a" />
-      <rect x="5" y="13" width="14" height="8" rx="1" fill="#1e3a8a" opacity=".18" />
-      <rect x="5" y="23.5" width="9" height="2" rx="1" fill="#1e3a8a" />
-    </svg>
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white">
+      <Image src="/LOGO%20BUKIFINDS.jpg" alt="" width={36} height={36} priority className="h-9 w-9 object-cover" />
+    </span>
   )
 }
 
-function NavLink({ href, children }) {
+// Same glyphs as the phone tab bar, so a place looks the same on every device.
+function NavLink({ href, icon: Icon, children }) {
   const active = usePathname() === href
   return (
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      className={`relative py-1 text-sm font-medium transition-colors ${
-        active
-          ? 'text-white after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-white'
-          : 'text-on-primary-muted hover:text-white'
+      // Faded white is too low-contrast on the green bar, so links stay full white and the
+      // active one is marked by its underline (hover previews a fainter one).
+      className={`relative inline-flex items-center gap-1.5 py-1 text-sm font-medium text-white transition-colors after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:rounded-full ${
+        active ? 'after:bg-white' : 'after:bg-transparent hover:after:bg-white/50'
       }`}
     >
+      <Icon className="h-4 w-4" />
       {children}
     </Link>
   )
@@ -37,47 +37,32 @@ function NavLink({ href, children }) {
 
 export default function Navbar() {
   const { user, loading } = useUser()
-  const router = useRouter()
-
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    router.push('/')
-  }
-
-  const links = (
-    <>
-      <NavLink href="/">Browse</NavLink>
-      {user && <NavLink href="/my-listings">My Listings</NavLink>}
-      {!loading &&
-        (user ? (
-          <button onClick={handleLogout} className="py-1 text-sm font-medium text-on-primary-muted transition-colors hover:text-white">
-            Log out
-          </button>
-        ) : (
-          <NavLink href="/login">Log in</NavLink>
-        ))}
-    </>
-  )
 
   return (
-    <header className="bg-primary">
-      <nav className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-2 px-4 py-3 sm:px-6">
-        <Link href="/" className="flex items-center gap-2.5 text-white" aria-label="Baligya Bukidnon home">
+    // The top bar wears the logo green (owner's choice). Focus rings go white so they show on it.
+    <header className="bg-accent [&_:focus-visible]:outline-white">
+      {/* Phones show only the wordmark here; the bottom tab bar carries navigation and Post Item. */}
+      <nav className="mx-auto flex max-w-7xl items-center gap-8 px-4 py-2.5 sm:px-6 md:py-3">
+        <Link href="/" className="flex items-center gap-2.5 text-white" aria-label="Buki-Finds home">
           <Mark />
-          <span className="card-type text-lg font-bold">Baligya Bukidnon</span>
+          <span className="card-type text-lg font-bold">Buki-Finds</span>
         </Link>
 
-        <div className="hidden items-center gap-6 sm:flex">{links}</div>
+        <div className="hidden items-center gap-6 md:flex">
+          <NavLink href="/" icon={BrowseIcon}>Browse</NavLink>
+          {user && <NavLink href="/my-listings" icon={ListingsIcon}>My Listings</NavLink>}
+        </div>
 
-        <Link
-          href="/post"
-          className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-white px-3.5 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary-soft"
-        >
-          <PlusIcon className="h-4 w-4" />
-          Post Item
-        </Link>
-
-        <div className="flex w-full items-center gap-6 border-t border-white/10 pt-2 sm:hidden">{links}</div>
+        <div className="ml-auto hidden items-center gap-4 md:flex">
+          <Link
+            href="/post"
+            className="inline-flex items-center gap-1.5 rounded-md bg-white px-3.5 py-2 text-sm font-semibold text-accent transition-colors hover:bg-accent-soft"
+          >
+            <PlusIcon className="h-4 w-4" />
+            Post Item
+          </Link>
+          {!loading && (user ? <ProfileDropdown user={user} /> : <NavLink href="/login" icon={UserIcon}>Log in</NavLink>)}
+        </div>
       </nav>
     </header>
   )
