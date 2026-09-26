@@ -2,7 +2,7 @@
 
 import { useState, useSyncExternalStore } from 'react'
 
-// Supabase sends OAuth failures (Google/Facebook) back as ?error_description=...
+// Supabase sends OAuth failures (Google) back as ?error_description=...
 // or #error_description=... on the redirect URL. Show them instead of failing silently.
 function readAuthError() {
   const query = new URLSearchParams(window.location.search)

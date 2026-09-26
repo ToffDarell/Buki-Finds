@@ -14,6 +14,8 @@ import {
 import { MAX_RAW_IMAGE_BYTES, MAX_UNCOMPRESSED_BYTES, imageStoragePaths, prepareImage } from '@/lib/images'
 import { ListingCardPreview } from '@/app/components/ListingCard'
 import SchoolInput from '@/app/components/SchoolInput'
+import { canonicalSchool } from '@/lib/schools'
+import { freeLimitMessage, isFreeLimitError } from '@/lib/subscription'
 import { CameraIcon, CloseIcon, MessengerIcon } from '@/app/components/icons'
 
 const inputClass =
@@ -188,7 +190,8 @@ export default function ListingForm({ user, listing, onSaved }) {
         category,
         condition: condition || null,
         size: size.trim() || null,
-        school: normalizeSchool(school) || null,
+        // "cmu" is saved as "Central Mindanao University" so listings group under one name.
+        school: normalizeSchool(canonicalSchool(school)) || null,
         meetup_spot: meetupSpot.replace(/\s+/g, ' ').trim().slice(0, 120) || null,
         seller_facebook_username: fbUsername || null,
       }
@@ -204,7 +207,8 @@ export default function ListingForm({ user, listing, onSaved }) {
           seller_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
           ...fields,
         })
-        if (insertError) throw new Error(insertError.message)
+        // Over the free limit (checked by the database): show the plain-English reason.
+        if (insertError) throw new Error(isFreeLimitError(insertError.message) ? freeLimitMessage(insertError.message) : insertError.message)
       }
 
       // 3. Sync listing_images: delete removed photos, re-number kept ones, insert new ones.
@@ -259,7 +263,7 @@ export default function ListingForm({ user, listing, onSaved }) {
     category,
     condition,
     size: size.trim(),
-    school: normalizeSchool(school),
+    school: normalizeSchool(canonicalSchool(school)),
     status: listing?.status ?? 'available',
   }
 
@@ -416,9 +420,9 @@ export default function ListingForm({ user, listing, onSaved }) {
             </Field>
           </div>
           <Field
-            label="School"
+            label="University"
             optional
-            hint="Type your school's full name. Pick a suggestion if yours is listed so buyers can find it."
+            hint="Full name or acronym both work (e.g. CMU saves as Central Mindanao University)."
           >
             <SchoolInput
               value={school}

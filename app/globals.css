@@ -2,24 +2,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #0b132b;
-
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-primary-soft: #eff6ff;
-  --color-on-primary-muted: #bfdbfe;
-
-  --color-accent: #10b981;
-  --color-accent-hover: #059669;
-  --color-accent-soft: #ecfdf5;
-
-  --color-highlight: #f59e0b;
-  --color-highlight-soft: #fef3c7;
-
-  --color-surface: #f8fafc;
-  --color-ink: #0b132b;
-  --color-muted: #64748b;
-  --color-line: #e2e8f0;
+  --foreground: #06243f;
 }
 
 @theme inline {
@@ -29,27 +12,27 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Electric Royal & Bright Jade Palette */
+/* Buki-Finds palette, measured from the official logo (public/LOGO BUKIFINDS.jpg).
+   Blue = the logo's B, ring and magnifier. Green = the logo's hills, used only for making and
+   trading (Post Item, swaps, available). Neutrals are tinted toward the logo blue.
+   Not Tailwind's stock blue-600 / emerald-500: those don't match the logo in the navbar. */
 @theme {
-  --color-primary: #2563eb;          /* Electric Royal */
-  --color-primary-hover: #1d4ed8;    /* Deeper Royal */
-  --color-primary-soft: #eff6ff;     /* Sky Glaze */
-  --color-on-primary-muted: #bfdbfe; /* Soft Sky Blue text */
+  --color-primary: #00528a;          /* logo blue (B stem, ring, magnifier rim) */
+  --color-primary-hover: #024273;    /* logo blue, darker end of its gradient */
+  --color-primary-soft: #e6f0f7;
+  --color-on-primary-muted: #bcd5e8; /* secondary text on blue, 5.4:1 */
 
-  --color-accent: #10b981;           /* Bright Jade */
-  --color-accent-hover: #059669;    /* Deeper Jade */
-  --color-accent-soft: #ecfdf5;      /* Mint Glaze */
+  --color-accent: #0b813e;           /* logo green, darker end: white text reads at 5.0:1 */
+  --color-accent-hover: #096b33;    /* also the text colour on accent-soft (5.9:1) */
+  --color-accent-soft: #e7f4ea;
 
-  --color-highlight: #f59e0b;        /* Amber Star */
-  --color-highlight-soft: #fef3c7;   /* Amber Mist */
+  --color-surface: #f3f7fa;
+  --color-ink: #06243f;
+  --color-muted: #4a6076;
+  --color-line: #d6e2ec;
 
-  --color-surface: #f8fafc;          /* Off-White Slate */
-  --color-ink: #0b132b;              /* Obsidian Navy */
-  --color-muted: #64748b;            /* Cool Slate */
-  --color-line: #e2e8f0;             /* Light Border */
-
-  --shadow-card: 0 1px 2px rgb(11 19 43 / 0.05), 0 2px 6px rgb(11 19 43 / 0.04);
-  --shadow-card-lift: 0 8px 16px rgb(11 19 43 / 0.08), 0 2px 4px rgb(11 19 43 / 0.04);
+  --shadow-card: 0 1px 2px rgb(6 36 63 / 0.06), 0 2px 6px rgb(6 36 63 / 0.04);
+  --shadow-card-lift: 0 6px 14px rgb(6 36 63 / 0.1), 0 2px 4px rgb(6 36 63 / 0.06);
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-sine: cubic-bezier(0.37, 0, 0.63, 1);

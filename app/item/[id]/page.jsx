@@ -20,6 +20,7 @@ import {
   sortedImages,
 } from '@/lib/listings'
 import { imageStoragePaths, thumbUrl } from '@/lib/images'
+import { freeLimitMessage, isFreeLimitError } from '@/lib/subscription'
 import { fetchSellerRating, formatRating, reviewLink } from '@/lib/reviews'
 import SaveButton from '@/app/components/SaveButton'
 import ShareButton from '@/app/components/ShareButton'
@@ -267,7 +268,7 @@ export default function ItemPage() {
       .eq('id', listing.id)
       .select(LISTING_WITH_IMAGES)
       .single()
-    if (error) alert(`Couldn’t update the listing: ${error.message}`)
+    if (error) alert(isFreeLimitError(error.message) ? freeLimitMessage(error.message) : `Couldn’t update the listing: ${error.message}`)
     else setResult((prev) => ({ ...prev, listing: data }))
     setBusy(false)
   }
@@ -385,7 +386,7 @@ export default function ItemPage() {
             <dl className="mt-5 grid grid-cols-2 rounded-md border border-line">
               <Field label="Condition" value={listing.condition} />
               <Field label="Size" value={listing.size} />
-              <Field label="School" value={listing.school} />
+              <Field label="University" value={listing.school} />
               <Field label="Posted" value={new Date(listing.created_at).toLocaleDateString('en-PH', { dateStyle: 'medium' })} />
             </dl>
 

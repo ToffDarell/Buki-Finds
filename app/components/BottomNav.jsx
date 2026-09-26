@@ -58,7 +58,7 @@ export default function BottomNav() {
             <span className="flex h-7 w-9 items-center justify-center rounded-lg bg-accent text-white shadow-xs transition-transform motion-safe:active:scale-95">
               <PlusIcon className="h-5 w-5" strokeWidth="2.25" />
             </span>
-            <span className="text-[11px] font-bold">Post</span>
+            <span className="text-xs font-bold">Post</span>
           </Link>
 
           <Tab href="/my-listings" icon={ListingsIcon} label="Listings" active={pathname === '/my-listings'} />

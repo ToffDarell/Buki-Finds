@@ -4,6 +4,9 @@
 --
 -- After this file, also run migrations_008_trust_features.sql (reserved status, meet-up spot,
 -- saved listings, reports, reviews). It is written to run on top of this schema.
+-- Then migrations_009_save_count.sql (public save counts) and migrations_010_profiles.sql
+-- (a profiles table that mirrors every sign-up and login).
+-- Then migrations_011_subscriptions.sql (₱20/month GCash subscription, free limit of 3 active listings).
 
 -- ---------------------------------------------------------------------------
 -- Tables

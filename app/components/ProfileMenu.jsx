@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { HeartIcon, ListingsIcon, LogOutIcon, PlusIcon, UserIcon } from '@/app/components/icons'
+import { fetchSubscription, subscriptionLabel } from '@/lib/subscription'
+import { HeartIcon, ListingsIcon, LogOutIcon, PlusIcon, StarIcon, UserIcon } from '@/app/components/icons'
 
 export function useLogout() {
   const router = useRouter()
@@ -27,6 +28,15 @@ function ProfileMenuItems({ user, onChoose, firstRef }) {
   // Native modal dialog: sits above the menu, traps focus and closes on Escape by itself.
   const confirmRef = useRef(null)
   const [loggingOut, setLoggingOut] = useState(false)
+  // The menu mounts when opened, so this reads the latest status each time it's shown.
+  const [sub, setSub] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    fetchSubscription().then((s) => !cancelled && setSub(s))
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   async function confirmLogout() {
     setLoggingOut(true)
@@ -63,6 +73,19 @@ function ProfileMenuItems({ user, onChoose, firstRef }) {
           <Link href={`/seller/${user.id}`} onClick={onChoose} className={row}>
             <UserIcon className="h-4 w-4 text-muted" />
             My Profile &amp; Reviews
+          </Link>
+        </li>
+        <li>
+          <Link href="/subscribe" onClick={onChoose} className={row}>
+            <StarIcon className="h-4 w-4 text-muted" />
+            <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+              Subscription
+              {sub && (
+                <span className={`truncate text-xs ${sub.state === 'active' ? 'font-semibold text-accent-hover' : 'text-muted'}`}>
+                  {subscriptionLabel(sub)}
+                </span>
+              )}
+            </span>
           </Link>
         </li>
         <li>

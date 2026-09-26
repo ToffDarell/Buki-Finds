@@ -14,6 +14,7 @@ import {
 } from '@/lib/listings'
 import ListingCard, { ListingCardSkeleton } from '@/app/components/ListingCard'
 import SchoolInput from '@/app/components/SchoolInput'
+import { matchSchools, schoolConditions } from '@/lib/schools'
 import { CloseIcon, FiltersIcon, PlusIcon, SearchIcon } from '@/app/components/icons'
 
 const DEFAULT_FILTERS = {
@@ -58,12 +59,18 @@ function fetchListings(filters, search) {
 
   if (filters.listingType) query = query.eq('listing_type', filters.listingType)
   if (filters.category) query = query.eq('category', filters.category)
-  if (filters.school) query = query.ilike('school', `%${filters.school}%`)
+  // "CMU" and "Central Mindanao University" find each other (see lib/schools.js).
+  if (filters.school) query = query.or(schoolConditions(filters.school).join(','))
   if (filters.size) query = query.eq('size', filters.size)
   if (filters.condition) query = query.eq('condition', filters.condition)
   if (filters.minPrice !== '') query = query.gte('price', Number(filters.minPrice))
   if (filters.maxPrice !== '') query = query.lte('price', Number(filters.maxPrice))
-  if (search) query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
+  if (search) {
+    // Searching a school's name or acronym also finds listings from that school.
+    const conditions = [`title.ilike.%${search}%`, `description.ilike.%${search}%`]
+    if (matchSchools(search).length) conditions.push(...schoolConditions(search))
+    query = query.or(conditions.join(','))
+  }
 
   return query
 }
@@ -127,7 +134,7 @@ function EmptyState({ active, onClearAll }) {
           className="mt-6 inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-accent-hover"
         >
           <PlusIcon className="h-4 w-4" />
-          Post an item
+          Post Item
         </Link>
       )}
     </div>
@@ -286,7 +293,7 @@ export default function BrowsePage() {
       {/* School Filter */}
       <div>
         <div className="flex items-center justify-between pb-2">
-          <label htmlFor="school-filter" className="text-xs font-semibold uppercase tracking-wider text-muted">
+          <label htmlFor="school-filter" className="text-sm font-semibold text-ink">
             School / University
           </label>
           {filters.school && (
@@ -320,7 +327,7 @@ export default function BrowsePage() {
                 onClick={() => selectPopularSchool(schoolName)}
                 className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
                   isSelected
-                    ? 'bg-primary text-white'
+                    ? 'border border-primary/40 bg-primary-soft text-primary'
                     : 'border border-line bg-white text-muted hover:border-primary/40 hover:text-ink'
                 }`}
               >
@@ -335,7 +342,7 @@ export default function BrowsePage() {
       {filters.listingType !== 'swap' && (
         <div className="border-t border-line/60 pt-5">
           <div className="flex items-center justify-between pb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted">Price Range (₱)</span>
+            <span className="text-sm font-semibold text-ink">Price Range (₱)</span>
             {(filters.minPrice !== '' || filters.maxPrice !== '') && (
               <button
                 onClick={() => setFilters((prev) => ({ ...prev, minPrice: '', maxPrice: '' }))}
@@ -387,7 +394,7 @@ export default function BrowsePage() {
                   onClick={() => togglePricePreset(preset)}
                   className={`rounded-lg py-1 px-2 text-center text-xs font-medium transition-colors ${
                     isSelected
-                      ? 'bg-primary text-white'
+                      ? 'border border-primary/40 bg-primary-soft text-primary'
                       : 'border border-line bg-white text-muted hover:border-primary/40 hover:text-ink'
                   }`}
                 >
@@ -403,7 +410,7 @@ export default function BrowsePage() {
       {sizes.length > 0 && (
         <div className="border-t border-line/60 pt-5">
           <div className="flex items-center justify-between pb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted">Size</span>
+            <span className="text-sm font-semibold text-ink">Size</span>
             {filters.size && (
               <button onClick={() => update('size', '')} className="text-xs font-medium text-primary hover:underline">
                 Clear
@@ -420,7 +427,7 @@ export default function BrowsePage() {
                   onClick={() => toggleSize(s)}
                   className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
                     isSelected
-                      ? 'bg-primary text-white shadow-xs'
+                      ? 'border border-primary/40 bg-primary-soft text-primary'
                       : 'border border-line bg-white text-muted hover:border-primary/40 hover:text-ink'
                   }`}
                 >
@@ -435,7 +442,7 @@ export default function BrowsePage() {
       {/* Condition Filter */}
       <div className="border-t border-line/60 pt-5">
         <div className="flex items-center justify-between pb-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted">Condition</span>
+          <span className="text-sm font-semibold text-ink">Condition</span>
           {filters.condition && (
             <button onClick={() => update('condition', '')} className="text-xs font-medium text-primary hover:underline">
               Clear
@@ -452,7 +459,7 @@ export default function BrowsePage() {
                 onClick={() => toggleCondition(c)}
                 className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
                   isSelected
-                    ? 'bg-primary text-white shadow-xs'
+                    ? 'border border-primary/40 bg-primary-soft text-primary'
                     : 'border border-line bg-white text-muted hover:border-primary/40 hover:text-ink'
                 }`}
               >
@@ -470,27 +477,18 @@ export default function BrowsePage() {
       {/* Hero & Search Header */}
       <section className="border-b border-line bg-white pb-6 pt-5 sm:pb-8 sm:pt-7">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Bukidnon Student Marketplace
-              </div>
-              <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-ink sm:text-3xl lg:text-4xl">
-                Find what you need on campus.
-              </h1>
-              <p className="mt-1.5 text-sm text-muted sm:text-base">
-                Buy, sell, or swap uniforms, textbooks, shoes, and gear with fellow students.
-              </p>
-            </div>
-
-            <Link
-              href="/post"
-              className="hidden items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-accent-hover md:inline-flex"
-            >
-              <PlusIcon className="h-4 w-4" />
-              Post an item
-            </Link>
+          {/* No eyebrow label and no second Post button: the heading speaks for itself, and
+              Post Item already lives in the navbar (desktop) and the tab bar (phones). */}
+          {/* "Student-to-student marketplace" opens the description instead of sitting in a label
+              above the heading. */}
+          <div>
+            <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-ink sm:text-3xl lg:text-4xl">
+              Good finds. <span className="text-accent">Greater impact.</span>
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
+              A student-to-student marketplace for Bukidnon. Buy affordable pre-loved school essentials, sell what you no
+              longer need, or swap with fellow students.
+            </p>
           </div>
 
           {/* Search bar & Type toggle */}
@@ -589,26 +587,23 @@ export default function BrowsePage() {
                 <FiltersIcon className="h-4 w-4" />
                 Filters
                 {activeFilterCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-white">
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-white">
                     {activeFilterCount}
                   </span>
                 )}
               </button>
 
-              {/* Desktop Filter Toggle (Show/Hide sidebar) */}
+              {/* Desktop: only offered while the panel is hidden; the open panel has its own Hide link. */}
               <button
-                onClick={() => setShowDesktopFilters(!showDesktopFilters)}
-                className={`hidden items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors lg:inline-flex ${
-                  showDesktopFilters
-                    ? 'border-primary/40 bg-primary-soft/60 text-primary'
-                    : 'border-line bg-white text-ink hover:border-muted/60'
+                onClick={() => setShowDesktopFilters(true)}
+                className={`hidden items-center gap-2 rounded-xl border border-line bg-white px-3 py-2 text-xs font-semibold text-ink transition-colors hover:border-muted/60 ${
+                  showDesktopFilters ? '' : 'lg:inline-flex'
                 }`}
-                title={showDesktopFilters ? 'Hide filters sidebar' : 'Show filters sidebar'}
               >
                 <FiltersIcon className="h-4 w-4" />
-                {showDesktopFilters ? 'Hide Filters' : 'Show Filters'}
+                Show Filters
                 {activeFilterCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-white">
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-white">
                     {activeFilterCount}
                   </span>
                 )}
@@ -617,10 +612,7 @@ export default function BrowsePage() {
               {/* Result Count Indicator */}
               <p className="text-xs text-muted sm:text-sm" aria-live="polite">
                 {loading ? (
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="h-2 w-2 animate-ping rounded-full bg-primary" />
-                    Finding items…
-                  </span>
+'Finding listings…'
                 ) : (
                   <>
                     <span className="tabular font-bold text-ink">{count}</span> {count === 1 ? 'item' : 'items'} available
@@ -676,19 +668,21 @@ export default function BrowsePage() {
                       <FiltersIcon className="h-4 w-4 text-primary" />
                       Filters
                       {activeFilterCount > 0 && (
-                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-white">
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-white">
                           {activeFilterCount}
                         </span>
                       )}
                     </span>
-                    {activeFilterCount > 0 && (
-                      <button
-                        onClick={resetSidebarFilters}
-                        className="text-xs font-semibold text-primary hover:underline"
-                      >
-                        Reset
+                    <span className="flex items-center gap-3">
+                      {activeFilterCount > 0 && (
+                        <button onClick={resetSidebarFilters} className="text-xs font-semibold text-primary hover:underline">
+                          Reset
+                        </button>
+                      )}
+                      <button onClick={() => setShowDesktopFilters(false)} className="text-xs font-medium text-muted hover:text-ink hover:underline">
+                        Hide
                       </button>
-                    )}
+                    </span>
                   </div>
 
                   <div className="pt-4">{filterControls}</div>

@@ -17,23 +17,24 @@ import {
   sortedImages,
 } from '@/lib/listings'
 import { imageStoragePaths, thumbUrl } from '@/lib/images'
+import { freeLimitMessage, isFreeLimitError } from '@/lib/subscription'
 import { CameraIcon, CheckIcon, PencilIcon, PlusIcon, TrashIcon, UndoIcon } from '@/app/components/icons'
 
 function StatusStamp({ listing }) {
   if (listing.status === 'reserved') {
     return (
-      <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+      <span className="rounded-full border border-primary/25 bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">
         Reserved
       </span>
     )
   }
   return listing.status === 'sold' ? (
-    <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-semibold text-white">
+    <span className="rounded-full bg-ink px-2.5 py-0.5 text-xs font-semibold text-white">
       {doneLabel(listing)}
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/25 bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent-hover">
+      <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
       Available
     </span>
   )
@@ -52,14 +53,14 @@ const action =
 function ListingRowSkeleton() {
   return (
     <div className="flex animate-pulse overflow-hidden rounded-xl border border-line bg-white p-3 shadow-xs">
-      <div className="h-20 w-20 shrink-0 rounded-lg bg-slate-100 sm:h-24 sm:w-24" />
+      <div className="h-20 w-20 shrink-0 rounded-lg bg-surface sm:h-24 sm:w-24" />
       <div className="ml-3 flex flex-1 flex-col gap-2 py-1">
-        <div className="h-4 w-24 rounded bg-slate-200" />
-        <div className="h-5 w-3/4 rounded bg-slate-150" />
-        <div className="h-4 w-16 rounded bg-slate-100" />
+        <div className="h-4 w-24 rounded bg-line" />
+        <div className="h-5 w-3/4 rounded bg-line/80" />
+        <div className="h-4 w-16 rounded bg-primary/15" />
         <div className="mt-auto flex gap-2">
-          <div className="h-6 w-14 rounded bg-slate-100" />
-          <div className="h-6 w-24 rounded bg-slate-100" />
+          <div className="h-6 w-14 rounded bg-surface" />
+          <div className="h-6 w-24 rounded bg-surface" />
         </div>
       </div>
     </div>
@@ -101,7 +102,7 @@ export default function MyListingsPage() {
       .eq('id', listing.id)
       .select('status, sold_at')
       .single()
-    if (error) alert(`Couldn’t update the listing: ${error.message}`)
+    if (error) alert(isFreeLimitError(error.message) ? freeLimitMessage(error.message) : `Couldn’t update the listing: ${error.message}`)
     else
       setResult((prev) => ({
         ...prev,
@@ -231,7 +232,7 @@ export default function MyListingsPage() {
                   <div className="ml-3 flex min-w-0 flex-1 flex-col py-0.5">
                     <div className="flex flex-wrap items-center gap-2">
                       <StatusStamp listing={listing} />
-                      <span className="font-mono text-[11px] text-muted">No. {listingNumber(listing)}</span>
+                      <span className="font-mono text-xs text-muted">No. {listingNumber(listing)}</span>
                     </div>
 
                     <Link
@@ -246,7 +247,7 @@ export default function MyListingsPage() {
                     </p>
 
                     {purgeDateLabel(listing) && (
-                      <p className="text-[11px] text-muted">Deletes automatically on {purgeDateLabel(listing)}</p>
+                      <p className="text-xs text-muted">Deletes automatically on {purgeDateLabel(listing)}</p>
                     )}
 
                     <div className="mt-auto flex flex-wrap gap-1.5 pt-2">

@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { BUKIDNON_SCHOOLS, canonicalSchool } from '@/lib/schools'
 
 // Free-text school field with suggestions from schools sellers have already entered.
 // The list grows on its own as new schools get posted, so there is nothing to maintain.
@@ -15,10 +16,11 @@ export default function SchoolInput({ value, onChange, placeholder, className, i
       .select('school')
       .not('school', 'is', null)
       .then(({ data }) => {
+        // Official names first; typed acronyms fold into them (CMU -> Central Mindanao University).
         // De-duplicate case-insensitively, keeping the first spelling seen.
-        const seen = new Map()
+        const seen = new Map(BUKIDNON_SCHOOLS.map(({ name }) => [name.toLowerCase(), name]))
         for (const row of data ?? []) {
-          const name = row.school.trim()
+          const name = canonicalSchool(row.school.trim())
           if (name && !seen.has(name.toLowerCase())) seen.set(name.toLowerCase(), name)
         }
         setSchools([...seen.values()].sort((a, b) => a.localeCompare(b)))
