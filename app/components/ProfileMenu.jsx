@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { ListingsIcon, LogOutIcon, PlusIcon, UserIcon } from '@/app/components/icons'
+import { HeartIcon, ListingsIcon, LogOutIcon, PlusIcon, UserIcon } from '@/app/components/icons'
 
 // The one place that signs a user out (navbar dropdown and phone sheet both use it).
 export function useLogout() {
@@ -38,6 +38,18 @@ function ProfileMenuItems({ user, onChoose, firstRef }) {
           <Link ref={firstRef} href="/my-listings" onClick={onChoose} className={row}>
             <ListingsIcon className="h-5 w-5 text-muted" />
             My Listings
+          </Link>
+        </li>
+        <li>
+          <Link href="/saved" onClick={onChoose} className={row}>
+            <HeartIcon className="h-5 w-5 text-muted" />
+            Saved
+          </Link>
+        </li>
+        <li>
+          <Link href={`/seller/${user.id}`} onClick={onChoose} className={row}>
+            <UserIcon className="h-5 w-5 text-muted" />
+            My Profile &amp; Reviews
           </Link>
         </li>
         <li>

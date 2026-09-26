@@ -98,6 +98,7 @@ export default function ListingForm({ user, listing, onSaved }) {
   const [condition, setCondition] = useState(listing?.condition ?? '')
   const [size, setSize] = useState(listing?.size ?? '')
   const [school, setSchool] = useState(listing?.school ?? '')
+  const [meetupSpot, setMeetupSpot] = useState(listing?.meetup_spot ?? '')
   const [facebook, setFacebook] = useState(listing?.seller_facebook_username ?? '')
   const [images, setImages] = useState(() =>
     listing ? sortedImages(listing).map((img) => ({ key: img.id, id: img.id, url: img.image_url })) : []
@@ -188,6 +189,7 @@ export default function ListingForm({ user, listing, onSaved }) {
         condition: condition || null,
         size: size.trim() || null,
         school: normalizeSchool(school) || null,
+        meetup_spot: meetupSpot.replace(/\s+/g, ' ').trim().slice(0, 120) || null,
         seller_facebook_username: fbUsername || null,
       }
 
@@ -428,6 +430,15 @@ export default function ListingForm({ user, listing, onSaved }) {
         </Section>
 
         <Section title="How students reach you">
+          <Field label="Meet-up spot" optional hint="Where you’d hand it over. Buyers see this on the listing.">
+            <input
+              maxLength={120}
+              value={meetupSpot}
+              onChange={(e) => setMeetupSpot(e.target.value)}
+              placeholder="e.g. BukSU main gate, CMU library, Valencia plaza"
+              className={inputClass}
+            />
+          </Field>
           <Field
             label="Facebook username"
             optional={Boolean(user.email)}

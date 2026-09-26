@@ -20,6 +20,11 @@ import { imageStoragePaths, thumbUrl } from '@/lib/images'
 import { CameraIcon, CheckIcon, PencilIcon, PlusIcon, TrashIcon, UndoIcon } from '@/app/components/icons'
 
 function StatusStamp({ listing }) {
+  if (listing.status === 'reserved') {
+    return (
+      <span className="rounded-sm border border-primary/25 bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary">Reserved</span>
+    )
+  }
   return listing.status === 'sold' ? (
     <span className="rounded-sm bg-ink px-2 py-0.5 text-xs font-semibold text-white">
       {doneLabel(listing)}
@@ -35,6 +40,7 @@ function StatusStamp({ listing }) {
 const TABS = [
   { id: 'all', label: 'All' },
   { id: 'available', label: 'Available' },
+  { id: 'reserved', label: 'Reserved' },
   { id: 'sold', label: 'Sold' },
 ]
 
@@ -68,9 +74,8 @@ export default function MyListingsPage() {
     }
   }, [user])
 
-  async function toggleSold(listing) {
+  async function setStatus(listing, status) {
     setBusyId(listing.id)
-    const status = listing.status === 'sold' ? 'available' : 'sold'
     // sold_at is set by the database, so read it back for the "deleted on" date.
     const { data, error } = await supabase
       .from('listings')
@@ -110,6 +115,7 @@ export default function MyListingsPage() {
   const counts = {
     all: listings.length,
     available: listings.filter((l) => l.status === 'available').length,
+    reserved: listings.filter((l) => l.status === 'reserved').length,
     sold: listings.filter((l) => l.status === 'sold').length,
   }
   const shown = tab === 'all' ? listings : listings.filter((l) => l.status === tab)
@@ -129,14 +135,14 @@ export default function MyListingsPage() {
         </div>
 
         {listings.length > 0 && (
-          <div className="mt-6 flex gap-6 border-b border-line" role="tablist" aria-label="Filter by status">
+          <div className="mt-6 flex gap-6 overflow-x-auto border-b border-line [scrollbar-width:none]" role="tablist" aria-label="Filter by status">
             {TABS.map((t) => (
               <button
                 key={t.id}
                 role="tab"
                 aria-selected={tab === t.id}
                 onClick={() => setTab(t.id)}
-                className={`-mb-px border-b-[3px] pb-2.5 text-sm font-medium transition-colors ${
+                className={`-mb-px shrink-0 border-b-[3px] pb-2.5 text-sm font-medium transition-colors ${
                   tab === t.id ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-ink'
                 }`}
               >
@@ -152,7 +158,7 @@ export default function MyListingsPage() {
           <div className="mt-8 flex flex-col items-center rounded-[10px] border border-dashed border-line bg-white px-6 py-14 text-center">
             <p className="card-type text-2xl font-bold text-ink">You haven’t posted anything yet.</p>
             <p className="mt-1 max-w-sm text-sm text-muted">Old uniform, shoes you’ve outgrown, last sem’s books? Someone on campus needs them.</p>
-            <Link href="/post" className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover">
+            <Link href="/post" className="mt-4 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover">
               Post your first item
             </Link>
           </div>
@@ -206,10 +212,23 @@ export default function MyListingsPage() {
                       <PencilIcon className="h-4 w-4" />
                       Edit
                     </Link>
-                    <button onClick={() => toggleSold(listing)} disabled={busy} className={`${action} text-ink hover:bg-surface`}>
-                      {sold ? <UndoIcon className="h-4 w-4" /> : <CheckIcon className="h-4 w-4" />}
-                      {sold ? 'Mark as Available' : `Mark as ${doneLabel(listing)}`}
-                    </button>
+                    {listing.status === 'available' && (
+                      <button onClick={() => setStatus(listing, 'reserved')} disabled={busy} className={`${action} text-ink hover:bg-surface`}>
+                        Mark as Reserved
+                      </button>
+                    )}
+                    {listing.status !== 'available' && (
+                      <button onClick={() => setStatus(listing, 'available')} disabled={busy} className={`${action} text-ink hover:bg-surface`}>
+                        <UndoIcon className="h-4 w-4" />
+                        Mark as Available
+                      </button>
+                    )}
+                    {!sold && (
+                      <button onClick={() => setStatus(listing, 'sold')} disabled={busy} className={`${action} text-ink hover:bg-surface`}>
+                        <CheckIcon className="h-4 w-4" />
+                        {`Mark as ${doneLabel(listing)}`}
+                      </button>
+                    )}
                     <button onClick={() => handleDelete(listing)} disabled={busy} className={`${action} text-red-700 hover:bg-red-50`}>
                       <TrashIcon className="h-4 w-4" />
                       Delete

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser } from '@/lib/useAuth'
 import { ProfileDropdown } from '@/app/components/ProfileMenu'
-import { BrowseIcon, ListingsIcon, PlusIcon, UserIcon } from '@/app/components/icons'
+import { BrowseIcon, HeartIcon, ListingsIcon, PlusIcon, UserIcon } from '@/app/components/icons'
 
 // The official Buki-Finds logo: a round mark on white, so it sits in a white circle on the blue strip.
 function Mark() {
@@ -50,6 +50,7 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-6 md:flex">
           <NavLink href="/" icon={BrowseIcon}>Browse</NavLink>
+          {user && <NavLink href="/saved" icon={HeartIcon}>Saved</NavLink>}
           {user && <NavLink href="/my-listings" icon={ListingsIcon}>My Listings</NavLink>}
         </div>
 

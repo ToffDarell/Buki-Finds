@@ -83,12 +83,12 @@ a {
       border-color 300ms var(--ease-out-expo);
   }
   .id-swing:hover,
-  .id-swing:focus-visible,
+  .id-swing:focus-within,
   .id-swing:active {
     transform: rotate(-1.25deg) translateY(2px);
   }
   .id-swing:nth-child(even):hover,
-  .id-swing:nth-child(even):focus-visible,
+  .id-swing:nth-child(even):focus-within,
   .id-swing:nth-child(even):active {
     transform: rotate(1.25deg) translateY(2px);
   }
@@ -98,7 +98,7 @@ a {
     transition: transform 700ms var(--ease-out-expo);
   }
   .id-swing:hover .id-photo,
-  .id-swing:focus-visible .id-photo {
+  .id-swing:focus-within .id-photo {
     transform: scale(1.04);
   }
 

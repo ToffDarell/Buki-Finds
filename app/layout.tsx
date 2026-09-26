@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "./components/Navbar";
 import AuthErrorBanner from "./components/AuthErrorBanner";
 import BottomNav from "./components/BottomNav";
+import AfterLoginRedirect from "./components/AfterLoginRedirect";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <AuthErrorBanner />
         {children}
         <BottomNav />
+        <AfterLoginRedirect />
       </body>
     </html>
   );

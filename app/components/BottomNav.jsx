@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser } from '@/lib/useAuth'
 import { ProfileSheet } from '@/app/components/ProfileMenu'
-import { BrowseIcon, ListingsIcon, PlusIcon, UserIcon } from '@/app/components/icons'
+import { BrowseIcon, HeartIcon, ListingsIcon, PlusIcon, UserIcon } from '@/app/components/icons'
 
 // The item page has its own bottom bar (price + Message Seller), so the tabs step aside there.
 const ITEM_DETAIL = /^\/item\/[^/]+$/
@@ -14,7 +14,7 @@ const ITEM_DETAIL = /^\/item\/[^/]+$/
 const tabClass = (active) =>
   `relative flex min-h-14 flex-col items-center justify-center gap-1 text-xs transition-colors ${
     active
-      ? 'font-semibold text-primary before:absolute before:inset-x-5 before:top-0 before:h-[3px] before:rounded-b-full before:bg-primary'
+      ? 'font-semibold text-primary before:absolute before:inset-x-4 before:top-0 before:h-[3px] before:rounded-b-full before:bg-primary'
       : 'font-medium text-muted'
   }`
 
@@ -51,9 +51,10 @@ export default function BottomNav() {
         aria-label="Main"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_12px_rgb(6_36_63/0.06)] md:hidden"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-4">
+        {/* Five slots so Post Item sits dead center, Carousell-style. */}
+        <div className="mx-auto grid max-w-lg grid-cols-5">
           <Tab href="/" icon={BrowseIcon} label="Browse" active={pathname === '/'} />
-          <Tab href="/my-listings" icon={ListingsIcon} label="My Listings" active={pathname === '/my-listings'} />
+          <Tab href="/saved" icon={HeartIcon} label="Saved" active={pathname === '/saved'} />
 
           {/* Post Item: the same green button, plus icon and wording as the desktop navbar, sized to sit in the bar. */}
           <Link href="/post" aria-current={posting ? 'page' : undefined} className={tabClass(posting)}>
@@ -62,6 +63,8 @@ export default function BottomNav() {
             </span>
             Post Item
           </Link>
+
+          <Tab href="/my-listings" icon={ListingsIcon} label="My Listings" active={pathname === '/my-listings'} />
 
           {loading ? (
             // Same size, not interactive, while the session loads: no jump and no wrong route.

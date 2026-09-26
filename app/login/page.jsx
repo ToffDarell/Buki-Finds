@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { nextPath, rememberNext } from '@/lib/afterLogin'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -24,11 +25,11 @@ export default function LoginPage() {
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) setError(error.message)
-      else router.push('/')
+      else router.push(nextPath())
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) setError(error.message)
-      else if (data.session) router.push('/')
+      else if (data.session) router.push(nextPath())
       else setMessage('Check your email to confirm your account, then log in.')
     }
 
@@ -39,6 +40,7 @@ export default function LoginPage() {
     setError('')
     setMessage('')
     setGoogleLoading(true)
+    rememberNext()
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin },
@@ -54,6 +56,7 @@ export default function LoginPage() {
     setError('')
     setMessage('')
     setFacebookLoading(true)
+    rememberNext()
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'facebook',
       options: { redirectTo: window.location.origin },

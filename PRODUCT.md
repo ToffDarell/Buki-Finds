@@ -23,7 +23,7 @@ Built for Bukidnon students. Every listing is from a student in the province, an
 - Buyers browse without logging in; posting, editing and managing listings require login (email/password, Google, or Facebook).
 - Contact happens off-platform: a "Message Seller on Messenger" link (m.me/<username>) when the seller shares a Facebook username, otherwise the seller's email.
 - Items are handed over in person.
-- Listings: type (for sale or for swap; swaps have no price and say what the seller wants in return), title, description, price (₱, sale listings only), category, condition, optional size, optional school (free text), up to 5 photos, status available/sold.
+- Listings: type (for sale or for swap; swaps have no price and say what the seller wants in return), title, description, price (₱, sale listings only), category, condition, optional size, optional school (free text), up to 5 photos, status available/reserved/sold, optional meet-up spot.
 
 ## Capabilities and Constraints
 
@@ -31,7 +31,8 @@ Built for Bukidnon students. Every listing is from a student in the province, an
 - Categories: Uniforms, School Shoes, Clothing, Books, School Supplies, Electronics, Food, Services, Other.
 - Conditions: New, Like New, Used - Good, Used - Fair.
 - School is free text, not a fixed list: there is no complete list of every school in Bukidnon. Suggestions come from schools sellers have already entered, and the Browse school filter does a partial, case-insensitive match.
-- No in-app chat, payments, ratings or delivery. Do not imply they exist.
+- No in-app chat, payments or delivery. Do not imply they exist.
+- Trust features: seller profiles (/seller/[id]) with 1-5 star reviews. A buyer can only review through a link the seller sends after marking the item sold (one review per sale, never the seller themself). Students can save listings (private), report listings (only the project owner reads reports, in the Supabase dashboard), share listings, mark items Reserved, and add a meet-up spot.
 
 ## Brand Commitments
 

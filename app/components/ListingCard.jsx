@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { coverImage, doneLabel, fallbackToFull, isSwap, listingNumber, priceOrSwap } from '@/lib/listings'
+import { coverImage, doneLabel, fallbackToFull, isReserved, isSwap, listingNumber, priceOrSwap } from '@/lib/listings'
 import { thumbUrl } from '@/lib/images'
+import SaveButton from '@/app/components/SaveButton'
 import { CameraIcon, SwapIcon } from '@/app/components/icons'
 
 function Field({ label, value, wide }) {
@@ -82,6 +83,11 @@ export function ListingIdCard({ listing, cover, preview = false }) {
               {doneLabel(listing)}
             </span>
           )}
+          {isReserved(listing) && (
+            <span className="absolute bottom-2 left-2 rounded-full bg-white/95 px-2.5 py-0.5 text-xs font-semibold text-primary shadow-card">
+              Reserved
+            </span>
+          )}
         </div>
       </div>
 
@@ -110,15 +116,21 @@ export function ListingIdCard({ listing, cover, preview = false }) {
 
 const shell = 'flex flex-col overflow-hidden rounded-lg border border-line bg-white md:rounded-[10px] md:shadow-card'
 
+// The heart sits beside the link, not inside it (a button inside a link is invalid and confuses
+// screen readers), so the wrapper carries the swing and both move together.
 export default function ListingCard({ listing }) {
+  const status = listing.status === 'sold' ? `, ${doneLabel(listing).toLowerCase()}` : isReserved(listing) ? ', reserved' : ''
   return (
-    <Link
-      href={`/item/${listing.id}`}
-      className={`${shell} id-swing hover:border-primary/25 hover:shadow-card-lift focus-visible:shadow-card-lift active:shadow-card`}
-      aria-label={`${listing.title}, ${isSwap(listing) ? 'for swap' : priceOrSwap(listing)}${listing.size ? `, size ${listing.size}` : ''}${listing.status === 'sold' ? `, ${doneLabel(listing).toLowerCase()}` : ''}`}
-    >
-      <ListingIdCard listing={listing} />
-    </Link>
+    <div className="id-swing group relative">
+      <Link
+        href={`/item/${listing.id}`}
+        className={`${shell} h-full group-hover:border-primary/25 group-hover:shadow-card-lift group-focus-within:shadow-card-lift group-active:shadow-card`}
+        aria-label={`${listing.title}, ${isSwap(listing) ? 'for swap' : priceOrSwap(listing)}${listing.size ? `, size ${listing.size}` : ''}${status}`}
+      >
+        <ListingIdCard listing={listing} />
+      </Link>
+      <SaveButton listingId={listing.id} className="absolute right-2 top-2 md:right-5 md:top-[3.6rem]" />
+    </div>
   )
 }
 

@@ -11,6 +11,7 @@ import {
   LISTING_TYPES,
   doneLabel,
   fallbackToFull,
+  isReserved,
   isSwap,
   listingNumber,
   messengerUrl,
@@ -19,6 +20,11 @@ import {
   sortedImages,
 } from '@/lib/listings'
 import { imageStoragePaths, thumbUrl } from '@/lib/images'
+import { fetchSellerRating, formatRating, reviewLink } from '@/lib/reviews'
+import SaveButton from '@/app/components/SaveButton'
+import ShareButton from '@/app/components/ShareButton'
+import ReportDialog from '@/app/components/ReportDialog'
+import Stars from '@/app/components/Stars'
 import {
   ArrowLeftIcon,
   CameraIcon,
@@ -27,10 +33,52 @@ import {
   ChevronRightIcon,
   MailIcon,
   MessengerIcon,
+  HeartIcon,
   PencilIcon,
+  PinIcon,
+  StarIcon,
   TrashIcon,
   UndoIcon,
 } from '@/app/components/icons'
+
+// Owner of a sold listing: get a link to send the buyer on Messenger so they can leave one review.
+function ReviewLinkPanel({ listing }) {
+  const [state, setState] = useState({ link: '', error: '', busy: false })
+
+  async function getLink() {
+    setState({ link: '', error: '', busy: true })
+    const { data, error } = await supabase.rpc('create_review_invite', { p_listing_id: listing.id })
+    if (error) setState({ link: '', error: error.message, busy: false })
+    else setState({ link: reviewLink(listing.id, data), error: '', busy: false })
+  }
+
+  return (
+    <div className="rounded-md border border-line bg-surface px-3.5 py-3 sm:col-span-2">
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+        <StarIcon className="h-4 w-4 text-primary" />
+        Get a review from your buyer
+      </p>
+      <p className="mt-1 text-xs leading-relaxed text-muted">
+        Send this link to your buyer on Messenger. They can leave one review, and it shows on your seller profile.
+      </p>
+      {state.link ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <input readOnly value={state.link} onFocus={(e) => e.target.select()} aria-label="Review link" className="min-w-0 flex-1 rounded-sm border border-line bg-white px-2.5 py-2 text-sm text-ink" />
+          <ShareButton title="Review your Buki-Finds seller" text={`How was buying "${listing.title}"? Leave a quick review:`} url={state.link} label="Send Link" />
+        </div>
+      ) : (
+        <button
+          onClick={getLink}
+          disabled={state.busy}
+          className="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-md bg-primary px-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+        >
+          {state.busy ? 'Getting link…' : 'Get Review Link'}
+        </button>
+      )}
+      {state.error && <p role="alert" className="mt-2 text-sm text-red-700">{state.error}</p>}
+    </div>
+  )
+}
 
 function Gallery({ images, title, sold }) {
   const [index, setIndex] = useState(0)
@@ -161,6 +209,8 @@ export default function ItemPage() {
   const { user } = useUser()
   const [result, setResult] = useState({ loaded: false, listing: null, error: '' })
   const [busy, setBusy] = useState(false)
+  const [rating, setRating] = useState({ average: null, count: 0 })
+  const [saveCount, setSaveCount] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -178,10 +228,25 @@ export default function ItemPage() {
   }, [id])
 
   const listing = result.listing
+  const sellerId = listing?.seller_id
 
-  async function toggleSold() {
+  useEffect(() => {
+    if (!sellerId) return
+    let cancelled = false
+    fetchSellerRating(sellerId).then((r) => !cancelled && setRating(r))
+    return () => {
+      cancelled = true
+    }
+  }, [sellerId])
+
+  // The count is kept by a database trigger; re-read it after a save or unsave.
+  async function refreshSaveCount() {
+    const { data } = await supabase.from('listings').select('save_count').eq('id', id).maybeSingle()
+    if (data) setSaveCount(data.save_count)
+  }
+
+  async function setStatus(status) {
     setBusy(true)
-    const status = listing.status === 'sold' ? 'available' : 'sold'
     const { data, error } = await supabase
       .from('listings')
       .update({ status })
@@ -235,6 +300,8 @@ export default function ItemPage() {
 
   const isOwner = user?.id === listing.seller_id
   const isSold = listing.status === 'sold'
+  const reserved = isReserved(listing)
+  const saves = saveCount ?? listing.save_count ?? 0
   const swap = isSwap(listing)
   const purgeDate = purgeDateLabel(listing)
   const number = listingNumber(listing)
@@ -283,7 +350,13 @@ export default function ItemPage() {
                   {doneLabel(listing)}
                 </span>
               )}
+              {reserved && (
+                <span className="rounded-full border border-primary/25 bg-primary-soft px-2.5 py-0.5 text-sm font-semibold text-primary">Reserved</span>
+              )}
             </div>
+            {reserved && !isOwner && (
+              <p className="mt-2 text-sm text-muted">The seller has promised this to someone. You can still message them in case it falls through.</p>
+            )}
 
             {swap && (
               <div className="mt-4 rounded-md border border-accent/25 bg-accent-soft px-3.5 py-3">
@@ -301,14 +374,36 @@ export default function ItemPage() {
               <Field label="Posted" value={new Date(listing.created_at).toLocaleDateString('en-PH', { dateStyle: 'medium' })} />
             </dl>
 
+            {listing.meetup_spot && (
+              <p className="mt-3 flex items-start gap-2 rounded-md border border-line px-3.5 py-2.5 text-[15px] text-ink">
+                <PinIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span>
+                  <span className="text-xs font-medium text-muted">Meet-up spot</span>
+                  <span className="block font-semibold">{listing.meetup_spot}</span>
+                </span>
+              </p>
+            )}
+
             {listing.description && (
               <p className="mt-5 max-w-[65ch] whitespace-pre-line text-[15px] leading-relaxed text-ink">{listing.description}</p>
             )}
 
             <div className="mt-6 border-t border-dashed border-line pt-5">
               <div className="flex items-baseline justify-between gap-3">
-                <p className="text-sm text-muted">
-                  {swap ? 'Posted by' : 'Sold by'} <span className="font-semibold text-ink">{listing.seller_name || 'a student seller'}</span>
+                <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
+                  <span>
+                    Listed by{' '}
+                    <Link href={`/seller/${listing.seller_id}`} className="font-semibold text-ink underline-offset-2 hover:text-primary hover:underline">
+                      {listing.seller_name || 'a student'}
+                    </Link>
+                  </span>
+                  {rating.count > 0 && (
+                    <Link href={`/seller/${listing.seller_id}#reviews`} className="inline-flex items-center gap-1 hover:underline">
+                      <Stars rating={rating.average} className="h-3.5 w-3.5" />
+                      <span className="tabular font-semibold text-ink">{formatRating(rating.average)}</span>
+                      <span>({rating.count})</span>
+                    </Link>
+                  )}
                 </p>
                 {!isOwner && listing.seller_email && listing.seller_facebook_username && (
                   <a href={`mailto:${listing.seller_email}`} className="truncate text-sm text-primary hover:underline">
@@ -318,7 +413,7 @@ export default function ItemPage() {
               </div>
 
               {isOwner ? (
-                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   <Link
                     href={`/item/${listing.id}/edit`}
                     className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-white px-3 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-surface"
@@ -326,14 +421,35 @@ export default function ItemPage() {
                     <PencilIcon className="h-4 w-4" />
                     Edit
                   </Link>
-                  <button
-                    onClick={toggleSold}
-                    disabled={busy}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
-                  >
-                    {isSold ? <UndoIcon className="h-4 w-4" /> : <CheckIcon className="h-4 w-4" />}
-                    {isSold ? 'Mark as Available' : `Mark as ${doneLabel(listing)}`}
-                  </button>
+                  {listing.status === 'available' && (
+                    <button
+                      onClick={() => setStatus('reserved')}
+                      disabled={busy}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-white px-3 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-surface disabled:opacity-60"
+                    >
+                      Mark as Reserved
+                    </button>
+                  )}
+                  {listing.status !== 'available' && (
+                    <button
+                      onClick={() => setStatus('available')}
+                      disabled={busy}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-white px-3 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-surface disabled:opacity-60"
+                    >
+                      <UndoIcon className="h-4 w-4" />
+                      Mark as Available
+                    </button>
+                  )}
+                  {!isSold && (
+                    <button
+                      onClick={() => setStatus('sold')}
+                      disabled={busy}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+                    >
+                      <CheckIcon className="h-4 w-4" />
+                      {`Mark as ${doneLabel(listing)}`}
+                    </button>
+                  )}
                   <button
                     onClick={handleDelete}
                     disabled={busy}
@@ -342,8 +458,9 @@ export default function ItemPage() {
                     <TrashIcon className="h-4 w-4" />
                     Delete Listing
                   </button>
+                  {isSold && <ReviewLinkPanel listing={listing} />}
                   {purgeDate && (
-                    <p className="text-xs text-muted sm:col-span-3">
+                    <p className="text-xs text-muted sm:col-span-2">
                       This listing and its photos will be deleted automatically on{' '}
                       <span className="font-semibold text-ink">{purgeDate}</span>. Mark it as available to keep it.
                     </p>
@@ -361,6 +478,24 @@ export default function ItemPage() {
               ) : (
                 <p className="mt-3 text-sm text-muted">The seller hasn’t shared a way to contact them.</p>
               )}
+
+              <div className="mt-5 flex flex-wrap items-center gap-2">
+                {!isOwner && <SaveButton listingId={listing.id} variant="inline" count={saves} onToggled={refreshSaveCount} />}
+                {isOwner && saves > 0 && (
+                  <span className="inline-flex min-h-10 items-center gap-1.5 text-sm text-muted">
+                    <HeartIcon className="h-4 w-4 text-primary" fill="currentColor" />
+                    <span>
+                      <span className="tabular font-semibold text-ink">{saves}</span> {saves === 1 ? 'person' : 'people'} saved this
+                    </span>
+                  </span>
+                )}
+                <ShareButton title={listing.title} text={`${listing.title} · ${priceOrSwap(listing)} on Buki-Finds`} />
+                {!isOwner && (
+                  <span className="ml-auto">
+                    <ReportDialog listingId={listing.id} user={user} />
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </article>

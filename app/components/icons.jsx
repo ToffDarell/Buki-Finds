@@ -132,6 +132,40 @@ export const LogOutIcon = (p) => (
   </Icon>
 )
 
+// Saved listings. Pass fill="currentColor" for the saved (filled) state.
+export const HeartIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 20s-7.5-4.6-7.5-10.1A4.4 4.4 0 0 1 12 7.2a4.4 4.4 0 0 1 7.5 2.7C19.5 15.4 12 20 12 20Z" />
+  </Icon>
+)
+
+export const ShareIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 15V3.75M8 7.5l4-3.75 4 3.75" />
+    <path d="M8.5 10.5H6.75A1.75 1.75 0 0 0 5 12.25v6A1.75 1.75 0 0 0 6.75 20h10.5A1.75 1.75 0 0 0 19 18.25v-6a1.75 1.75 0 0 0-1.75-1.75H15.5" />
+  </Icon>
+)
+
+export const FlagIcon = (p) => (
+  <Icon {...p}>
+    <path d="M5.5 21V4.5M5.5 4.5h11l-2.25 4 2.25 4h-11" />
+  </Icon>
+)
+
+// Pass fill="currentColor" for a filled star.
+export const StarIcon = (p) => (
+  <Icon {...p}>
+    <path d="m12 3.75 2.5 5.1 5.6.8-4.05 3.95.95 5.6L12 16.55 6.99 19.2l.96-5.6L3.9 9.65l5.6-.8Z" />
+  </Icon>
+)
+
+export const PinIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" />
+    <circle cx="12" cy="10" r="2.25" />
+  </Icon>
+)
+
 // Two arrows trading places: marks listings that are for swap.
 export const SwapIcon = (p) => (
   <Icon {...p}>

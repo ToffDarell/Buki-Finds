@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { CATEGORIES, LISTING_TYPES, LISTING_WITH_IMAGES, cleanSearchText, formatPrice } from '@/lib/listings'
+import { BROWSE_STATUSES, CATEGORIES, LISTING_TYPES, LISTING_WITH_IMAGES, cleanSearchText, formatPrice } from '@/lib/listings'
 import ListingCard, { ListingCardSkeleton } from '@/app/components/ListingCard'
 import SchoolInput from '@/app/components/SchoolInput'
 import { CloseIcon, FiltersIcon, PlusIcon, SearchIcon } from '@/app/components/icons'
@@ -26,7 +26,8 @@ function fetchListings(filters, search) {
   let query = supabase
     .from('listings')
     .select(LISTING_WITH_IMAGES)
-    .eq('status', 'available')
+    // Reserved items stay visible (with a badge) so buyers know they're spoken for.
+    .in('status', BROWSE_STATUSES)
     // Swaps have no price, so they go after priced listings when sorting by price.
     .order(sort.column, { ascending: sort.ascending, nullsFirst: false })
 
