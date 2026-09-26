@@ -99,7 +99,7 @@ export default function ListingCard({ listing }) {
       <Link
         href={`/item/${listing.id}`}
         className={`${shell} transition-[border-color,box-shadow] duration-300 group-hover:border-primary/30 group-hover:shadow-card-lift`}
-        aria-label={`${listing.title}, ${isSwap(listing) ? 'for swap' : priceOrSwap(listing)}${listing.size ? `, size ${size}` : ''}${status}`}
+        aria-label={`${listing.title}, ${isSwap(listing) ? 'for swap' : priceOrSwap(listing)}${formatSize(listing.size) ? `, size ${formatSize(listing.size)}` : ''}${status}`}
       >
         <ListingIdCard listing={listing} />
       </Link>
