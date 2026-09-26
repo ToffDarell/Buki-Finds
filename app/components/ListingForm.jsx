@@ -15,6 +15,8 @@ import {
 import { MAX_RAW_IMAGE_BYTES, MAX_UNCOMPRESSED_BYTES, imageStoragePaths, prepareImage } from '@/lib/images'
 import { ListingCardPreview } from '@/app/components/ListingCard'
 import SchoolInput from '@/app/components/SchoolInput'
+import { displayName } from '@/lib/avatar'
+import { userSchool } from '@/lib/profile'
 import { canonicalSchool } from '@/lib/schools'
 import { freeLimitMessage, isFreeLimitError } from '@/lib/subscription'
 import { CameraIcon, CloseIcon, MessengerIcon } from '@/app/components/icons'
@@ -100,7 +102,8 @@ export default function ListingForm({ user, listing, onSaved }) {
   const [category, setCategory] = useState(listing?.category ?? '')
   const [condition, setCondition] = useState(listing?.condition ?? '')
   const [size, setSize] = useState(listing?.size ?? '')
-  const [school, setSchool] = useState(listing?.school ?? '')
+  // New listings start with the university from the seller's profile.
+  const [school, setSchool] = useState(listing ? (listing.school ?? '') : userSchool(user))
   const [meetupSpot, setMeetupSpot] = useState(listing?.meetup_spot ?? '')
   const [facebook, setFacebook] = useState(listing?.seller_facebook_username ?? '')
   const [images, setImages] = useState(() =>
@@ -205,7 +208,7 @@ export default function ListingForm({ user, listing, onSaved }) {
           id: listingId,
           seller_id: user.id,
           seller_email: user.email || null,
-          seller_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+          seller_name: displayName(user),
           ...fields,
         })
         // Over the free limit (checked by the database): show the plain-English reason.

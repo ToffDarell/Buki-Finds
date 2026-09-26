@@ -10,6 +10,8 @@ import { avatarUrl, displayName } from '@/lib/avatar'
 import { useUser } from '@/lib/useAuth'
 import Avatar from '@/app/components/Avatar'
 import AvatarEditor from '@/app/components/AvatarEditor'
+import EditProfileButton from '@/app/components/EditProfileButton'
+import { userSchool } from '@/lib/profile'
 import ListingCard, { ListingCardSkeleton } from '@/app/components/ListingCard'
 import Stars from '@/app/components/Stars'
 import { ArrowLeftIcon, StarIcon } from '@/app/components/icons'
@@ -31,25 +33,33 @@ function ReviewItem({ review }) {
   )
 }
 
+// Name, photo and university (migration 013). Falls back to just the photo (012), then to nothing,
+// so the page still works before the migrations are run.
+async function fetchSellerProfile(id) {
+  const { data, error } = await supabase.rpc('seller_profile', { seller: id })
+  if (!error) return data?.[0] ?? null
+  const avatar = await supabase.rpc('seller_avatar', { seller: id })
+  return avatar.data ? { avatar_url: avatar.data } : null
+}
+
 export default function SellerPage() {
   const { id } = useParams()
   const { user } = useUser()
-  const [result, setResult] = useState({ loaded: false, listings: [], reviews: [], avatar: null, error: '' })
+  const [result, setResult] = useState({ loaded: false, listings: [], reviews: [], profile: null, error: '' })
 
   useEffect(() => {
     let cancelled = false
     Promise.all([
       supabase.from('listings').select(LISTING_WITH_IMAGES).eq('seller_id', id).order('created_at', { ascending: false }),
       supabase.from('reviews').select('id, rating, comment, reviewer_name, listing_title, created_at').eq('seller_id', id).order('created_at', { ascending: false }),
-      // A missing photo (or migration 012 not run yet) just shows the initial.
-      supabase.rpc('seller_avatar', { seller: id }),
-    ]).then(([listings, reviews, avatar]) => {
+      fetchSellerProfile(id),
+    ]).then(([listings, reviews, profile]) => {
       if (cancelled) return
       setResult({
         loaded: true,
         listings: listings.data ?? [],
         reviews: reviews.data ?? [],
-        avatar: avatar.data ?? null,
+        profile,
         error: listings.error?.message || reviews.error?.message || '',
       })
     })
@@ -58,12 +68,14 @@ export default function SellerPage() {
     }
   }, [id])
 
-  const { loaded, listings, reviews, avatar, error } = result
+  const { loaded, listings, reviews, profile, error } = result
   const isMe = user?.id === id
   const active = listings.filter((l) => BROWSE_STATUSES.includes(l.status))
   const soldCount = listings.filter((l) => l.status === 'sold').length
-  const name = listings[0]?.seller_name || (isMe ? displayName(user) : 'Student seller')
-  const schools = [...new Set(listings.map((l) => l.school).filter(Boolean))]
+  const name = isMe ? displayName(user) : profile?.full_name || listings[0]?.seller_name || 'Student seller'
+  // The university set on the profile; otherwise the ones their listings mention.
+  const school = isMe ? userSchool(user) : profile?.school
+  const schools = school ? [school] : [...new Set(listings.map((l) => l.school).filter(Boolean))]
   const since = [...listings, ...reviews].map((x) => x.created_at).sort()[0]
   const average = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : null
 
@@ -97,12 +109,13 @@ export default function SellerPage() {
             {isMe ? (
               <AvatarEditor user={user} src={avatarUrl(user)} name={name} className="h-16 w-16 text-xl" />
             ) : (
-              <Avatar src={avatar} name={name} className="h-14 w-14 text-xl" />
+              <Avatar src={profile?.avatar_url} name={name} className="h-14 w-14 text-xl" />
             )}
             <div className="min-w-0 flex-1">
               <h1 className="truncate text-xl font-extrabold text-white sm:text-2xl">{loaded ? name : 'Student Seller'}</h1>
               {schools.length > 0 && <p className="mt-1 truncate text-xs text-on-primary-muted sm:text-sm">{schools.join(' · ')}</p>}
             </div>
+            {isMe && <EditProfileButton user={user} />}
           </div>
           <dl className="grid grid-cols-2 sm:grid-cols-4">
             <div className="border-b border-r border-line px-5 py-3 sm:border-b-0">

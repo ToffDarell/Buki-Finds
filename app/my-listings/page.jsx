@@ -18,6 +18,7 @@ import {
 } from '@/lib/listings'
 import { imageStoragePaths, thumbUrl } from '@/lib/images'
 import { freeLimitMessage, isFreeLimitError } from '@/lib/subscription'
+import useDialog from '@/app/components/useDialog'
 import { CameraIcon, CheckIcon, PencilIcon, PlusIcon, TrashIcon, UndoIcon } from '@/app/components/icons'
 
 function StatusStamp({ listing }) {
@@ -73,6 +74,7 @@ export default function MyListingsPage() {
   const [result, setResult] = useState({ loaded: false, listings: [], error: '' })
   const [tab, setTab] = useState('all')
   const [busyId, setBusyId] = useState(null)
+  const [dialog, { confirm, alert: showAlert }] = useDialog()
 
   useEffect(() => {
     if (!userLoading && !user) router.replace('/login?next=/my-listings')
@@ -102,7 +104,7 @@ export default function MyListingsPage() {
       .eq('id', listing.id)
       .select('status, sold_at')
       .single()
-    if (error) alert(isFreeLimitError(error.message) ? freeLimitMessage(error.message) : `Couldn’t update the listing: ${error.message}`)
+    if (error) showAlert({ title: 'Couldn’t update the listing', body: isFreeLimitError(error.message) ? freeLimitMessage(error.message) : error.message })
     else
       setResult((prev) => ({
         ...prev,
@@ -112,11 +114,16 @@ export default function MyListingsPage() {
   }
 
   async function handleDelete(listing) {
-    if (!confirm(`Delete “${listing.title}”? This can’t be undone.`)) return
+    const ok = await confirm({
+      title: `Delete “${listing.title}”?`,
+      body: 'This removes the listing and its photos. This can’t be undone.',
+      action: 'Delete',
+    })
+    if (!ok) return
     setBusyId(listing.id)
     const { error } = await supabase.from('listings').delete().eq('id', listing.id)
     if (error) {
-      alert(`Couldn’t delete the listing: ${error.message}`)
+      showAlert({ title: 'Couldn’t delete the listing', body: error.message })
       setBusyId(null)
       return
     }
@@ -138,6 +145,7 @@ export default function MyListingsPage() {
 
   return (
     <main className="flex-1 bg-surface py-6 sm:py-8">
+      {dialog}
       <div className="mx-auto w-full max-w-4xl px-4 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>

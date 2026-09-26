@@ -26,6 +26,7 @@ import { fetchSellerRating, formatRating, reviewLink } from '@/lib/reviews'
 import SaveButton from '@/app/components/SaveButton'
 import ShareButton from '@/app/components/ShareButton'
 import ReportDialog from '@/app/components/ReportDialog'
+import useDialog from '@/app/components/useDialog'
 import Stars from '@/app/components/Stars'
 import {
   ArrowLeftIcon,
@@ -220,6 +221,7 @@ function ContactAction({ listing, number, compact = false, signedOut = false }) 
 }
 
 export default function ItemPage() {
+  const [dialog, { confirm, alert: showAlert }] = useDialog()
   const { id } = useParams()
   const router = useRouter()
   const { user, loading: userLoading } = useUser()
@@ -269,18 +271,23 @@ export default function ItemPage() {
       .eq('id', listing.id)
       .select(LISTING_WITH_IMAGES)
       .single()
-    if (error) alert(isFreeLimitError(error.message) ? freeLimitMessage(error.message) : `Couldn’t update the listing: ${error.message}`)
+    if (error) showAlert({ title: 'Couldn’t update the listing', body: isFreeLimitError(error.message) ? freeLimitMessage(error.message) : error.message })
     else setResult((prev) => ({ ...prev, listing: data }))
     setBusy(false)
   }
 
   async function handleDelete() {
-    if (!confirm('Delete this listing? This can’t be undone.')) return
+    const ok = await confirm({
+      title: `Delete “${listing.title}”?`,
+      body: 'This removes the listing and its photos. This can’t be undone.',
+      action: 'Delete',
+    })
+    if (!ok) return
     setBusy(true)
     // listing_images rows go with ON DELETE CASCADE; the files in storage are removed separately.
     const { error } = await supabase.from('listings').delete().eq('id', listing.id)
     if (error) {
-      alert(`Couldn’t delete the listing: ${error.message}`)
+      showAlert({ title: 'Couldn’t delete the listing', body: error.message })
       setBusy(false)
       return
     }
@@ -327,6 +334,7 @@ export default function ItemPage() {
 
   return (
     <main className={`w-full flex-1 bg-surface ${showMobileBar ? 'pb-28 md:pb-10' : 'pb-10'}`}>
+      {dialog}
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
       <Link href="/" className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
         <ArrowLeftIcon className="h-4 w-4" />
