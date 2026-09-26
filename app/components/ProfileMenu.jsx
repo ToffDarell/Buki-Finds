@@ -24,6 +24,16 @@ const row =
 function ProfileMenuItems({ user, onChoose, firstRef }) {
   const logout = useLogout()
   const initial = (displayName(user)[0] || 'U').toUpperCase()
+  // Native modal dialog: sits above the menu, traps focus and closes on Escape by itself.
+  const confirmRef = useRef(null)
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  async function confirmLogout() {
+    setLoggingOut(true)
+    await logout()
+    confirmRef.current?.close()
+    onChoose()
+  }
 
   return (
     <>
@@ -62,18 +72,47 @@ function ProfileMenuItems({ user, onChoose, firstRef }) {
           </Link>
         </li>
         <li className="mt-1 border-t border-line pt-1">
-          <button
-            onClick={() => {
-              onChoose()
-              logout()
-            }}
-            className={`${row} text-red-600 hover:bg-red-50`}
-          >
+          <button onClick={() => confirmRef.current?.showModal()} aria-haspopup="dialog" className={`${row} text-red-600 hover:bg-red-50`}>
             <LogOutIcon className="h-4 w-4 text-red-500" />
             Log out
           </button>
         </li>
       </ul>
+
+      <dialog
+        ref={confirmRef}
+        aria-labelledby="logout-title"
+        aria-describedby="logout-body"
+        onClick={(e) => e.target === confirmRef.current && !loggingOut && confirmRef.current.close()}
+        className="m-auto w-[min(22rem,calc(100%-2rem))] rounded-2xl border border-line bg-white p-0 text-ink shadow-card-lift backdrop:bg-ink/40"
+      >
+        <div className="p-5">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600">
+            <LogOutIcon className="h-5 w-5" />
+          </span>
+          <h2 id="logout-title" className="mt-3 text-lg font-bold">Log out of Buki-Finds?</h2>
+          <p id="logout-body" className="mt-1 text-sm text-muted">
+            You’ll need to log in again to post items, message sellers, and see your saved listings.
+          </p>
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            <button
+              autoFocus
+              onClick={() => confirmRef.current?.close()}
+              disabled={loggingOut}
+              className="min-h-11 rounded-md border border-line bg-white text-sm font-semibold text-ink transition-colors hover:bg-surface disabled:opacity-60"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmLogout}
+              disabled={loggingOut}
+              className="min-h-11 rounded-md bg-red-600 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-60"
+            >
+              {loggingOut ? 'Logging out…' : 'Log Out'}
+            </button>
+          </div>
+        </div>
+      </dialog>
     </>
   )
 }

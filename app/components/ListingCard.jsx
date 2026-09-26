@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { coverImage, doneLabel, fallbackToFull, isReserved, isSwap, listingNumber, priceOrSwap } from '@/lib/listings'
+import { coverImage, doneLabel, fallbackToFull, isReserved, isSwap, priceOrSwap } from '@/lib/listings'
 import { thumbUrl } from '@/lib/images'
 import SaveButton from '@/app/components/SaveButton'
 import { CameraIcon, SwapIcon, PinIcon } from '@/app/components/icons'

@@ -167,7 +167,21 @@ function Field({ label, value }) {
   )
 }
 
-function ContactAction({ listing, number, compact = false }) {
+// Browsing is open to everyone; contacting a seller needs an account. Signed-out visitors get a
+// login button that brings them straight back to this item afterwards.
+function ContactAction({ listing, number, compact = false, signedOut = false }) {
+  const size = compact ? 'px-4 py-2.5 text-sm' : 'w-full px-4 py-3'
+  if (signedOut) {
+    return (
+      <Link
+        href={`/login?next=${encodeURIComponent(`/item/${listing.id}`)}`}
+        className={`flex items-center justify-center gap-2 rounded-md bg-primary font-semibold text-white transition-colors hover:bg-primary-hover ${size}`}
+      >
+        <MessengerIcon />
+        <span>{compact ? 'Log in to Message' : 'Log in to Message Seller'}</span>
+      </Link>
+    )
+  }
   if (listing.seller_facebook_username) {
     return (
       <a
@@ -206,7 +220,7 @@ function ContactAction({ listing, number, compact = false }) {
 export default function ItemPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { user } = useUser()
+  const { user, loading: userLoading } = useUser()
   const [result, setResult] = useState({ loaded: false, listing: null, error: '' })
   const [busy, setBusy] = useState(false)
   const [rating, setRating] = useState({ average: null, count: 0 })
@@ -307,6 +321,7 @@ export default function ItemPage() {
   const number = listingNumber(listing)
   const hasContact = Boolean(listing.seller_facebook_username || listing.seller_email)
   const showMobileBar = !isOwner && !isSold && hasContact
+  const signedOut = !userLoading && !user
 
   return (
     <main className={`w-full flex-1 bg-surface ${showMobileBar ? 'pb-28 md:pb-10' : 'pb-10'}`}>
@@ -405,7 +420,7 @@ export default function ItemPage() {
                     </Link>
                   )}
                 </p>
-                {!isOwner && listing.seller_email && listing.seller_facebook_username && (
+                {!isOwner && user && listing.seller_email && listing.seller_facebook_username && (
                   <a href={`mailto:${listing.seller_email}`} className="truncate text-sm text-primary hover:underline">
                     {listing.seller_email}
                   </a>
@@ -470,7 +485,7 @@ export default function ItemPage() {
                 <p className="mt-3 text-sm text-muted">This item has been {doneLabel(listing).toLowerCase()}.</p>
               ) : hasContact ? (
                 <div className="mt-4">
-                  <ContactAction listing={listing} number={number} />
+                  <ContactAction listing={listing} number={number} signedOut={signedOut} />
                   <p className="mt-2 text-center text-xs text-muted">
                     Mention <span className="font-mono font-semibold text-ink">No. {number}</span> so the seller knows which item.
                   </p>
@@ -509,7 +524,7 @@ export default function ItemPage() {
               <p className="card-type tabular text-2xl font-bold leading-none text-primary">{priceOrSwap(listing)}</p>
               <p className="truncate text-xs text-muted">No. {number} · {listing.title}</p>
             </div>
-            <ContactAction listing={listing} number={number} compact />
+            <ContactAction listing={listing} number={number} compact signedOut={signedOut} />
           </div>
         </div>
       )}

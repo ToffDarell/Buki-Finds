@@ -14,7 +14,7 @@ import {
 } from '@/lib/listings'
 import ListingCard, { ListingCardSkeleton } from '@/app/components/ListingCard'
 import SchoolInput from '@/app/components/SchoolInput'
-import { CloseIcon, FiltersIcon, PlusIcon, SearchIcon, PinIcon, SwapIcon } from '@/app/components/icons'
+import { CloseIcon, FiltersIcon, PlusIcon, SearchIcon } from '@/app/components/icons'
 
 const DEFAULT_FILTERS = {
   listingType: '',

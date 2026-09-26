@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser } from '@/lib/useAuth'
+import { useIsClient } from '@/lib/useIsClient'
 import { ProfileDropdown } from '@/app/components/ProfileMenu'
 import { BrowseIcon, HeartIcon, ListingsIcon, PlusIcon, UserIcon } from '@/app/components/icons'
 
@@ -34,11 +34,7 @@ function NavLink({ href, icon: Icon, children }) {
 
 export default function Navbar() {
   const { user, loading } = useUser()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = useIsClient()
 
   return (
     <header className="bg-primary shadow-xs [&_:focus-visible]:outline-white">

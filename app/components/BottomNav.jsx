@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser } from '@/lib/useAuth'
+import { useIsClient } from '@/lib/useIsClient'
 import { ProfileSheet } from '@/app/components/ProfileMenu'
 import { BrowseIcon, HeartIcon, ListingsIcon, PlusIcon, UserIcon } from '@/app/components/icons'
 
@@ -29,12 +30,8 @@ export default function BottomNav() {
   const pathname = usePathname()
   const { user, loading } = useUser()
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  const mounted = useIsClient()
   const profileRef = useRef(null)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const closeSheet = useCallback(() => {
     setSheetOpen(false)
