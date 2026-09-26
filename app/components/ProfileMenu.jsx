@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { fetchSubscription, subscriptionLabel } from '@/lib/subscription'
 import { avatarUrl, displayName } from '@/lib/avatar'
-import Avatar, { AvatarEditor } from '@/app/components/Avatar'
+import Avatar from '@/app/components/Avatar'
 import { HeartIcon, ListingsIcon, LogOutIcon, PlusIcon, StarIcon, UserIcon } from '@/app/components/icons'
 
 export function useLogout() {
@@ -44,13 +44,18 @@ function ProfileMenuItems({ user, onChoose, firstRef }) {
 
   return (
     <>
-      <div className="flex items-center gap-3 bg-primary p-4 text-white">
-        <AvatarEditor user={user} src={avatarUrl(user)} name={displayName(user)} className="h-14 w-14 text-lg" showRemove />
+      {/* Tapping the header opens the profile; the photo is changed there. */}
+      <Link
+        href={`/seller/${user.id}`}
+        onClick={onChoose}
+        className="flex items-center gap-3 bg-primary p-4 text-white transition-colors hover:bg-primary-hover focus-visible:bg-primary-hover focus-visible:outline-none"
+      >
+        <Avatar src={avatarUrl(user)} name={displayName(user)} className="h-12 w-12 text-base" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-bold leading-tight">{displayName(user)}</p>
-          {user?.email && <p className="mt-0.5 truncate text-xs text-on-primary-muted">{user.email}</p>}
+          <p className="mt-0.5 truncate text-xs text-on-primary-muted">View profile ›</p>
         </div>
-      </div>
+      </Link>
       <ul className="py-2">
         <li>
           <Link ref={firstRef} href="/my-listings" onClick={onChoose} className={row}>

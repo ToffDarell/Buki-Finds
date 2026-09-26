@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { coverImage, doneLabel, fallbackToFull, isReserved, isSwap, priceOrSwap } from '@/lib/listings'
+import { coverImage, doneLabel, fallbackToFull, formatSize, isReserved, isSwap, priceOrSwap } from '@/lib/listings'
 import { thumbUrl } from '@/lib/images'
 import SaveButton from '@/app/components/SaveButton'
 import { schoolLocationLabel } from '@/lib/schools'
@@ -29,8 +29,7 @@ export function ListingIdCard({ listing, cover, preview = false }) {
   const photo = cover === undefined ? coverImage(listing) : cover
   const sold = listing.status === 'sold'
   const location = schoolLocationLabel(listing.school)
-  // Letter sizes read as capitals (a typed "l" looks like a 1); number sizes stay as typed.
-  const size = listing.size && (/^[a-z]{1,4}$/i.test(listing.size.trim()) ? listing.size.trim().toUpperCase() : listing.size)
+  const size = formatSize(listing.size)
   const details = [size && `Size ${size}`, listing.condition].filter(Boolean).join(' · ')
 
   return (
@@ -100,7 +99,7 @@ export default function ListingCard({ listing }) {
       <Link
         href={`/item/${listing.id}`}
         className={`${shell} transition-[border-color,box-shadow] duration-300 group-hover:border-primary/30 group-hover:shadow-card-lift`}
-        aria-label={`${listing.title}, ${isSwap(listing) ? 'for swap' : priceOrSwap(listing)}${listing.size ? `, size ${listing.size}` : ''}${status}`}
+        aria-label={`${listing.title}, ${isSwap(listing) ? 'for swap' : priceOrSwap(listing)}${listing.size ? `, size ${size}` : ''}${status}`}
       >
         <ListingIdCard listing={listing} />
       </Link>

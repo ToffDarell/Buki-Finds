@@ -8,7 +8,8 @@ import { BROWSE_STATUSES, LISTING_WITH_IMAGES } from '@/lib/listings'
 import { formatRating } from '@/lib/reviews'
 import { avatarUrl, displayName } from '@/lib/avatar'
 import { useUser } from '@/lib/useAuth'
-import Avatar, { AvatarEditor } from '@/app/components/Avatar'
+import Avatar from '@/app/components/Avatar'
+import AvatarEditor from '@/app/components/AvatarEditor'
 import ListingCard, { ListingCardSkeleton } from '@/app/components/ListingCard'
 import Stars from '@/app/components/Stars'
 import { ArrowLeftIcon, StarIcon } from '@/app/components/icons'
@@ -94,7 +95,7 @@ export default function SellerPage() {
         <section className={`overflow-hidden rounded-2xl border border-line bg-white shadow-xs ${loaded ? '' : 'animate-pulse'}`}>
           <div className="flex items-center gap-4 bg-primary p-5 sm:p-6 text-white">
             {isMe ? (
-              <AvatarEditor user={user} src={avatarUrl(user)} name={name} className="h-16 w-16 text-xl" showRemove />
+              <AvatarEditor user={user} src={avatarUrl(user)} name={name} className="h-16 w-16 text-xl" />
             ) : (
               <Avatar src={avatar} name={name} className="h-14 w-14 text-xl" />
             )}

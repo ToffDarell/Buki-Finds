@@ -103,6 +103,14 @@ export const CameraIcon = (p) => (
   </Icon>
 )
 
+export const ImageIcon = (p) => (
+  <Icon {...p}>
+    <rect x="4" y="4.5" width="16" height="15" rx="2" />
+    <circle cx="9" cy="9.5" r="1.5" />
+    <path d="m20 15.5-4.5-4.5L6 19.5" />
+  </Icon>
+)
+
 // Navigation set: the same glyph stands for the same place on the phone tab bar and the desktop navbar.
 export const BrowseIcon = (p) => (
   <Icon {...p}>

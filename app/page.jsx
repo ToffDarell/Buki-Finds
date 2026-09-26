@@ -11,6 +11,7 @@ import {
   LISTING_WITH_IMAGES,
   cleanSearchText,
   formatPrice,
+  formatSize,
 } from '@/lib/listings'
 import ListingCard, { ListingCardSkeleton } from '@/app/components/ListingCard'
 import SchoolInput from '@/app/components/SchoolInput'
@@ -61,7 +62,8 @@ function fetchListings(filters, search) {
   if (filters.category) query = query.eq('category', filters.category)
   // "CMU" and "Central Mindanao University" find each other (see lib/schools.js).
   if (filters.school) query = query.or(schoolConditions(filters.school).join(','))
-  if (filters.size) query = query.eq('size', filters.size)
+  // ilike ignores capitals, so the "L" chip also finds listings typed as "l".
+  if (filters.size) query = query.ilike('size', filters.size.replace(/[\\%_]/g, '\\$&'))
   if (filters.condition) query = query.eq('condition', filters.condition)
   if (filters.minPrice !== '') query = query.gte('price', Number(filters.minPrice))
   if (filters.maxPrice !== '') query = query.lte('price', Number(filters.maxPrice))
@@ -190,7 +192,7 @@ export default function BrowsePage() {
       .eq('status', 'available')
       .not('size', 'is', null)
       .then(({ data }) => {
-        const unique = [...new Set((data ?? []).map((row) => row.size.trim()).filter(Boolean))]
+        const unique = [...new Set((data ?? []).map((row) => formatSize(row.size)).filter(Boolean))]
         setSizes(unique.sort((a, b) => a.localeCompare(b, undefined, { numeric: true })))
       })
   }, [])

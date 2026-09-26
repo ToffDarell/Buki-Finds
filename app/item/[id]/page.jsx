@@ -18,6 +18,7 @@ import {
   priceOrSwap,
   purgeDateLabel,
   sortedImages,
+  formatSize,
 } from '@/lib/listings'
 import { imageStoragePaths, thumbUrl } from '@/lib/images'
 import { freeLimitMessage, isFreeLimitError } from '@/lib/subscription'
@@ -385,7 +386,7 @@ export default function ItemPage() {
 
             <dl className="mt-5 grid grid-cols-2 rounded-md border border-line">
               <Field label="Condition" value={listing.condition} />
-              <Field label="Size" value={listing.size} />
+              <Field label="Size" value={formatSize(listing.size)} />
               <Field label="University" value={listing.school} />
               <Field label="Posted" value={new Date(listing.created_at).toLocaleDateString('en-PH', { dateStyle: 'medium' })} />
             </dl>

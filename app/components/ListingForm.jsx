@@ -10,6 +10,7 @@ import {
   normalizeFacebookUsername,
   normalizeSchool,
   sortedImages,
+  formatSize,
 } from '@/lib/listings'
 import { MAX_RAW_IMAGE_BYTES, MAX_UNCOMPRESSED_BYTES, imageStoragePaths, prepareImage } from '@/lib/images'
 import { ListingCardPreview } from '@/app/components/ListingCard'
@@ -189,7 +190,7 @@ export default function ListingForm({ user, listing, onSaved }) {
         swap_for: listingType === 'swap' ? swapFor.trim() || null : null,
         category,
         condition: condition || null,
-        size: size.trim() || null,
+        size: formatSize(size) || null,
         // "cmu" is saved as "Central Mindanao University" so listings group under one name.
         school: normalizeSchool(canonicalSchool(school)) || null,
         meetup_spot: meetupSpot.replace(/\s+/g, ' ').trim().slice(0, 120) || null,
