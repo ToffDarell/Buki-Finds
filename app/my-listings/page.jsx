@@ -22,16 +22,18 @@ import { CameraIcon, CheckIcon, PencilIcon, PlusIcon, TrashIcon, UndoIcon } from
 function StatusStamp({ listing }) {
   if (listing.status === 'reserved') {
     return (
-      <span className="rounded-sm border border-primary/25 bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary">Reserved</span>
+      <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+        Reserved
+      </span>
     )
   }
   return listing.status === 'sold' ? (
-    <span className="rounded-sm bg-ink px-2 py-0.5 text-xs font-semibold text-white">
+    <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-semibold text-white">
       {doneLabel(listing)}
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-sm border border-accent/25 bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent-hover">
-      <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
       Available
     </span>
   )
@@ -45,7 +47,24 @@ const TABS = [
 ]
 
 const action =
-  'inline-flex items-center gap-1.5 rounded-sm px-2 py-1.5 text-sm font-medium transition-colors disabled:opacity-50'
+  'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50'
+
+function ListingRowSkeleton() {
+  return (
+    <div className="flex animate-pulse overflow-hidden rounded-xl border border-line bg-white p-3 shadow-xs">
+      <div className="h-20 w-20 shrink-0 rounded-lg bg-slate-100 sm:h-24 sm:w-24" />
+      <div className="ml-3 flex flex-1 flex-col gap-2 py-1">
+        <div className="h-4 w-24 rounded bg-slate-200" />
+        <div className="h-5 w-3/4 rounded bg-slate-150" />
+        <div className="h-4 w-16 rounded bg-slate-100" />
+        <div className="mt-auto flex gap-2">
+          <div className="h-6 w-14 rounded bg-slate-100" />
+          <div className="h-6 w-24 rounded bg-slate-100" />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function MyListingsPage() {
   const router = useRouter()
@@ -55,7 +74,7 @@ export default function MyListingsPage() {
   const [busyId, setBusyId] = useState(null)
 
   useEffect(() => {
-    if (!userLoading && !user) router.replace('/login')
+    if (!userLoading && !user) router.replace('/login?next=/my-listings')
   }, [userLoading, user, router])
 
   useEffect(() => {
@@ -76,7 +95,6 @@ export default function MyListingsPage() {
 
   async function setStatus(listing, status) {
     setBusyId(listing.id)
-    // sold_at is set by the database, so read it back for the "deleted on" date.
     const { data, error } = await supabase
       .from('listings')
       .update({ status })
@@ -107,10 +125,7 @@ export default function MyListingsPage() {
     setBusyId(null)
   }
 
-  if (userLoading || !user || !result.loaded) {
-    return <main className="flex-1 p-6 text-muted">Loading…</main>
-  }
-
+  const isLoading = userLoading || !result.loaded
   const { listings, error } = result
   const counts = {
     all: listings.length,
@@ -121,124 +136,175 @@ export default function MyListingsPage() {
   const shown = tab === 'all' ? listings : listings.filter((l) => l.status === tab)
 
   return (
-    <main className="flex-1 bg-surface">
-      <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
+    <main className="flex-1 bg-surface py-6 sm:py-8">
+      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <h1 className="card-type text-3xl font-bold leading-none text-ink sm:text-4xl">My Listings</h1>
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">My Listings</h1>
+            <p className="mt-1 text-xs text-muted sm:text-sm">Manage items you are selling or swapping.</p>
+          </div>
           <Link
             href="/post"
-            className="inline-flex items-center gap-1.5 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2.5 text-sm font-bold text-white shadow-xs transition-colors hover:bg-accent-hover"
           >
             <PlusIcon className="h-4 w-4" />
             Post Item
           </Link>
         </div>
 
-        {listings.length > 0 && (
-          <div className="mt-6 flex gap-6 overflow-x-auto border-b border-line [scrollbar-width:none]" role="tablist" aria-label="Filter by status">
-            {TABS.map((t) => (
+        {/* Tab switcher */}
+        <div className="mt-6 flex gap-2 overflow-x-auto border-b border-line pb-px [scrollbar-width:none]">
+          {TABS.map((t) => {
+            const active = tab === t.id
+            return (
               <button
                 key={t.id}
                 role="tab"
-                aria-selected={tab === t.id}
+                aria-selected={active}
                 onClick={() => setTab(t.id)}
-                className={`-mb-px shrink-0 border-b-[3px] pb-2.5 text-sm font-medium transition-colors ${
-                  tab === t.id ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-ink'
+                className={`-mb-px shrink-0 border-b-2 px-3.5 pb-2.5 text-sm font-semibold transition-all ${
+                  active ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-ink'
                 }`}
               >
-                {t.label} <span className="tabular text-muted">{counts[t.id]}</span>
+                {t.label} {!isLoading && <span className="tabular ml-1 text-xs text-muted">({counts[t.id]})</span>}
               </button>
-            ))}
+            )
+          })}
+        </div>
+
+        {error && <p className="mt-6 text-sm text-red-600">Couldn’t load listings: {error}</p>}
+
+        {isLoading ? (
+          <div className="mt-5 flex flex-col gap-3">
+            <ListingRowSkeleton />
+            <ListingRowSkeleton />
+            <ListingRowSkeleton />
           </div>
-        )}
-
-        {error && <p className="mt-6 text-red-700">Couldn’t load your listings: {error}</p>}
-
-        {!error && listings.length === 0 && (
-          <div className="mt-8 flex flex-col items-center rounded-[10px] border border-dashed border-line bg-white px-6 py-14 text-center">
-            <p className="card-type text-2xl font-bold text-ink">You haven’t posted anything yet.</p>
-            <p className="mt-1 max-w-sm text-sm text-muted">Old uniform, shoes you’ve outgrown, last sem’s books? Someone on campus needs them.</p>
-            <Link href="/post" className="mt-4 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover">
+        ) : listings.length === 0 ? (
+          <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-line bg-white p-8 text-center shadow-xs sm:p-12">
+            <p className="text-xl font-bold text-ink">You haven’t posted anything yet.</p>
+            <p className="mt-1.5 max-w-sm text-xs text-muted sm:text-sm">
+              Old uniforms, textbooks, shoes, or electronics? Someone on campus needs them.
+            </p>
+            <Link
+              href="/post"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-accent-hover"
+            >
+              <PlusIcon className="h-4 w-4" />
               Post your first item
             </Link>
           </div>
-        )}
-
-        {listings.length > 0 && shown.length === 0 && (
-          <p className="mt-8 text-center text-sm text-muted">No {tab} listings.</p>
-        )}
-
-        <ul className="mt-5 flex flex-col gap-3">
-          {shown.map((listing) => {
-            const cover = coverImage(listing)
-            const sold = listing.status === 'sold'
-            const busy = busyId === listing.id
-            return (
-              <li
-                key={listing.id}
-                className="flex overflow-hidden rounded-[10px] border border-line bg-white shadow-card"
-              >
-                <Link
-                  href={`/item/${listing.id}`}
-                  className="m-3 h-20 w-20 shrink-0 overflow-hidden rounded-sm bg-surface ring-1 ring-line sm:h-24 sm:w-24"
+        ) : shown.length === 0 ? (
+          <div className="mt-8 rounded-xl border border-line bg-white p-8 text-center text-sm text-muted shadow-xs">
+            No {tab} listings found.
+          </div>
+        ) : (
+          <ul className="mt-5 flex flex-col gap-3">
+            {shown.map((listing) => {
+              const cover = coverImage(listing)
+              const sold = listing.status === 'sold'
+              const busy = busyId === listing.id
+              return (
+                <li
+                  key={listing.id}
+                  className="flex overflow-hidden rounded-xl border border-line bg-white p-3 shadow-xs transition-all hover:border-primary/30 hover:shadow-md"
                 >
-                  {cover ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={thumbUrl(cover)} onError={fallbackToFull(cover)} alt="" className={`h-full w-full object-cover ${sold ? 'grayscale' : ''}`} />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-muted">
-                      <CameraIcon className="h-6 w-6" />
-                    </div>
-                  )}
-                </Link>
-
-                <div className="flex min-w-0 flex-1 flex-col py-3 pr-3">
-                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                    <StatusStamp listing={listing} />
-                    <span className="font-mono text-xs text-muted">No. {listingNumber(listing)}</span>
-                  </div>
-                  <Link href={`/item/${listing.id}`} className="mt-1 truncate font-medium text-ink hover:underline">
-                    {listing.title}
+                  <Link
+                    href={`/item/${listing.id}`}
+                    className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-surface ring-1 ring-line sm:h-24 sm:w-24"
+                  >
+                    {cover ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={thumbUrl(cover)}
+                        onError={fallbackToFull(cover)}
+                        alt=""
+                        className={`h-full w-full object-cover ${sold ? 'grayscale' : ''}`}
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-muted">
+                        <CameraIcon className="h-6 w-6 text-muted/50" />
+                      </div>
+                    )}
                   </Link>
-                  <p className={`card-type tabular text-xl font-bold leading-tight ${sold ? 'text-muted' : 'text-primary'}`}>
-                    {priceOrSwap(listing)}
-                  </p>
-                  {purgeDateLabel(listing) && (
-                    <p className="text-xs text-muted">Deletes automatically on {purgeDateLabel(listing)}</p>
-                  )}
 
-                  <div className="-ml-2 mt-auto flex flex-wrap gap-x-1 pt-1.5">
-                    <Link href={`/item/${listing.id}/edit`} className={`${action} text-primary hover:bg-primary-soft`}>
-                      <PencilIcon className="h-4 w-4" />
-                      Edit
+                  <div className="ml-3 flex min-w-0 flex-1 flex-col py-0.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusStamp listing={listing} />
+                      <span className="font-mono text-[11px] text-muted">No. {listingNumber(listing)}</span>
+                    </div>
+
+                    <Link
+                      href={`/item/${listing.id}`}
+                      className="mt-1 truncate text-sm font-semibold text-ink transition-colors hover:text-primary sm:text-base"
+                    >
+                      {listing.title}
                     </Link>
-                    {listing.status === 'available' && (
-                      <button onClick={() => setStatus(listing, 'reserved')} disabled={busy} className={`${action} text-ink hover:bg-surface`}>
-                        Mark as Reserved
-                      </button>
+
+                    <p className={`tabular text-base font-bold sm:text-lg ${sold ? 'text-muted' : 'text-primary'}`}>
+                      {priceOrSwap(listing)}
+                    </p>
+
+                    {purgeDateLabel(listing) && (
+                      <p className="text-[11px] text-muted">Deletes automatically on {purgeDateLabel(listing)}</p>
                     )}
-                    {listing.status !== 'available' && (
-                      <button onClick={() => setStatus(listing, 'available')} disabled={busy} className={`${action} text-ink hover:bg-surface`}>
-                        <UndoIcon className="h-4 w-4" />
-                        Mark as Available
+
+                    <div className="mt-auto flex flex-wrap gap-1.5 pt-2">
+                      <Link
+                        href={`/item/${listing.id}/edit`}
+                        className={`${action} text-primary hover:bg-primary-soft`}
+                      >
+                        <PencilIcon className="h-3.5 w-3.5" />
+                        Edit
+                      </Link>
+
+                      {listing.status === 'available' && (
+                        <button
+                          onClick={() => setStatus(listing, 'reserved')}
+                          disabled={busy}
+                          className={`${action} text-ink hover:bg-surface`}
+                        >
+                          Mark as Reserved
+                        </button>
+                      )}
+
+                      {listing.status !== 'available' && (
+                        <button
+                          onClick={() => setStatus(listing, 'available')}
+                          disabled={busy}
+                          className={`${action} text-ink hover:bg-surface`}
+                        >
+                          <UndoIcon className="h-3.5 w-3.5" />
+                          Mark as Available
+                        </button>
+                      )}
+
+                      {!sold && (
+                        <button
+                          onClick={() => setStatus(listing, 'sold')}
+                          disabled={busy}
+                          className={`${action} text-ink hover:bg-surface`}
+                        >
+                          <CheckIcon className="h-3.5 w-3.5" />
+                          {`Mark as ${doneLabel(listing)}`}
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => handleDelete(listing)}
+                        disabled={busy}
+                        className={`${action} text-red-600 hover:bg-red-50`}
+                      >
+                        <TrashIcon className="h-3.5 w-3.5" />
+                        Delete
                       </button>
-                    )}
-                    {!sold && (
-                      <button onClick={() => setStatus(listing, 'sold')} disabled={busy} className={`${action} text-ink hover:bg-surface`}>
-                        <CheckIcon className="h-4 w-4" />
-                        {`Mark as ${doneLabel(listing)}`}
-                      </button>
-                    )}
-                    <button onClick={() => handleDelete(listing)} disabled={busy} className={`${action} text-red-700 hover:bg-red-50`}>
-                      <TrashIcon className="h-4 w-4" />
-                      Delete
-                    </button>
+                    </div>
                   </div>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
+                </li>
+              )
+            })}
+          </ul>
+        )}
       </div>
     </main>
   )

@@ -29,7 +29,6 @@ export default function SavedPage() {
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (cancelled) return
-        // Deleted listings disappear from saved on their own (on delete cascade).
         const listings = (data ?? []).map((row) => row.listings).filter(Boolean)
         setResult({ loaded: true, listings, error: error?.message ?? '' })
       })
@@ -38,37 +37,50 @@ export default function SavedPage() {
     }
   }, [user])
 
-  // Unsaving from this page removes the card straight away.
   const shown = result.listings.filter((l) => savedIds.has(l.id))
+  const isLoading = userLoading || !result.loaded
 
   return (
-    <main className="flex-1 bg-surface">
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 md:py-8">
-        <h1 className="card-type text-3xl font-bold leading-none text-ink sm:text-4xl">Saved</h1>
-        <p className="mt-2 text-sm text-muted">Listings you tapped the heart on. Only you can see this list.</p>
+    <main className="flex-1 bg-surface py-6 sm:py-8">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">Saved Items</h1>
+          <p className="mt-1 text-xs text-muted sm:text-sm">Listings you tapped the heart on.</p>
+        </div>
 
         {result.error && (
-          <p role="alert" className="mt-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            Couldn’t load your saved listings: {result.error}
+          <p role="alert" className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            Couldn’t load saved listings: {result.error}
           </p>
         )}
 
-        {result.loaded && !result.error && shown.length === 0 ? (
-          <div className="rise-in mt-6 flex flex-col items-center rounded-[12px] border border-line bg-white px-6 py-12 text-center shadow-card">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary">
+        {isLoading ? (
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 4 }, (_, i) => (
+              <ListingCardSkeleton key={i} index={i} />
+            ))}
+          </div>
+        ) : shown.length === 0 ? (
+          <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-line bg-white p-8 text-center shadow-xs sm:p-12">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary shadow-xs">
               <HeartIcon className="h-7 w-7" />
             </span>
-            <h2 className="card-type mt-4 text-2xl font-extrabold text-ink">Nothing saved yet.</h2>
-            <p className="mt-2 max-w-sm text-sm text-muted">Tap the heart on any listing to keep it here while you compare sizes and prices.</p>
-            <Link href="/" className="mt-6 inline-flex min-h-11 items-center rounded-md bg-primary px-5 text-[15px] font-semibold text-white hover:bg-primary-hover">
+            <h2 className="mt-4 text-xl font-bold text-ink sm:text-2xl">Nothing saved yet</h2>
+            <p className="mt-1.5 max-w-sm text-xs text-muted sm:text-sm">
+              Tap the heart on any listing while browsing to easily compare prices, sizes, and meet-up spots.
+            </p>
+            <Link
+              href="/"
+              className="mt-6 inline-flex items-center rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-xs transition-colors hover:bg-primary-hover"
+            >
               Browse Listings
             </Link>
           </div>
         ) : (
-          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-x-4 md:gap-y-6 lg:grid-cols-4">
-            {!result.loaded
-              ? Array.from({ length: 4 }, (_, i) => <ListingCardSkeleton key={i} index={i} />)
-              : shown.map((listing) => <ListingCard key={listing.id} listing={listing} />)}
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {shown.map((listing) => (
+              <ListingCard key={listing.id} listing={listing} />
+            ))}
           </div>
         )}
       </div>

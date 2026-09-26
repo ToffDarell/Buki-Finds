@@ -6,6 +6,8 @@ import AuthErrorBanner from "./components/AuthErrorBanner";
 import BottomNav from "./components/BottomNav";
 import AfterLoginRedirect from "./components/AfterLoginRedirect";
 
+import { AuthProvider } from "@/lib/useAuth";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -33,11 +35,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-surface text-ink">
-        <Navbar />
-        <AuthErrorBanner />
-        {children}
-        <BottomNav />
-        <AfterLoginRedirect />
+        <AuthProvider>
+          <Navbar />
+          <AuthErrorBanner />
+          {children}
+          <BottomNav />
+          <AfterLoginRedirect />
+        </AuthProvider>
       </body>
     </html>
   );

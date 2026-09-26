@@ -1,38 +1,40 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser } from '@/lib/useAuth'
 import { ProfileSheet } from '@/app/components/ProfileMenu'
 import { BrowseIcon, HeartIcon, ListingsIcon, PlusIcon, UserIcon } from '@/app/components/icons'
 
-// The item page has its own bottom bar (price + Message Seller), so the tabs step aside there.
 const ITEM_DETAIL = /^\/item\/[^/]+$/
 
-// Active is marked twice: navy semibold text and a 3px navy bar on the top edge (color alone isn't enough).
 const tabClass = (active) =>
   `relative flex min-h-14 flex-col items-center justify-center gap-1 text-xs transition-colors ${
     active
-      ? 'font-semibold text-primary before:absolute before:inset-x-4 before:top-0 before:h-[3px] before:rounded-b-full before:bg-primary'
-      : 'font-medium text-muted'
+      ? 'font-bold text-primary before:absolute before:inset-x-4 before:top-0 before:h-[3px] before:rounded-b-full before:bg-primary'
+      : 'font-medium text-muted hover:text-ink'
   }`
 
 function Tab({ href, icon: Icon, label, active }) {
   return (
     <Link href={href} aria-current={active ? 'page' : undefined} className={tabClass(active)}>
-      <Icon className="h-6 w-6 transition-transform motion-safe:active:scale-90" />
-      {label}
+      <Icon className="h-5 w-5 transition-transform motion-safe:active:scale-90" />
+      <span>{label}</span>
     </Link>
   )
 }
 
-// Phone-only tab bar in the Carousell pattern. No chat tab: students contact sellers on Messenger.
 export default function BottomNav() {
   const pathname = usePathname()
   const { user, loading } = useUser()
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const profileRef = useRef(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const closeSheet = useCallback(() => {
     setSheetOpen(false)
@@ -44,33 +46,30 @@ export default function BottomNav() {
 
   return (
     <>
-      {/* Keeps the last row of content (and form submit buttons) clear of the fixed bar. */}
       <div aria-hidden="true" className="h-[calc(4rem+env(safe-area-inset-bottom))] shrink-0 md:hidden" />
 
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_12px_rgb(6_36_63/0.06)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgb(11_19_43/0.06)] backdrop-blur-md md:hidden"
       >
-        {/* Five slots so Post Item sits dead center, Carousell-style. */}
         <div className="mx-auto grid max-w-lg grid-cols-5">
           <Tab href="/" icon={BrowseIcon} label="Browse" active={pathname === '/'} />
+
           <Tab href="/saved" icon={HeartIcon} label="Saved" active={pathname === '/saved'} />
 
-          {/* Post Item: the same green button, plus icon and wording as the desktop navbar, sized to sit in the bar. */}
           <Link href="/post" aria-current={posting ? 'page' : undefined} className={tabClass(posting)}>
-            <span className="flex h-7 w-9 items-center justify-center rounded-md bg-accent text-white transition-transform motion-safe:active:scale-90">
+            <span className="flex h-7 w-9 items-center justify-center rounded-lg bg-accent text-white shadow-xs transition-transform motion-safe:active:scale-95">
               <PlusIcon className="h-5 w-5" strokeWidth="2.25" />
             </span>
-            Post Item
+            <span className="text-[11px] font-bold">Post</span>
           </Link>
 
-          <Tab href="/my-listings" icon={ListingsIcon} label="My Listings" active={pathname === '/my-listings'} />
+          <Tab href="/my-listings" icon={ListingsIcon} label="Listings" active={pathname === '/my-listings'} />
 
-          {loading ? (
-            // Same size, not interactive, while the session loads: no jump and no wrong route.
-            <span aria-hidden="true" className={`${tabClass(false)} opacity-60`}>
-              <UserIcon className="h-6 w-6" />
-              Profile
+          {!mounted || loading ? (
+            <span aria-hidden="true" className={`${tabClass(false)} opacity-50`}>
+              <UserIcon className="h-5 w-5" />
+              <span>Profile</span>
             </span>
           ) : user ? (
             <button
@@ -80,16 +79,16 @@ export default function BottomNav() {
               aria-haspopup="dialog"
               className={tabClass(sheetOpen)}
             >
-              <UserIcon className="h-6 w-6 transition-transform motion-safe:active:scale-90" />
-              Profile
+              <UserIcon className="h-5 w-5 transition-transform motion-safe:active:scale-90" />
+              <span>Profile</span>
             </button>
           ) : (
-            <Tab href="/login" icon={UserIcon} label="Profile" active={pathname === '/login'} />
+            <Tab href="/login" icon={UserIcon} label="Log in" active={pathname === '/login'} />
           )}
         </div>
       </nav>
 
-      {user && <ProfileSheet user={user} open={sheetOpen} onClose={closeSheet} />}
+      {mounted && user && <ProfileSheet user={user} open={sheetOpen} onClose={closeSheet} />}
     </>
   )
 }

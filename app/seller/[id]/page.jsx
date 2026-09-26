@@ -82,12 +82,16 @@ export default function SellerPage() {
           </p>
         )}
 
-        {/* The seller's ID card. */}
-        <section className={`overflow-hidden rounded-xl border border-line bg-white shadow-card ${loaded ? '' : 'animate-pulse'}`}>
-          <div className="relative bg-primary px-5 pb-4 pt-7">
-            <span aria-hidden="true" className="absolute left-1/2 top-2.5 h-2 w-14 -translate-x-1/2 rounded-full bg-white shadow-[inset_0_1px_2px_rgb(6_36_63/0.35)]" />
-            <h1 className="card-type truncate text-2xl font-bold text-white sm:text-3xl">{loaded ? name : ' '}</h1>
-            {schools.length > 0 && <p className="mt-1 truncate text-sm text-on-primary-muted">{schools.join(' · ')}</p>}
+        {/* The seller's profile card. */}
+        <section className={`overflow-hidden rounded-2xl border border-line bg-white shadow-xs ${loaded ? '' : 'animate-pulse'}`}>
+          <div className="flex items-center gap-4 bg-primary p-5 sm:p-6 text-white">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/20 text-xl font-bold text-white shadow-xs backdrop-blur-xs">
+              {(name[0] || 'S').toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-xl font-extrabold text-white sm:text-2xl">{loaded ? name : 'Student Seller'}</h1>
+              {schools.length > 0 && <p className="mt-1 truncate text-xs text-on-primary-muted sm:text-sm">{schools.join(' · ')}</p>}
+            </div>
           </div>
           <dl className="grid grid-cols-2 sm:grid-cols-4">
             <div className="border-b border-r border-line px-5 py-3 sm:border-b-0">
