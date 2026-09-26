@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation'
 import { useUser } from '@/lib/useAuth'
 import { useIsClient } from '@/lib/useIsClient'
 import { ProfileSheet } from '@/app/components/ProfileMenu'
+import Avatar from '@/app/components/Avatar'
+import { avatarUrl, displayName } from '@/lib/avatar'
 import { BrowseIcon, HeartIcon, ListingsIcon, PlusIcon, UserIcon } from '@/app/components/icons'
 
 const ITEM_DETAIL = /^\/item\/[^/]+$/
@@ -76,7 +78,11 @@ export default function BottomNav() {
               aria-haspopup="dialog"
               className={tabClass(sheetOpen)}
             >
-              <UserIcon className="h-5 w-5 transition-transform motion-safe:active:scale-90" />
+              {avatarUrl(user) ? (
+                <Avatar src={avatarUrl(user)} name={displayName(user)} bg="bg-primary" className="h-6 w-6 text-[10px]" />
+              ) : (
+                <UserIcon className="h-5 w-5 transition-transform motion-safe:active:scale-90" />
+              )}
               <span>Profile</span>
             </button>
           ) : (

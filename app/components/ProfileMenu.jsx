@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { fetchSubscription, subscriptionLabel } from '@/lib/subscription'
+import { avatarUrl, displayName } from '@/lib/avatar'
+import Avatar, { AvatarEditor } from '@/app/components/Avatar'
 import { HeartIcon, ListingsIcon, LogOutIcon, PlusIcon, StarIcon, UserIcon } from '@/app/components/icons'
 
 export function useLogout() {
@@ -15,16 +17,11 @@ export function useLogout() {
   }
 }
 
-function displayName(user) {
-  return user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Student'
-}
-
 const row =
   'flex min-h-11 w-full items-center gap-3 px-4 text-left text-sm font-medium text-ink transition-colors hover:bg-surface focus-visible:bg-surface focus-visible:outline-none'
 
 function ProfileMenuItems({ user, onChoose, firstRef }) {
   const logout = useLogout()
-  const initial = (displayName(user)[0] || 'U').toUpperCase()
   // Native modal dialog: sits above the menu, traps focus and closes on Escape by itself.
   const confirmRef = useRef(null)
   const [loggingOut, setLoggingOut] = useState(false)
@@ -48,9 +45,7 @@ function ProfileMenuItems({ user, onChoose, firstRef }) {
   return (
     <>
       <div className="flex items-center gap-3 bg-primary p-4 text-white">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-base font-bold text-white shadow-xs backdrop-blur-xs">
-          {initial}
-        </div>
+        <AvatarEditor user={user} src={avatarUrl(user)} name={displayName(user)} className="h-14 w-14 text-lg" showRemove />
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-bold leading-tight">{displayName(user)}</p>
           {user?.email && <p className="mt-0.5 truncate text-xs text-on-primary-muted">{user.email}</p>}
@@ -179,9 +174,7 @@ export function ProfileDropdown({ user }) {
           open ? 'bg-white/20 text-white' : 'text-white hover:bg-white/10'
         }`}
       >
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white shadow-xs">
-          {(displayName(user)[0] || 'U').toUpperCase()}
-        </span>
+        <Avatar src={avatarUrl(user)} name={displayName(user)} className="h-7 w-7 text-xs" />
         <span className="max-w-32 truncate">{displayName(user).split(' ')[0]}</span>
       </button>
       {open && (
