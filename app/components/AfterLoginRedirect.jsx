@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/useAuth'
 import { takeRememberedNext } from '@/lib/afterLogin'
 
-// Finishes a Google/Facebook login that started from /login?next=...: once the student is
+// Finishes a Google login that started from /login?next=...: once the student is
 // signed in, send them on to where they were headed (e.g. a review link). Renders nothing.
 export default function AfterLoginRedirect() {
   const { user } = useUser()

@@ -6,6 +6,12 @@ import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { BROWSE_STATUSES, LISTING_WITH_IMAGES } from '@/lib/listings'
 import { formatRating } from '@/lib/reviews'
+import { avatarUrl, displayName } from '@/lib/avatar'
+import { useUser } from '@/lib/useAuth'
+import Avatar from '@/app/components/Avatar'
+import AvatarEditor from '@/app/components/AvatarEditor'
+import EditProfileButton from '@/app/components/EditProfileButton'
+import { userSchool } from '@/lib/profile'
 import ListingCard, { ListingCardSkeleton } from '@/app/components/ListingCard'
 import Stars from '@/app/components/Stars'
 import { ArrowLeftIcon, StarIcon } from '@/app/components/icons'
@@ -27,21 +33,33 @@ function ReviewItem({ review }) {
   )
 }
 
+// Name, photo and university (migration 013). Falls back to just the photo (012), then to nothing,
+// so the page still works before the migrations are run.
+async function fetchSellerProfile(id) {
+  const { data, error } = await supabase.rpc('seller_profile', { seller: id })
+  if (!error) return data?.[0] ?? null
+  const avatar = await supabase.rpc('seller_avatar', { seller: id })
+  return avatar.data ? { avatar_url: avatar.data } : null
+}
+
 export default function SellerPage() {
   const { id } = useParams()
-  const [result, setResult] = useState({ loaded: false, listings: [], reviews: [], error: '' })
+  const { user } = useUser()
+  const [result, setResult] = useState({ loaded: false, listings: [], reviews: [], profile: null, error: '' })
 
   useEffect(() => {
     let cancelled = false
     Promise.all([
       supabase.from('listings').select(LISTING_WITH_IMAGES).eq('seller_id', id).order('created_at', { ascending: false }),
       supabase.from('reviews').select('id, rating, comment, reviewer_name, listing_title, created_at').eq('seller_id', id).order('created_at', { ascending: false }),
-    ]).then(([listings, reviews]) => {
+      fetchSellerProfile(id),
+    ]).then(([listings, reviews, profile]) => {
       if (cancelled) return
       setResult({
         loaded: true,
         listings: listings.data ?? [],
         reviews: reviews.data ?? [],
+        profile,
         error: listings.error?.message || reviews.error?.message || '',
       })
     })
@@ -50,15 +68,18 @@ export default function SellerPage() {
     }
   }, [id])
 
-  const { loaded, listings, reviews, error } = result
+  const { loaded, listings, reviews, profile, error } = result
+  const isMe = user?.id === id
   const active = listings.filter((l) => BROWSE_STATUSES.includes(l.status))
   const soldCount = listings.filter((l) => l.status === 'sold').length
-  const name = listings[0]?.seller_name || 'Student seller'
-  const schools = [...new Set(listings.map((l) => l.school).filter(Boolean))]
+  const name = isMe ? displayName(user) : profile?.full_name || listings[0]?.seller_name || 'Student seller'
+  // The university set on the profile; otherwise the ones their listings mention.
+  const school = isMe ? userSchool(user) : profile?.school
+  const schools = school ? [school] : [...new Set(listings.map((l) => l.school).filter(Boolean))]
   const since = [...listings, ...reviews].map((x) => x.created_at).sort()[0]
   const average = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : null
 
-  if (loaded && !error && listings.length === 0 && reviews.length === 0) {
+  if (loaded && !error && !isMe && listings.length === 0 && reviews.length === 0) {
     return (
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-start gap-3 px-4 py-16 sm:px-6">
         <p className="card-type text-3xl font-bold text-ink">No listings here yet.</p>
@@ -85,13 +106,16 @@ export default function SellerPage() {
         {/* The seller's profile card. */}
         <section className={`overflow-hidden rounded-2xl border border-line bg-white shadow-xs ${loaded ? '' : 'animate-pulse'}`}>
           <div className="flex items-center gap-4 bg-primary p-5 sm:p-6 text-white">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/20 text-xl font-bold text-white shadow-xs backdrop-blur-xs">
-              {(name[0] || 'S').toUpperCase()}
-            </div>
+            {isMe ? (
+              <AvatarEditor user={user} src={avatarUrl(user)} name={name} className="h-16 w-16 text-xl" />
+            ) : (
+              <Avatar src={profile?.avatar_url} name={name} className="h-14 w-14 text-xl" />
+            )}
             <div className="min-w-0 flex-1">
               <h1 className="truncate text-xl font-extrabold text-white sm:text-2xl">{loaded ? name : 'Student Seller'}</h1>
               {schools.length > 0 && <p className="mt-1 truncate text-xs text-on-primary-muted sm:text-sm">{schools.join(' · ')}</p>}
             </div>
+            {isMe && <EditProfileButton user={user} />}
           </div>
           <dl className="grid grid-cols-2 sm:grid-cols-4">
             <div className="border-b border-r border-line px-5 py-3 sm:border-b-0">

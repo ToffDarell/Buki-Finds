@@ -1,10 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser } from '@/lib/useAuth'
+import { useIsClient } from '@/lib/useIsClient'
 import { ProfileSheet } from '@/app/components/ProfileMenu'
+import Avatar from '@/app/components/Avatar'
+import { avatarUrl, displayName } from '@/lib/avatar'
 import { BrowseIcon, HeartIcon, ListingsIcon, PlusIcon, UserIcon } from '@/app/components/icons'
 
 const ITEM_DETAIL = /^\/item\/[^/]+$/
@@ -29,12 +32,8 @@ export default function BottomNav() {
   const pathname = usePathname()
   const { user, loading } = useUser()
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  const mounted = useIsClient()
   const profileRef = useRef(null)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const closeSheet = useCallback(() => {
     setSheetOpen(false)
@@ -61,7 +60,7 @@ export default function BottomNav() {
             <span className="flex h-7 w-9 items-center justify-center rounded-lg bg-accent text-white shadow-xs transition-transform motion-safe:active:scale-95">
               <PlusIcon className="h-5 w-5" strokeWidth="2.25" />
             </span>
-            <span className="text-[11px] font-bold">Post</span>
+            <span className="text-xs font-bold">Post</span>
           </Link>
 
           <Tab href="/my-listings" icon={ListingsIcon} label="Listings" active={pathname === '/my-listings'} />
@@ -79,7 +78,11 @@ export default function BottomNav() {
               aria-haspopup="dialog"
               className={tabClass(sheetOpen)}
             >
-              <UserIcon className="h-5 w-5 transition-transform motion-safe:active:scale-90" />
+              {avatarUrl(user) ? (
+                <Avatar src={avatarUrl(user)} name={displayName(user)} bg="bg-primary" className="h-6 w-6 text-[10px]" />
+              ) : (
+                <UserIcon className="h-5 w-5 transition-transform motion-safe:active:scale-90" />
+              )}
               <span>Profile</span>
             </button>
           ) : (

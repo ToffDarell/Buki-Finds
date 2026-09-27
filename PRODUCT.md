@@ -20,7 +20,7 @@ Built for Bukidnon students. Every listing is from a student in the province, an
 
 ## Operating Context
 
-- Buyers browse without logging in; posting, editing and managing listings require login (email/password, Google, or Facebook).
+- Buyers browse without logging in; posting, editing and managing listings require login (email/password or Google). There is no Facebook login; Facebook is only used for the optional Messenger contact link.
 - Contact happens off-platform: a "Message Seller on Messenger" link (m.me/<username>) when the seller shares a Facebook username, otherwise the seller's email.
 - Items are handed over in person.
 - Listings: type (for sale or for swap; swaps have no price and say what the seller wants in return), title, description, price (₱, sale listings only), category, condition, optional size, optional school (free text), up to 5 photos, status available/reserved/sold, optional meet-up spot.

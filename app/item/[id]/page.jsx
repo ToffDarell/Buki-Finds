@@ -15,15 +15,19 @@ import {
   isSwap,
   listingNumber,
   messengerUrl,
+  instagramUrl,
   priceOrSwap,
   purgeDateLabel,
   sortedImages,
+  formatSize,
 } from '@/lib/listings'
 import { imageStoragePaths, thumbUrl } from '@/lib/images'
+import { freeLimitMessage, isFreeLimitError } from '@/lib/subscription'
 import { fetchSellerRating, formatRating, reviewLink } from '@/lib/reviews'
 import SaveButton from '@/app/components/SaveButton'
 import ShareButton from '@/app/components/ShareButton'
 import ReportDialog from '@/app/components/ReportDialog'
+import useDialog from '@/app/components/useDialog'
 import Stars from '@/app/components/Stars'
 import {
   ArrowLeftIcon,
@@ -33,6 +37,7 @@ import {
   ChevronRightIcon,
   MailIcon,
   MessengerIcon,
+  InstagramIcon,
   HeartIcon,
   PencilIcon,
   PinIcon,
@@ -167,17 +172,30 @@ function Field({ label, value }) {
   )
 }
 
-function ContactAction({ listing, number, compact = false }) {
-  if (listing.seller_facebook_username) {
+// Browsing is open to everyone; contacting a seller needs an account. Signed-out visitors get a
+// login button that brings them straight back to this item afterwards.
+function ContactAction({ listing, number, compact = false, signedOut = false }) {
+  const size = compact ? 'px-4 py-2.5 text-sm' : 'w-full px-4 py-3'
+  if (signedOut) {
     return (
-      <a
-        href={messengerUrl(listing.seller_facebook_username)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`flex items-center justify-center gap-2 rounded-md bg-primary font-semibold text-white transition-colors hover:bg-primary-hover ${
-          compact ? 'px-4 py-2.5 text-sm' : 'w-full px-4 py-3'
-        }`}
+      <Link
+        href={`/login?next=${encodeURIComponent(`/item/${listing.id}`)}`}
+        className={`flex items-center justify-center gap-2 rounded-md bg-primary font-semibold text-white transition-colors hover:bg-primary-hover ${size}`}
       >
+        <MessengerIcon />
+        <span>{compact ? 'Log in to Message' : 'Log in to Message Seller'}</span>
+      </Link>
+    )
+  }
+  const messenger = messengerUrl(listing.seller_facebook_username)
+  const instagram = instagramUrl(listing.seller_instagram_username)
+  const filled = `flex items-center justify-center gap-2 rounded-md bg-primary font-semibold text-white transition-colors hover:bg-primary-hover ${size}`
+
+  // Main button: Messenger, else Instagram, else email.
+  let primary = null
+  if (messenger) {
+    primary = (
+      <a href={messenger} target="_blank" rel="noopener noreferrer" className={filled}>
         <MessengerIcon />
         {/* Small phones and the tablet column are too narrow for the full label; the Messenger icon already says where it goes. */}
         <span>
@@ -186,27 +204,61 @@ function ContactAction({ listing, number, compact = false }) {
         </span>
       </a>
     )
-  }
-  if (listing.seller_email) {
-    return (
-      <a
-        href={`mailto:${listing.seller_email}?subject=${encodeURIComponent(`Buki-Finds No. ${number}: ${listing.title}`)}`}
-        className={`flex items-center justify-center gap-2 rounded-md bg-primary font-semibold text-white transition-colors hover:bg-primary-hover ${
-          compact ? 'px-4 py-2.5 text-sm' : 'w-full px-4 py-3'
-        }`}
-      >
+  } else if (instagram) {
+    primary = (
+      <a href={instagram} target="_blank" rel="noopener noreferrer" className={filled}>
+        <InstagramIcon />
+        <span>
+          Message Seller
+          {!compact && <span className="hidden sm:inline md:hidden lg:inline"> on Instagram</span>}
+        </span>
+      </a>
+    )
+  } else if (listing.seller_email) {
+    primary = (
+      <a href={`mailto:${listing.seller_email}?subject=${encodeURIComponent(`Buki-Finds No. ${number}: ${listing.title}`)}`} className={filled}>
         <MailIcon />
         Email Seller
       </a>
     )
   }
-  return null
+  if (!primary || !(messenger && instagram)) return primary
+
+  // Sellers with both get Instagram as a second, quieter button (icon-only in the phone bar).
+  return compact ? (
+    <div className="flex shrink-0 gap-2">
+      {primary}
+      <a
+        href={instagram}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Message Seller on Instagram"
+        className="flex w-11 items-center justify-center rounded-md border border-line bg-white text-primary transition-colors hover:bg-surface"
+      >
+        <InstagramIcon />
+      </a>
+    </div>
+  ) : (
+    <div className="flex flex-col gap-2">
+      {primary}
+      <a
+        href={instagram}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex w-full items-center justify-center gap-2 rounded-md border border-line bg-white px-4 py-3 font-semibold text-primary transition-colors hover:bg-surface"
+      >
+        <InstagramIcon />
+        Message on Instagram
+      </a>
+    </div>
+  )
 }
 
 export default function ItemPage() {
+  const [dialog, { confirm, alert: showAlert }] = useDialog()
   const { id } = useParams()
   const router = useRouter()
-  const { user } = useUser()
+  const { user, loading: userLoading } = useUser()
   const [result, setResult] = useState({ loaded: false, listing: null, error: '' })
   const [busy, setBusy] = useState(false)
   const [rating, setRating] = useState({ average: null, count: 0 })
@@ -253,18 +305,23 @@ export default function ItemPage() {
       .eq('id', listing.id)
       .select(LISTING_WITH_IMAGES)
       .single()
-    if (error) alert(`Couldn’t update the listing: ${error.message}`)
+    if (error) showAlert({ title: 'Couldn’t update the listing', body: isFreeLimitError(error.message) ? freeLimitMessage(error.message) : error.message })
     else setResult((prev) => ({ ...prev, listing: data }))
     setBusy(false)
   }
 
   async function handleDelete() {
-    if (!confirm('Delete this listing? This can’t be undone.')) return
+    const ok = await confirm({
+      title: `Delete “${listing.title}”?`,
+      body: 'This removes the listing and its photos. This can’t be undone.',
+      action: 'Delete',
+    })
+    if (!ok) return
     setBusy(true)
     // listing_images rows go with ON DELETE CASCADE; the files in storage are removed separately.
     const { error } = await supabase.from('listings').delete().eq('id', listing.id)
     if (error) {
-      alert(`Couldn’t delete the listing: ${error.message}`)
+      showAlert({ title: 'Couldn’t delete the listing', body: error.message })
       setBusy(false)
       return
     }
@@ -305,11 +362,13 @@ export default function ItemPage() {
   const swap = isSwap(listing)
   const purgeDate = purgeDateLabel(listing)
   const number = listingNumber(listing)
-  const hasContact = Boolean(listing.seller_facebook_username || listing.seller_email)
+  const hasContact = Boolean(messengerUrl(listing.seller_facebook_username) || instagramUrl(listing.seller_instagram_username) || listing.seller_email)
   const showMobileBar = !isOwner && !isSold && hasContact
+  const signedOut = !userLoading && !user
 
   return (
     <main className={`w-full flex-1 bg-surface ${showMobileBar ? 'pb-28 md:pb-10' : 'pb-10'}`}>
+      {dialog}
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
       <Link href="/" className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
         <ArrowLeftIcon className="h-4 w-4" />
@@ -369,8 +428,8 @@ export default function ItemPage() {
 
             <dl className="mt-5 grid grid-cols-2 rounded-md border border-line">
               <Field label="Condition" value={listing.condition} />
-              <Field label="Size" value={listing.size} />
-              <Field label="School" value={listing.school} />
+              <Field label="Size" value={formatSize(listing.size)} />
+              <Field label="University" value={listing.school} />
               <Field label="Posted" value={new Date(listing.created_at).toLocaleDateString('en-PH', { dateStyle: 'medium' })} />
             </dl>
 
@@ -405,7 +464,7 @@ export default function ItemPage() {
                     </Link>
                   )}
                 </p>
-                {!isOwner && listing.seller_email && listing.seller_facebook_username && (
+                {!isOwner && user && listing.seller_email && (messengerUrl(listing.seller_facebook_username) || instagramUrl(listing.seller_instagram_username)) && (
                   <a href={`mailto:${listing.seller_email}`} className="truncate text-sm text-primary hover:underline">
                     {listing.seller_email}
                   </a>
@@ -470,7 +529,7 @@ export default function ItemPage() {
                 <p className="mt-3 text-sm text-muted">This item has been {doneLabel(listing).toLowerCase()}.</p>
               ) : hasContact ? (
                 <div className="mt-4">
-                  <ContactAction listing={listing} number={number} />
+                  <ContactAction listing={listing} number={number} signedOut={signedOut} />
                   <p className="mt-2 text-center text-xs text-muted">
                     Mention <span className="font-mono font-semibold text-ink">No. {number}</span> so the seller knows which item.
                   </p>
@@ -509,7 +568,7 @@ export default function ItemPage() {
               <p className="card-type tabular text-2xl font-bold leading-none text-primary">{priceOrSwap(listing)}</p>
               <p className="truncate text-xs text-muted">No. {number} · {listing.title}</p>
             </div>
-            <ContactAction listing={listing} number={number} compact />
+            <ContactAction listing={listing} number={number} compact signedOut={signedOut} />
           </div>
         </div>
       )}

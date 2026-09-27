@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { HeartIcon, ListingsIcon, LogOutIcon, PlusIcon, UserIcon } from '@/app/components/icons'
+import { fetchSubscription, subscriptionLabel } from '@/lib/subscription'
+import { avatarUrl, displayName } from '@/lib/avatar'
+import Avatar from '@/app/components/Avatar'
+import { HeartIcon, ListingsIcon, LogOutIcon, PlusIcon, StarIcon, UserIcon } from '@/app/components/icons'
 
 export function useLogout() {
   const router = useRouter()
@@ -14,28 +17,45 @@ export function useLogout() {
   }
 }
 
-function displayName(user) {
-  return user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Student'
-}
-
 const row =
   'flex min-h-11 w-full items-center gap-3 px-4 text-left text-sm font-medium text-ink transition-colors hover:bg-surface focus-visible:bg-surface focus-visible:outline-none'
 
 function ProfileMenuItems({ user, onChoose, firstRef }) {
   const logout = useLogout()
-  const initial = (displayName(user)[0] || 'U').toUpperCase()
+  // Native modal dialog: sits above the menu, traps focus and closes on Escape by itself.
+  const confirmRef = useRef(null)
+  const [loggingOut, setLoggingOut] = useState(false)
+  // The menu mounts when opened, so this reads the latest status each time it's shown.
+  const [sub, setSub] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    fetchSubscription().then((s) => !cancelled && setSub(s))
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  async function confirmLogout() {
+    setLoggingOut(true)
+    await logout()
+    confirmRef.current?.close()
+    onChoose()
+  }
 
   return (
     <>
-      <div className="flex items-center gap-3 bg-primary p-4 text-white">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-base font-bold text-white shadow-xs backdrop-blur-xs">
-          {initial}
-        </div>
+      {/* Tapping the header opens the profile; the photo is changed there. */}
+      <Link
+        href={`/seller/${user.id}`}
+        onClick={onChoose}
+        className="flex items-center gap-3 bg-primary p-4 text-white transition-colors hover:bg-primary-hover focus-visible:bg-primary-hover focus-visible:outline-none"
+      >
+        <Avatar src={avatarUrl(user)} name={displayName(user)} className="h-12 w-12 text-base" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-bold leading-tight">{displayName(user)}</p>
-          {user?.email && <p className="mt-0.5 truncate text-xs text-on-primary-muted">{user.email}</p>}
+          <p className="mt-0.5 truncate text-xs text-on-primary-muted">View profile ›</p>
         </div>
-      </div>
+      </Link>
       <ul className="py-2">
         <li>
           <Link ref={firstRef} href="/my-listings" onClick={onChoose} className={row}>
@@ -56,24 +76,66 @@ function ProfileMenuItems({ user, onChoose, firstRef }) {
           </Link>
         </li>
         <li>
+          <Link href="/subscribe" onClick={onChoose} className={row}>
+            <StarIcon className="h-4 w-4 text-muted" />
+            <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+              Subscription
+              {sub && (
+                <span className={`truncate text-xs ${sub.state === 'active' ? 'font-semibold text-accent-hover' : 'text-muted'}`}>
+                  {subscriptionLabel(sub)}
+                </span>
+              )}
+            </span>
+          </Link>
+        </li>
+        <li>
           <Link href="/post" onClick={onChoose} className={row}>
             <PlusIcon className="h-4 w-4 text-accent" />
             Post Item
           </Link>
         </li>
         <li className="mt-1 border-t border-line pt-1">
-          <button
-            onClick={() => {
-              onChoose()
-              logout()
-            }}
-            className={`${row} text-red-600 hover:bg-red-50`}
-          >
+          <button onClick={() => confirmRef.current?.showModal()} aria-haspopup="dialog" className={`${row} text-red-600 hover:bg-red-50`}>
             <LogOutIcon className="h-4 w-4 text-red-500" />
             Log out
           </button>
         </li>
       </ul>
+
+      <dialog
+        ref={confirmRef}
+        aria-labelledby="logout-title"
+        aria-describedby="logout-body"
+        onClick={(e) => e.target === confirmRef.current && !loggingOut && confirmRef.current.close()}
+        className="m-auto w-[min(22rem,calc(100%-2rem))] rounded-2xl border border-line bg-white p-0 text-ink shadow-card-lift backdrop:bg-ink/40"
+      >
+        <div className="p-5">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600">
+            <LogOutIcon className="h-5 w-5" />
+          </span>
+          <h2 id="logout-title" className="mt-3 text-lg font-bold">Log out of Buki-Finds?</h2>
+          <p id="logout-body" className="mt-1 text-sm text-muted">
+            You’ll need to log in again to post items, message sellers, and see your saved listings.
+          </p>
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            <button
+              autoFocus
+              onClick={() => confirmRef.current?.close()}
+              disabled={loggingOut}
+              className="min-h-11 rounded-md border border-line bg-white text-sm font-semibold text-ink transition-colors hover:bg-surface disabled:opacity-60"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmLogout}
+              disabled={loggingOut}
+              className="min-h-11 rounded-md bg-red-600 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-60"
+            >
+              {loggingOut ? 'Logging out…' : 'Log Out'}
+            </button>
+          </div>
+        </div>
+      </dialog>
     </>
   )
 }
@@ -117,9 +179,7 @@ export function ProfileDropdown({ user }) {
           open ? 'bg-white/20 text-white' : 'text-white hover:bg-white/10'
         }`}
       >
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white shadow-xs">
-          {(displayName(user)[0] || 'U').toUpperCase()}
-        </span>
+        <Avatar src={avatarUrl(user)} name={displayName(user)} className="h-7 w-7 text-xs" />
         <span className="max-w-32 truncate">{displayName(user).split(' ')[0]}</span>
       </button>
       {open && (

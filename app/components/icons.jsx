@@ -103,6 +103,14 @@ export const CameraIcon = (p) => (
   </Icon>
 )
 
+export const ImageIcon = (p) => (
+  <Icon {...p}>
+    <rect x="4" y="4.5" width="16" height="15" rx="2" />
+    <circle cx="9" cy="9.5" r="1.5" />
+    <path d="m20 15.5-4.5-4.5L6 19.5" />
+  </Icon>
+)
+
 // Navigation set: the same glyph stands for the same place on the phone tab bar and the desktop navbar.
 export const BrowseIcon = (p) => (
   <Icon {...p}>
@@ -175,6 +183,14 @@ export const SwapIcon = (p) => (
 )
 
 // Brand glyph: filled, not stroked.
+export const InstagramIcon = ({ className = 'h-5 w-5' }) => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="3" width="18" height="18" rx="5" />
+    <circle cx="12" cy="12" r="4" />
+    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+  </svg>
+)
+
 export const MessengerIcon = ({ className = 'h-5 w-5' }) => (
   <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
     <path d="M12 2C6.36 2 2 6.13 2 11.7c0 2.91 1.19 5.44 3.14 7.17.16.14.26.35.27.57l.05 1.78a.8.8 0 0 0 1.12.71l1.98-.87c.17-.08.36-.09.54-.04.91.25 1.87.38 2.9.38 5.64 0 10-4.13 10-9.7S17.64 2 12 2Zm6 7.46-2.94 4.66a1.5 1.5 0 0 1-2.17.4l-2.34-1.75a.6.6 0 0 0-.72 0l-3.16 2.4c-.42.32-.97-.18-.69-.63L8.92 9.88a1.5 1.5 0 0 1 2.17-.4l2.34 1.75a.6.6 0 0 0 .72 0l3.16-2.4c.42-.32.97.18.69.63Z" />
