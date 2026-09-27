@@ -369,9 +369,10 @@ export default async function LandingPage() {
       </section>
 
       <section className="py-10">
-        <div className={`${wrap} flex flex-col gap-4 sm:flex-row sm:items-baseline sm:justify-between`}>
-          <p className="text-sm font-semibold text-ink">Made by students in Bukidnon</p>
-          <ul className="flex flex-col gap-3 sm:flex-row sm:gap-10">
+        {/* The label sits right above the names so the credits read as one group. */}
+        <div className={wrap}>
+          <p className="text-xs font-medium text-muted">Made by students in Bukidnon</p>
+          <ul className="mt-3 flex flex-col gap-4 sm:flex-row sm:gap-12">
             {CREDITS.map((c) => (
               <li key={c.email} className="text-sm">
                 <p className="font-semibold text-ink">
