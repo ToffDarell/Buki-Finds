@@ -7,7 +7,7 @@ import {
   CONDITIONS,
   IMAGE_BUCKET,
   MAX_IMAGES,
-  normalizeFacebookUsername,
+  resolveFacebookUsername,
   normalizeSchool,
   sortedImages,
   formatSize,
@@ -111,6 +111,7 @@ export default function ListingForm({ user, listing, onSaved }) {
   )
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [fbStatus, setFbStatus] = useState(null) // { ok, text } under the Facebook field
 
   // Free the preview blob URLs when the form goes away.
   const imagesRef = useRef(images)
@@ -149,15 +150,33 @@ export default function ListingForm({ user, listing, onSaved }) {
     setImages((prev) => [prev.find((i) => i.key === key), ...prev.filter((i) => i.key !== key)])
   }
 
+  // Turns a pasted link (including the Facebook app's share links) into the username right away,
+  // so the seller sees exactly what buyers' Messenger button will use.
+  async function checkFacebook() {
+    const raw = facebook.trim()
+    if (!raw || /^[A-Za-z0-9.]+$/.test(raw)) return setFbStatus(null)
+    setFbStatus({ text: 'Checking your Facebook link…' })
+    const username = await resolveFacebookUsername(raw)
+    if (username) {
+      setFacebook(username)
+      setFbStatus({ ok: true, text: `Got it: buyers will message facebook.com/${username}` })
+    } else {
+      setFbStatus(null)
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
 
-    const fbUsername = normalizeFacebookUsername(facebook)
+    setSaving(true)
+    const fbUsername = await resolveFacebookUsername(facebook)
+    setSaving(false)
     if (fbUsername === null) {
-      setError('That Facebook link doesn’t lead to a profile. Paste your profile link (facebook.com/yourname) or just your username, e.g. juan.delacruz. “Share” links from the Facebook app don’t work here.')
+      setError('That Facebook link doesn’t lead to a profile. Paste your profile link or just your username, e.g. juan.delacruz.')
       return
     }
+    if (fbUsername) setFacebook(fbUsername)
     if (!user.email && !fbUsername) {
       setError('Your account has no email address, so add your Facebook username so buyers can reach you.')
       return
@@ -462,12 +481,19 @@ export default function ListingForm({ user, listing, onSaved }) {
                 required={!user.email}
                 value={facebook}
                 onChange={(e) => setFacebook(e.target.value)}
+                onBlur={checkFacebook}
+                aria-describedby={fbStatus ? 'facebook-status' : undefined}
                 placeholder="juan.delacruz or your profile link"
                 className={`${inputClass} pl-9`}
                 autoCapitalize="none"
                 autoCorrect="off"
               />
             </div>
+            {fbStatus && (
+              <p id="facebook-status" aria-live="polite" className={`mt-1.5 text-xs ${fbStatus.ok ? 'text-accent-hover' : 'text-muted'}`}>
+                {fbStatus.text}
+              </p>
+            )}
           </Field>
         </Section>
 
