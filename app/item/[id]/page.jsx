@@ -464,11 +464,6 @@ export default function ItemPage() {
                     </Link>
                   )}
                 </p>
-                {!isOwner && user && listing.seller_email && (messengerUrl(listing.seller_facebook_username) || instagramUrl(listing.seller_instagram_username)) && (
-                  <a href={`mailto:${listing.seller_email}`} className="truncate text-sm text-primary hover:underline">
-                    {listing.seller_email}
-                  </a>
-                )}
               </div>
 
               {isOwner ? (
