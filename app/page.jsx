@@ -102,7 +102,7 @@ export default async function LandingPage() {
           <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:gap-16">
             <div>
               <h1 className="card-type max-w-[14ch] text-[2.75rem] font-extrabold leading-[0.95] text-ink sm:text-6xl lg:text-7xl">
-                Buy, sell and swap with students across Bukidnon.
+                Buy, sell and swap with college students across Bukidnon.
               </h1>
             </div>
             <div className="lg:pb-2">
