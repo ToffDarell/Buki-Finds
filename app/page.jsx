@@ -46,12 +46,12 @@ const USES = [
     link: ['Browse uniforms', '/browse?category=Uniforms'],
   },
   {
-    title: 'Run a small shop',
-    body: 'Resell thrifted clothes, sell homemade snacks, take pre-orders. Put up as many items as you want with the ₱20 pass.',
+    title: 'Run a small student shop',
+    body: 'Resell thrifted clothes, sell homemade snacks, take pre-orders. Turn your dorm room or campus downtime into extra allowance.',
     link: ['Browse food', '/browse?category=Food'],
   },
   {
-    title: 'Offer a service',
+    title: 'Offer a campus service',
     body: 'Tutoring, printing, thesis layout, phone repairs, haircuts in the dorm. List it like any item and set your rate.',
     link: ['Browse services', '/browse?category=Services'],
   },
@@ -79,8 +79,8 @@ const STEPS = [
 ]
 
 const CREDITS = [
-  { name: 'Atheo Jessar R. Caliao', role: 'Front-end developer', email: 'ajtheo176@gmail.com' },
-  { name: 'Toff Darell B. Vergara', role: 'Full-stack developer', email: 'topedarell13@gmail.com' },
+  { name: 'Atheo Jessar R. Caliao', role: 'Front-end developer', email: 'ajtheo176@gmail.com', phone: '09924908157' },
+  { name: 'Toff Darell B. Vergara', role: 'Full-stack developer', email: 'topedarell13@gmail.com', phone: '09977907786' },
 ]
 
 const wrap = 'mx-auto w-full max-w-7xl px-4 sm:px-6'
@@ -101,14 +101,18 @@ export default async function LandingPage() {
         <div className={`${wrap} pb-8 pt-10 sm:pt-14 lg:pb-12`}>
           <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:gap-16">
             <div>
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
+                <span className="flex h-2 w-2 rounded-full bg-accent animate-pulse" />
+                <span>The Student Community of Bukidnon</span>
+              </div>
               <h1 className="card-type max-w-[14ch] text-[2.75rem] font-extrabold leading-[0.95] text-ink sm:text-6xl lg:text-7xl">
                 Buy, sell and swap with students across Bukidnon.
               </h1>
             </div>
             <div className="lg:pb-2">
               <p className="max-w-[46ch] text-base leading-relaxed text-muted sm:text-lg">
-                Uniforms, shoes, books, gadgets, homemade snacks and student services, listed by students near
-                your campus. Message the seller on Messenger or Instagram and meet up at university.
+                Uniforms, shoes, books, gadgets, homemade snacks and student services, listed directly by students near
+                your campus. Message the seller on Messenger or Instagram and meet up safely at university.
               </p>
               <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
                 <Link href="/browse" className={btnPrimary}>
@@ -127,12 +131,12 @@ export default async function LandingPage() {
             <LandingRack listings={rack} />
           </div>
 
-          {/* The old checkmark row, rewritten as ID-card fields: label over value. */}
+          {/* Student community terms: transparent label over value. */}
           <dl className="mt-8 grid gap-px overflow-hidden rounded-[10px] border border-line bg-line sm:grid-cols-3">
             {[
-              ['Browsing', 'Free, no account needed'],
+              ['Browsing', 'Free for all students, no account needed'],
               ['Posting', `${FREE_ACTIVE_LISTINGS} free listings, or unlimited for ₱${SUBSCRIPTION_PRICE}`],
-              ['Contacting sellers', 'Log in, then message on Messenger or Instagram'],
+              ['Contacting sellers', 'Direct message on Messenger or Instagram'],
             ].map(([label, value]) => (
               <div key={label} className="bg-white px-4 py-3">
                 <dt className="text-xs font-medium text-muted">{label}</dt>
@@ -143,7 +147,56 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* What you can do: a ruled list, not a grid of icon cards. */}
+      {/* Student Community: Purely Peer-to-Peer */}
+      <section className="border-b border-line bg-white py-16 sm:py-24">
+        <div className={wrap}>
+          <div className="max-w-2xl">
+            <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-bold text-accent">
+              100% Student-to-Student
+            </span>
+            <h2 className="card-type mt-3 text-3xl font-extrabold leading-tight sm:text-4xl text-ink">
+              Built purely for our student community.
+            </h2>
+            <p className="mt-4 text-[15px] leading-relaxed text-muted">
+              BUKI is created for college and university peers across Bukidnon. No outside middlemen or corporate interference—just students helping fellow students find affordable school needs and earn honest allowance.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="rounded-[10px] border border-line bg-surface p-6 shadow-xs">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold">
+                🤝
+              </div>
+              <h3 className="mt-4 text-base font-bold text-ink">Direct Peer-to-Peer</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                Trade directly with fellow students who walk the same campus grounds. Verified reviews from completed student transactions make every deal transparent.
+              </p>
+            </div>
+
+            <div className="rounded-[10px] border border-line bg-surface p-6 shadow-xs">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/15 text-accent font-bold">
+                🏫
+              </div>
+              <h3 className="mt-4 text-base font-bold text-ink">Familiar Campus Meetups</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                No delivery wait times or extra parcel fees. Message each other, agree on a campus spot—like your canteen, library, or gate—and inspect the item in person.
+              </p>
+            </div>
+
+            <div className="rounded-[10px] border border-line bg-surface p-6 shadow-xs">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-highlight/20 text-highlight font-bold">
+                💡
+              </div>
+              <h3 className="mt-4 text-base font-bold text-ink">Student Side-Hustles</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                Empower your own student mini-business. Bake snacks, offer thesis formatting, tutor classmates, or sell pre-loved gear to support your daily allowance.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What you can do: a ruled list */}
       <section className="py-16 sm:py-24">
         <div className={`${wrap} grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16`}>
           <div>
@@ -151,7 +204,7 @@ export default async function LandingPage() {
               Not just uniforms and books.
             </h2>
             <p className="mt-4 max-w-[42ch] text-[15px] leading-relaxed text-muted">
-              If a student in Bukidnon would pay for it, trade for it, or book it, it can go on BukiMart.
+              If a student in Bukidnon would pay for it, trade for it, or book it, it can go on BUKI.
             </p>
           </div>
           <ul className="divide-y divide-dashed divide-line border-y border-line">
@@ -174,7 +227,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Cross-campus: a working school search, not a claim. */}
+      {/* Cross-campus: a working school search */}
       <section className="border-y border-line bg-surface py-16 sm:py-24">
         <div className={`${wrap} grid gap-10 lg:grid-cols-2 lg:gap-16`}>
           <div>
@@ -241,17 +294,16 @@ export default async function LandingPage() {
               Message sellers where you already chat.
             </h2>
             <p className="max-w-[56ch] text-[15px] leading-relaxed text-muted lg:pt-2">
-              There’s no chat inside BukiMart. Sellers paste their Facebook, Messenger or Instagram link when they
-              post, whatever the app gave them, even the ones with codes in them. BukiMart finds the account, and
-              buyers get a button that opens the conversation directly.
+              There’s no separate chat app to download. Sellers paste their Facebook, Messenger or Instagram link when they
+              post. BUKI connects you directly so buyers can start the conversation immediately.
             </p>
           </div>
 
           <div className="mt-10 overflow-hidden rounded-[10px] border border-line shadow-card">
             <div className="hidden grid-cols-[1.2fr_auto_1fr] gap-6 bg-surface px-5 py-2.5 text-xs font-medium text-muted md:grid">
-              <span>The seller pastes</span>
+              <span>The student seller pastes</span>
               <span aria-hidden="true" />
-              <span>The buyer taps</span>
+              <span>The student buyer taps</span>
             </div>
             <ul className="divide-y divide-line bg-white">
               {LINK_EXAMPLES.map(({ pasted, from, icon: Icon, button }) => (
@@ -320,7 +372,7 @@ export default async function LandingPage() {
               </div>
               <div className="overflow-hidden rounded-[10px] border border-accent/40 bg-white shadow-card">
                 <div className="bg-accent px-4 py-3">
-                  <p className="text-sm font-semibold text-white">Unlimited pass</p>
+                  <p className="text-sm font-semibold text-white">Unlimited student pass</p>
                 </div>
                 <div className="px-4 py-4">
                   <p className="card-type tabular text-3xl font-extrabold leading-none text-accent">
@@ -343,7 +395,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Close: the two actions again, then who made it. */}
+      {/* Close: the two actions again */}
       <section className="bg-primary text-white">
         <div className={`${wrap} flex flex-col gap-6 py-14 sm:py-16 lg:flex-row lg:items-center lg:justify-between`}>
           <div>
@@ -368,20 +420,28 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <section className="py-10">
-        {/* The label sits right above the names so the credits read as one group. */}
+      {/* Meet the Developers (Clean text without profile avatar icons) */}
+      <section className="py-12 border-t border-line bg-surface">
         <div className={wrap}>
-          <p className="text-xs font-medium text-muted">Made by students in Bukidnon</p>
-          <ul className="mt-3 flex flex-col gap-4 sm:flex-row sm:gap-12">
+          <p className="text-xs font-bold uppercase tracking-wider text-muted">Created by Bukidnon Students</p>
+          <h3 className="card-type text-2xl font-bold text-ink mt-1">Meet the Developers</h3>
+          <ul className="mt-6 grid gap-6 sm:grid-cols-2 max-w-2xl">
             {CREDITS.map((c) => (
-              <li key={c.email} className="text-sm">
-                <p className="font-semibold text-ink">
-                  {c.name} <span className="font-normal text-muted">· {c.role}</span>
-                </p>
-                <a href={`mailto:${c.email}`} className="mt-0.5 inline-flex items-center gap-1.5 text-primary hover:underline">
-                  <MailIcon className="h-3.5 w-3.5" />
-                  {c.email}
-                </a>
+              <li key={c.email} className="rounded-[10px] border border-line bg-white p-5 shadow-xs">
+                <p className="text-base font-bold text-ink">{c.name}</p>
+                <p className="text-xs font-semibold text-primary mt-0.5">{c.role}</p>
+                <div className="mt-3 flex flex-col gap-1.5 text-xs text-muted">
+                  <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
+                    <MailIcon className="h-3.5 w-3.5 text-primary" />
+                    {c.email}
+                  </a>
+                  <a href={`tel:${c.phone}`} className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 text-primary">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {c.phone}
+                  </a>
+                </div>
               </li>
             ))}
           </ul>
