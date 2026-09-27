@@ -10,9 +10,14 @@ import { BrowseIcon, HeartIcon, ListingsIcon, PlusIcon, UserIcon } from '@/app/c
 
 function Mark() {
   return (
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white">
-      <Image src="/LOGO%20BUKIFINDS.jpg" alt="" width={36} height={36} priority className="h-9 w-9 object-cover" />
-    </span>
+    <Image
+      src="/BUKI.png"
+      alt="BUKI"
+      width={160}
+      height={80}
+      priority
+      className="h-10 w-auto object-contain transition-transform hover:scale-[1.02] sm:h-11"
+    />
   )
 }
 
@@ -39,13 +44,12 @@ export default function Navbar() {
   return (
     <header className="bg-primary shadow-xs [&_:focus-visible]:outline-white">
       <nav className="mx-auto flex max-w-7xl items-center gap-8 px-4 py-2.5 sm:px-6 md:py-3">
-        <Link href="/" className="flex items-center gap-2.5 text-white" aria-label="Buki-Finds home">
+        <Link href="/" className="flex items-center text-white" aria-label="BUKI home">
           <Mark />
-          <span className="card-type text-lg font-bold">Buki-Finds</span>
         </Link>
 
         <div className="hidden items-center gap-6 md:flex">
-          <NavLink href="/" icon={BrowseIcon}>Browse</NavLink>
+          <NavLink href="/browse" icon={BrowseIcon}>Browse</NavLink>
           {mounted && user && <NavLink href="/saved" icon={HeartIcon}>Saved</NavLink>}
           {mounted && user && <NavLink href="/my-listings" icon={ListingsIcon}>My Listings</NavLink>}
         </div>

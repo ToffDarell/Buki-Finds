@@ -52,7 +52,7 @@ export default function BottomNav() {
         className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgb(11_19_43/0.06)] backdrop-blur-md md:hidden"
       >
         <div className="mx-auto grid max-w-lg grid-cols-5">
-          <Tab href="/" icon={BrowseIcon} label="Browse" active={pathname === '/'} />
+          <Tab href="/browse" icon={BrowseIcon} label="Browse" active={pathname === '/browse'} />
 
           <Tab href="/saved" icon={HeartIcon} label="Saved" active={pathname === '/saved'} />
 

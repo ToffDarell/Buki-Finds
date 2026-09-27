@@ -82,24 +82,27 @@ export default function LoginPage() {
   return (
     <main className="flex flex-1 items-center justify-center bg-surface px-4 py-8 sm:py-12">
       <div className="w-full max-w-md overflow-hidden rounded-2xl border border-line bg-white shadow-xl">
-        {/* Card Header with Electric Royal Brand */}
-        <div className="bg-primary p-6 text-white sm:p-7">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-xs">
-              <Image src="/LOGO%20BUKIFINDS.jpg" alt="Buki-Finds" width={40} height={40} className="h-10 w-10 object-cover" />
-            </span>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-                {mode === 'login' ? 'Welcome back' : 'Create an account'}
-              </h1>
-              <p className="mt-0.5 text-xs text-on-primary-muted sm:text-sm">
-                Student marketplace across Bukidnon campuses
-              </p>
-            </div>
+        {/* Card Header with Centered 1.png Logo */}
+        <div className="bg-white p-6 pb-2 text-center sm:p-8 sm:pb-3">
+          <div className="mx-auto mb-3 flex items-center justify-center">
+            <Image
+              src="/1.png"
+              alt="BUKI"
+              width={140}
+              height={140}
+              priority
+              className="h-28 w-28 object-contain sm:h-32 sm:w-32 transition-transform hover:scale-105"
+            />
           </div>
+          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+            {mode === 'login' ? 'Welcome back' : 'Create an account'}
+          </h1>
+          <p className="mt-1 text-xs text-muted sm:text-sm">
+            Student marketplace across Bukidnon campuses
+          </p>
 
           {/* Segmented Switcher (Log in / Sign up) */}
-          <div className="mt-5 grid grid-cols-2 rounded-xl bg-black/15 p-1 backdrop-blur-xs">
+          <div className="mt-5 grid grid-cols-2 rounded-xl border border-line bg-surface p-1">
             <button
               type="button"
               onClick={() => {
@@ -108,7 +111,7 @@ export default function LoginPage() {
                 setMessage('')
               }}
               className={`rounded-lg py-2 text-xs font-bold transition-all sm:text-sm ${
-                mode === 'login' ? 'bg-white text-primary shadow-xs' : 'text-white/80 hover:text-white'
+                mode === 'login' ? 'bg-primary text-white shadow-xs' : 'text-muted hover:text-ink'
               }`}
             >
               Log in
@@ -121,7 +124,7 @@ export default function LoginPage() {
                 setMessage('')
               }}
               className={`rounded-lg py-2 text-xs font-bold transition-all sm:text-sm ${
-                mode === 'signup' ? 'bg-white text-primary shadow-xs' : 'text-white/80 hover:text-white'
+                mode === 'signup' ? 'bg-primary text-white shadow-xs' : 'text-muted hover:text-ink'
               }`}
             >
               Sign up
@@ -213,7 +216,7 @@ export default function LoginPage() {
               disabled={submitting}
               className="mt-1 rounded-xl bg-primary py-3 text-sm font-bold text-white shadow-xs transition-all hover:bg-primary-hover hover:shadow-md disabled:opacity-60"
             >
-              {submitting ? 'Please wait…' : mode === 'login' ? 'Log in to Buki-Finds' : 'Create Account'}
+              {submitting ? 'Please wait…' : mode === 'login' ? 'Log in to BUKI' : 'Create Account'}
             </button>
           </form>
 
