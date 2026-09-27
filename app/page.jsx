@@ -1,781 +1,603 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
 import {
-  BROWSE_STATUSES,
-  CATEGORIES,
-  CONDITIONS,
-  LISTING_TYPES,
-  LISTING_WITH_IMAGES,
-  cleanSearchText,
-  formatPrice,
-  formatSize,
-} from '@/lib/listings'
-import ListingCard, { ListingCardSkeleton } from '@/app/components/ListingCard'
-import SchoolInput from '@/app/components/SchoolInput'
-import { matchSchools, schoolConditions } from '@/lib/schools'
-import { CloseIcon, FiltersIcon, PlusIcon, SearchIcon } from '@/app/components/icons'
+  BrowseIcon,
+  CheckIcon,
+  ChevronRightIcon,
+  HeartIcon,
+  MailIcon,
+  PlusIcon,
+  SwapIcon,
+  UserIcon,
+} from '@/app/components/icons'
 
-const DEFAULT_FILTERS = {
-  listingType: '',
-  category: '',
-  school: '',
-  size: '',
-  condition: '',
-  minPrice: '',
-  maxPrice: '',
-  sort: 'newest',
-}
+export default function LandingPage() {
+  const schools = [
+    { name: 'Bukidnon State University', short: 'BukSU' },
+    { name: 'Central Mindanao University', short: 'CMU' },
+    { name: 'San Isidro College', short: 'SIC' },
+    { name: 'STI College Malaybalay', short: 'STI' },
+    { name: 'Mountain View College', short: 'MVC' },
+    { name: 'Philippine College Foundation', short: 'PCF' },
+  ]
 
-const TYPE_OPTIONS = [
-  ['', 'All Items'],
-  ['sell', 'For Sale'],
-  ['swap', 'For Swap'],
-]
+  const features = [
+    {
+      title: 'Start Your Student Business',
+      desc: 'Turn your unused textbooks, uniforms, gadgets, and creative crafts into extra allowance. Zero listing fees, 100% student-focused.',
+      badge: 'Student Entrepreneurship',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6 text-accent">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+    {
+      title: 'Campus-to-Campus Trading',
+      desc: 'Easily filter by your university or city. Arrange safe, quick handoffs and meetups right outside your lecture hall or campus gates.',
+      badge: 'Safe & Local',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6 text-primary">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      ),
+    },
+    {
+      title: 'Cashless Item Swapping',
+      desc: 'Need a different uniform size or textbook edition? Put your items up "For Swap" and trade directly with fellow students without spending cash.',
+      badge: 'Sustainable Campus',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6 text-highlight">
+          <path d="M4 8h13M13.5 4.5 17 8l-3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M20 16H7M10.5 12.5 7 16l3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+    {
+      title: 'Campus ID Card Experience',
+      desc: 'Every listing is formatted cleanly like a vertical campus lanyard ID, keeping vital details like price, size, school, and condition front and center.',
+      badge: 'Student Identity',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6 text-primary">
+          <rect x="3" y="4" width="18" height="16" rx="3" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="12" cy="10" r="3" />
+          <path d="M7 17h10" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+  ]
 
-const SORTS = {
-  newest: { label: 'Newest first', column: 'created_at', ascending: false },
-  'price-asc': { label: 'Price: low to high', column: 'price', ascending: true },
-  'price-desc': { label: 'Price: high to low', column: 'price', ascending: false },
-}
-
-const POPULAR_SCHOOLS = ['BukSU', 'CMU', 'San Isidro', 'STI']
-
-const PRICE_PRESETS = [
-  { label: 'Under ₱150', min: '', max: '150' },
-  { label: '₱150–₱500', min: '150', max: '500' },
-  { label: '₱500–₱1,000', min: '500', max: '1000' },
-  { label: '₱1,000+', min: '1000', max: '' },
-]
-
-function fetchListings(filters, search) {
-  const sort = SORTS[filters.sort] || SORTS.newest
-  let query = supabase
-    .from('listings')
-    .select(LISTING_WITH_IMAGES)
-    .in('status', BROWSE_STATUSES)
-    .order(sort.column, { ascending: sort.ascending, nullsFirst: false })
-
-  if (filters.listingType) query = query.eq('listing_type', filters.listingType)
-  if (filters.category) query = query.eq('category', filters.category)
-  // "CMU" and "Central Mindanao University" find each other (see lib/schools.js).
-  if (filters.school) query = query.or(schoolConditions(filters.school).join(','))
-  // ilike ignores capitals, so the "L" chip also finds listings typed as "l".
-  if (filters.size) query = query.ilike('size', filters.size.replace(/[\\%_]/g, '\\$&'))
-  if (filters.condition) query = query.eq('condition', filters.condition)
-  if (filters.minPrice !== '') query = query.gte('price', Number(filters.minPrice))
-  if (filters.maxPrice !== '') query = query.lte('price', Number(filters.maxPrice))
-  if (search) {
-    // Searching a school's name or acronym also finds listings from that school.
-    const conditions = [`title.ilike.%${search}%`, `description.ilike.%${search}%`]
-    if (matchSchools(search).length) conditions.push(...schoolConditions(search))
-    query = query.or(conditions.join(','))
-  }
-
-  return query
-}
-
-function priceLabel(min, max) {
-  if (min !== '' && max !== '') return `${formatPrice(min)}–${formatPrice(max)}`
-  if (min !== '') return `${formatPrice(min)}+`
-  return `Up to ${formatPrice(max)}`
-}
-
-function FilterChip({ label, onRemove }) {
   return (
-    <button
-      onClick={onRemove}
-      className="group inline-flex min-h-7 shrink-0 items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft/70 px-2.5 py-1 text-xs font-medium text-primary transition-all hover:border-primary/50 hover:bg-primary-soft"
-      aria-label={`Remove filter ${label}`}
-    >
-      <span>{label}</span>
-      <span className="flex h-4 w-4 items-center justify-center rounded-full transition-colors group-hover:bg-primary/10">
-        <CloseIcon className="h-3 w-3" />
-      </span>
-    </button>
-  )
-}
-
-function EmptyState({ active, onClearAll }) {
-  const filtered = active.length > 0
-  return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-line bg-white p-8 text-center shadow-xs sm:p-12">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-surface text-primary">
-        <SearchIcon className="h-8 w-8 text-primary/70" />
-      </div>
-      <h2 className="mt-4 text-xl font-bold text-ink sm:text-2xl">
-        {filtered ? 'No listings found' : 'No listings yet'}
-      </h2>
-      <p className="mt-2 max-w-sm text-sm text-muted">
-        {filtered
-          ? 'No items match your active filters. Try adjusting your criteria or clearing some filters.'
-          : 'Be the first to list uniforms, books, or essentials for college students across Bukidnon.'}
-      </p>
-
-      {filtered ? (
-        <div className="mt-6 flex flex-col items-center gap-3">
-          {active.length > 0 && (
-            <div className="flex max-w-md flex-wrap justify-center gap-2">
-              {active.map((f) => (
-                <FilterChip key={f.key} label={f.label} onRemove={f.clear} />
-              ))}
-            </div>
-          )}
-          <button
-            onClick={onClearAll}
-            className="mt-2 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-primary-hover"
-          >
-            Clear all filters
-          </button>
-        </div>
-      ) : (
-        <Link
-          href="/post"
-          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-accent-hover"
-        >
-          <PlusIcon className="h-4 w-4" />
-          Post Item
-        </Link>
-      )}
-    </div>
-  )
-}
-
-export default function BrowsePage() {
-  const [filters, setFilters] = useState(DEFAULT_FILTERS)
-  const [searchInput, setSearchInput] = useState('')
-  const [search, setSearch] = useState('')
-  const [schoolInput, setSchoolInput] = useState('')
-  const [sizes, setSizes] = useState([])
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
-  const [showDesktopFilters, setShowDesktopFilters] = useState(true)
-  const [result, setResult] = useState({ key: null, listings: [], error: '' })
-
-  const requestKey = JSON.stringify({ filters, search })
-  const loading = result.key !== requestKey
-
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => setSearch(cleanSearchText(searchInput)), 300)
-    return () => clearTimeout(timer)
-  }, [searchInput])
-
-  // Debounce school free-text input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const school = cleanSearchText(schoolInput)
-      setFilters((prev) => (prev.school === school ? prev : { ...prev, school }))
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [schoolInput])
-
-  // Fetch listings
-  useEffect(() => {
-    let cancelled = false
-    fetchListings(filters, search).then(({ data, error }) => {
-      if (!cancelled) {
-        setResult({ key: requestKey, listings: data ?? [], error: error?.message ?? '' })
-      }
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [filters, search, requestKey])
-
-  // Fetch available sizes from existing listings
-  useEffect(() => {
-    supabase
-      .from('listings')
-      .select('size')
-      .eq('status', 'available')
-      .not('size', 'is', null)
-      .then(({ data }) => {
-        const unique = [...new Set((data ?? []).map((row) => formatSize(row.size)).filter(Boolean))]
-        setSizes(unique.sort((a, b) => a.localeCompare(b, undefined, { numeric: true })))
-      })
-  }, [])
-
-  function update(name, value) {
-    setFilters((prev) => ({ ...prev, [name]: value }))
-  }
-
-  function setListingType(listingType) {
-    setFilters((prev) => ({
-      ...prev,
-      listingType,
-      ...(listingType === 'swap' && { minPrice: '', maxPrice: '' }),
-    }))
-  }
-
-  function clearAll() {
-    setFilters(DEFAULT_FILTERS)
-    setSearchInput('')
-    setSchoolInput('')
-  }
-
-  function selectPopularSchool(name) {
-    if (filters.school.toLowerCase() === name.toLowerCase()) {
-      setSchoolInput('')
-      update('school', '')
-    } else {
-      setSchoolInput(name)
-      update('school', name)
-    }
-  }
-
-  function togglePricePreset(preset) {
-    if (filters.minPrice === preset.min && filters.maxPrice === preset.max) {
-      setFilters((prev) => ({ ...prev, minPrice: '', maxPrice: '' }))
-    } else {
-      setFilters((prev) => ({ ...prev, minPrice: preset.min, maxPrice: preset.max }))
-    }
-  }
-
-  function toggleSize(s) {
-    update('size', filters.size === s ? '' : s)
-  }
-
-  function toggleCondition(c) {
-    update('condition', filters.condition === c ? '' : c)
-  }
-
-  // Active filter pills
-  const active = [
-    search && { key: 'search', label: `“${search}”`, clear: () => setSearchInput('') },
-    filters.listingType && {
-      key: 'type',
-      label: LISTING_TYPES[filters.listingType] || filters.listingType,
-      clear: () => update('listingType', ''),
-    },
-    filters.category && { key: 'category', label: filters.category, clear: () => update('category', '') },
-    filters.school && {
-      key: 'school',
-      label: `School: ${filters.school}`,
-      clear: () => {
-        setSchoolInput('')
-        update('school', '')
-      },
-    },
-    filters.size && { key: 'size', label: `Size ${filters.size}`, clear: () => update('size', '') },
-    filters.condition && { key: 'condition', label: filters.condition, clear: () => update('condition', '') },
-    (filters.minPrice !== '' || filters.maxPrice !== '') && {
-      key: 'price',
-      label: priceLabel(filters.minPrice, filters.maxPrice),
-      clear: () => setFilters((prev) => ({ ...prev, minPrice: '', maxPrice: '' })),
-    },
-  ].filter(Boolean)
-
-  const activeFilterCount = [
-    'school',
-    'size',
-    'condition',
-    'minPrice',
-    'maxPrice',
-  ].filter((k) => filters[k] !== '').length
-
-  function resetSidebarFilters() {
-    setSchoolInput('')
-    setFilters((prev) => ({
-      ...prev,
-      school: '',
-      size: '',
-      condition: '',
-      minPrice: '',
-      maxPrice: '',
-    }))
-  }
-
-  const count = result.listings.length
-
-  // Filter components reusable in sidebar and mobile drawer
-  const filterControls = (
-    <div className="flex flex-col gap-6">
-      {/* School Filter */}
-      <div>
-        <div className="flex items-center justify-between pb-2">
-          <label htmlFor="school-filter" className="text-sm font-semibold text-ink">
-            School / University
-          </label>
-          {filters.school && (
-            <button
-              onClick={() => {
-                setSchoolInput('')
-                update('school', '')
-              }}
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-        <SchoolInput
-          id="school-filter"
-          value={schoolInput}
-          onChange={setSchoolInput}
-          placeholder="e.g. BukSU, CMU, STI..."
-          className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink transition-colors placeholder:text-muted focus:border-primary focus:bg-white focus:outline-none"
+    <main className="flex-1 bg-surface text-ink">
+      {/* 1. HERO SECTION */}
+      <section className="relative overflow-hidden border-b border-line bg-gradient-to-b from-white via-white to-surface py-12 md:py-20">
+        {/* Subtle decorative grid/glow */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.08),transparent_50%)]"
         />
 
-        {/* Quick popular school tags */}
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {POPULAR_SCHOOLS.map((schoolName) => {
-            const isSelected = filters.school.toLowerCase() === schoolName.toLowerCase()
-            return (
-              <button
-                key={schoolName}
-                type="button"
-                onClick={() => selectPopularSchool(schoolName)}
-                className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
-                  isSelected
-                    ? 'border border-primary/40 bg-primary-soft text-primary'
-                    : 'border border-line bg-white text-muted hover:border-primary/40 hover:text-ink'
-                }`}
-              >
-                {schoolName}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-8">
+            
+            {/* Left Column: Hero Text */}
+            <div className="text-center lg:col-span-7 lg:text-left">
+              {/* Campus pill */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-soft px-3.5 py-1.5 text-xs font-semibold text-primary sm:text-sm">
+                <span className="flex h-2 w-2 rounded-full bg-accent animate-pulse" />
+                <span>The Student Marketplace of Bukidnon</span>
+              </div>
 
-      {/* Price Range Filter (Only when not Swap) */}
-      {filters.listingType !== 'swap' && (
-        <div className="border-t border-line/60 pt-5">
-          <div className="flex items-center justify-between pb-2">
-            <span className="text-sm font-semibold text-ink">Price Range (₱)</span>
-            {(filters.minPrice !== '' || filters.maxPrice !== '') && (
-              <button
-                onClick={() => setFilters((prev) => ({ ...prev, minPrice: '', maxPrice: '' }))}
-                className="text-xs font-medium text-primary hover:underline"
-              >
-                Clear
-              </button>
-            )}
-          </div>
+              {/* Main Headline */}
+              <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-ink sm:text-5xl sm:leading-tight lg:text-5xl">
+                Buy, Sell &amp; Grow Your <br className="hidden sm:inline" />
+                <span className="text-primary">Campus Business</span> in Bukidnon
+              </h1>
 
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted">
-                ₱
-              </span>
-              <input
-                type="number"
-                min="0"
-                placeholder="Min"
-                value={filters.minPrice}
-                onChange={(e) => update('minPrice', e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface py-2 pl-7 pr-2.5 text-sm tabular text-ink transition-colors placeholder:text-muted focus:border-primary focus:bg-white focus:outline-none"
-              />
-            </div>
-            <span className="text-muted">–</span>
-            <div className="relative flex-1">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted">
-                ₱
-              </span>
-              <input
-                type="number"
-                min="0"
-                placeholder="Max"
-                value={filters.maxPrice}
-                onChange={(e) => update('maxPrice', e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface py-2 pl-7 pr-2.5 text-sm tabular text-ink transition-colors placeholder:text-muted focus:border-primary focus:bg-white focus:outline-none"
-              />
-            </div>
-          </div>
+              {/* Subtitle */}
+              <p className="mt-4 text-base leading-relaxed text-muted sm:text-lg lg:max-w-xl">
+                <strong>BUKI</strong> connects students across <strong>BukSU, CMU, STI, San Isidro</strong>, and neighboring colleges. Trade uniforms, books, gadgets, and dorm supplies, or launch your own student side-hustle with zero platform fees.
+              </p>
 
-          {/* Quick Price Presets */}
-          <div className="mt-2.5 grid grid-cols-2 gap-1.5">
-            {PRICE_PRESETS.map((preset) => {
-              const isSelected = filters.minPrice === preset.min && filters.maxPrice === preset.max
-              return (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => togglePricePreset(preset)}
-                  className={`rounded-lg py-1 px-2 text-center text-xs font-medium transition-colors ${
-                    isSelected
-                      ? 'border border-primary/40 bg-primary-soft text-primary'
-                      : 'border border-line bg-white text-muted hover:border-primary/40 hover:text-ink'
-                  }`}
+              {/* CTAs */}
+              <div className="mt-8 flex flex-col gap-3.5 sm:flex-row sm:justify-center lg:justify-start">
+                <Link
+                  href="/browse"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-primary-hover hover:shadow-lg focus-visible:outline-2 focus-visible:outline-primary"
                 >
-                  {preset.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
+                  <BrowseIcon className="h-5 w-5" />
+                  Start Browsing
+                </Link>
 
-      {/* Size Filter */}
-      {sizes.length > 0 && (
-        <div className="border-t border-line/60 pt-5">
-          <div className="flex items-center justify-between pb-2">
-            <span className="text-sm font-semibold text-ink">Size</span>
-            {filters.size && (
-              <button onClick={() => update('size', '')} className="text-xs font-medium text-primary hover:underline">
-                Clear
-              </button>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {sizes.map((s) => {
-              const isSelected = filters.size === s
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => toggleSize(s)}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
-                    isSelected
-                      ? 'border border-primary/40 bg-primary-soft text-primary'
-                      : 'border border-line bg-white text-muted hover:border-primary/40 hover:text-ink'
-                  }`}
+                <Link
+                  href="/post"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-accent-hover hover:shadow-lg focus-visible:outline-2 focus-visible:outline-accent"
                 >
-                  {s}
-                </button>
-              )
-            })}
+                  <PlusIcon className="h-5 w-5" />
+                  Post an Item
+                </Link>
+              </div>
+
+              {/* Quick Trust Highlights */}
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-muted sm:text-sm lg:justify-start">
+                <div className="flex items-center gap-1.5">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent/15 text-accent font-bold">✓</span>
+                  <span>100% Free for Students</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-primary font-bold">✓</span>
+                  <span>Campus ID Card Listings</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-highlight/20 text-highlight font-bold">✓</span>
+                  <span>Direct Messenger Chat</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Hero Visual Card Mockup */}
+            <div className="flex justify-center lg:col-span-5">
+              <div className="relative w-full max-w-sm">
+                
+                {/* Glow accent behind card */}
+                <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-primary/30 to-accent/30 opacity-70 blur-xl" />
+
+                {/* Floating "Campus ID Card" Mockup */}
+                <div className="relative overflow-hidden rounded-2xl border border-line bg-white shadow-2xl transition-transform hover:-translate-y-1">
+                  
+                  {/* Signature Navy ID Strip Header */}
+                  <div className="relative bg-primary px-5 py-3.5 text-white">
+                    {/* Centered Lanyard Slot Punch */}
+                    <div className="mx-auto mb-2 h-1.5 w-12 rounded-full bg-white/30" />
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold tracking-wider text-on-primary-muted uppercase">
+                        Uniform &bull; College
+                      </span>
+                      <span className="font-mono text-xs font-medium text-on-primary-muted">
+                        No. BUK-2026
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="p-5">
+                    {/* Centered Logo Preview */}
+                    <div className="relative mb-4 flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl border border-line bg-surface p-4">
+                      <Image
+                        src="/1.png"
+                        alt="BUKI Official Logo"
+                        width={200}
+                        height={200}
+                        priority
+                        className="h-36 w-36 object-contain drop-shadow-sm transition-transform hover:scale-105"
+                      />
+                      <span className="absolute top-2.5 right-2.5 rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-bold text-white shadow-xs">
+                        Available
+                      </span>
+                    </div>
+
+                    {/* Price & Title */}
+                    <div className="flex items-baseline justify-between">
+                      <span className="card-type text-2xl font-extrabold text-primary tabular">
+                        ₱250
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-bold text-accent">
+                        <SwapIcon className="h-3.5 w-3.5" /> For Swap Available
+                      </span>
+                    </div>
+
+                    <h2 className="mt-1.5 text-base font-bold text-ink">
+                      BukSU College Polo Uniform (Size M)
+                    </h2>
+
+                    {/* Details row */}
+                    <div className="mt-4 grid grid-cols-3 gap-2 border-t border-dashed border-line pt-3 text-center">
+                      <div className="rounded-lg bg-surface py-1.5">
+                        <span className="block text-[10px] uppercase font-semibold text-muted">School</span>
+                        <span className="text-xs font-bold text-ink">BukSU</span>
+                      </div>
+                      <div className="rounded-lg bg-surface py-1.5">
+                        <span className="block text-[10px] uppercase font-semibold text-muted">Size</span>
+                        <span className="text-xs font-bold text-ink">Medium</span>
+                      </div>
+                      <div className="rounded-lg bg-surface py-1.5">
+                        <span className="block text-[10px] uppercase font-semibold text-muted">Condition</span>
+                        <span className="text-xs font-bold text-ink">Like New</span>
+                      </div>
+                    </div>
+
+                    {/* Mock action button */}
+                    <Link
+                      href="/browse"
+                      className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-2.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover"
+                    >
+                      Message Seller &bull; View Item
+                    </Link>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
           </div>
         </div>
-      )}
+      </section>
 
-      {/* Condition Filter */}
-      <div className="border-t border-line/60 pt-5">
-        <div className="flex items-center justify-between pb-2">
-          <span className="text-sm font-semibold text-ink">Condition</span>
-          {filters.condition && (
-            <button onClick={() => update('condition', '')} className="text-xs font-medium text-primary hover:underline">
-              Clear
-            </button>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {CONDITIONS.map((c) => {
-            const isSelected = filters.condition === c
-            return (
-              <button
-                key={c}
-                type="button"
-                onClick={() => toggleCondition(c)}
-                className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
-                  isSelected
-                    ? 'border border-primary/40 bg-primary-soft text-primary'
-                    : 'border border-line bg-white text-muted hover:border-primary/40 hover:text-ink'
-                }`}
+      {/* 2. CAMPUSES COVERED STRIP */}
+      <section className="border-b border-line bg-white py-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <p className="text-center text-xs font-bold uppercase tracking-wider text-muted">
+            Supporting Students &amp; Campuses Across Bukidnon
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+            {schools.map((s) => (
+              <Link
+                key={s.short}
+                href={`/browse?school=${encodeURIComponent(s.short)}`}
+                className="flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2 text-xs font-bold text-ink shadow-xs transition-all hover:border-primary/50 hover:bg-primary-soft hover:text-primary sm:text-sm"
               >
-                {c}
-              </button>
-            )
-          })}
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-[10px] font-extrabold text-primary">
+                  {s.short[0]}
+                </span>
+                <span>{s.name}</span>
+                <span className="text-[11px] font-medium text-muted">({s.short})</span>
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
-    </div>
-  )
+      </section>
 
-  return (
-    <main className="flex flex-1 flex-col">
-      {/* Hero & Search Header */}
-      <section className="border-b border-line bg-white pb-6 pt-5 sm:pb-8 sm:pt-7">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          {/* No eyebrow label and no second Post button: the heading speaks for itself, and
-              Post Item already lives in the navbar (desktop) and the tab bar (phones). */}
-          {/* "Student-to-student marketplace" opens the description instead of sitting in a label
-              above the heading. */}
-          <div>
-            <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-ink sm:text-3xl lg:text-4xl">
-              Good finds. <span className="text-accent">Greater impact.</span>
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
-              A student-to-student marketplace for Bukidnon. Buy affordable pre-loved school essentials, sell what you no
-              longer need, or swap with fellow students.
+      {/* 3. STUDENT ENTREPRENEURSHIP & BUSINESS HUB */}
+      <section className="py-14 sm:py-20 bg-surface">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          
+          <div className="text-center max-w-2xl mx-auto">
+            <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-bold text-accent">
+              Empowering Student Sellers
+            </span>
+            <h2 className="mt-3 text-2xl font-extrabold text-ink sm:text-4xl">
+              Turn Campus Needs into Your Own Business
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
+              BUKI isn’t just a classifieds board—it’s an open launchpad for Bukidnon students to earn, trade, and provide affordable essentials for each other.
             </p>
           </div>
 
-          {/* Search bar & Type toggle */}
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
-              <input
-                type="search"
-                placeholder="Search uniforms, school shoes, books, calculators…"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface py-2.5 pl-11 pr-10 text-sm text-ink transition-colors placeholder:text-muted focus:border-primary focus:bg-white focus:outline-none sm:py-3 sm:text-base"
-                aria-label="Search listings"
-              />
-              {searchInput && (
-                <button
-                  type="button"
-                  onClick={() => setSearchInput('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted hover:bg-line/40 hover:text-ink"
-                  aria-label="Clear search"
-                >
-                  <CloseIcon className="h-4 w-4" />
-                </button>
-              )}
-            </div>
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {features.map((f, i) => (
+              <div
+                key={i}
+                className="group relative flex flex-col justify-between rounded-2xl border border-line bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-md"
+              >
+                <div>
+                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-surface border border-line shadow-2xs group-hover:scale-110 transition-transform">
+                    {f.icon}
+                  </div>
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-muted">
+                    {f.badge}
+                  </span>
+                  <h3 className="mt-1 text-base font-bold text-ink">
+                    {f.title}
+                  </h3>
+                  <p className="mt-2 text-xs leading-relaxed text-muted sm:text-sm">
+                    {f.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
 
-            {/* Listing Type Switcher (All / Sale / Swap) */}
-            <div
-              role="group"
-              aria-label="Listing type"
-              className="flex shrink-0 rounded-xl border border-line bg-surface p-1"
-            >
-              {TYPE_OPTIONS.map(([value, label]) => {
-                const selected = filters.listingType === value
-                return (
-                  <button
-                    key={value || 'all'}
-                    onClick={() => setListingType(value)}
-                    aria-pressed={selected}
-                    className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all sm:text-sm ${
-                      selected
-                        ? 'bg-primary text-white shadow-xs'
-                        : 'text-muted hover:text-ink'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                )
-              })}
+          {/* Business Pitch Banner */}
+          <div className="mt-12 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary to-primary-hover p-6 text-white sm:p-8">
+            <div className="grid items-center gap-6 lg:grid-cols-12">
+              <div className="lg:col-span-8">
+                <span className="inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-xs">
+                  Zero Commission &bull; Instant Student Peer-to-Peer
+                </span>
+                <h3 className="mt-3 text-xl font-extrabold sm:text-2xl">
+                  Have textbooks, dorm supplies, or crafts to sell?
+                </h3>
+                <p className="mt-2 text-xs text-on-primary-muted sm:text-sm leading-relaxed max-w-xl">
+                  Post in under 2 minutes. Your fellow classmates and dorm mates are already looking for what you have. Set your price, meet at the campus library or canteen, and get paid directly.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 lg:col-span-4 lg:justify-end">
+                <Link
+                  href="/post"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-primary shadow-sm transition-colors hover:bg-primary-soft"
+                >
+                  <PlusIcon className="h-4 w-4" />
+                  Create Your Listing
+                </Link>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center rounded-xl border border-white/30 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10"
+                >
+                  Sign Up Free
+                </Link>
+              </div>
             </div>
           </div>
+
         </div>
       </section>
 
-      {/* Horizontal Category Navigation Bar */}
-      <section className="sticky top-0 z-20 border-b border-line bg-white/95 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 py-2.5 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
-            {['', ...CATEGORIES].map((category) => {
-              const selected = filters.category === category
-              return (
-                <button
-                  key={category || 'all'}
-                  onClick={() => update('category', category)}
-                  aria-pressed={selected}
-                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all sm:text-sm ${
-                    selected
-                      ? 'bg-primary text-white shadow-xs'
-                      : 'border border-line bg-white text-muted hover:border-primary/40 hover:text-ink'
-                  }`}
-                >
-                  {category || 'All Categories'}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Main Content Area */}
-      <div className="flex-1 bg-surface py-5 sm:py-7">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          {/* Subheader Toolbar: Filters toggle, Active count, Sort */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
-            <div className="flex items-center gap-2.5">
-              {/* Mobile Filter Toggle */}
-              <button
-                onClick={() => setMobileFiltersOpen(true)}
-                className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors lg:hidden ${
-                  activeFilterCount > 0
-                    ? 'border-primary bg-primary-soft text-primary'
-                    : 'border-line bg-white text-ink hover:border-muted/60'
-                }`}
-              >
-                <FiltersIcon className="h-4 w-4" />
-                Filters
-                {activeFilterCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-white">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Desktop: only offered while the panel is hidden; the open panel has its own Hide link. */}
-              <button
-                onClick={() => setShowDesktopFilters(true)}
-                className={`hidden items-center gap-2 rounded-xl border border-line bg-white px-3 py-2 text-xs font-semibold text-ink transition-colors hover:border-muted/60 ${
-                  showDesktopFilters ? '' : 'lg:inline-flex'
-                }`}
-              >
-                <FiltersIcon className="h-4 w-4" />
-                Show Filters
-                {activeFilterCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-white">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Result Count Indicator */}
-              <p className="text-xs text-muted sm:text-sm" aria-live="polite">
-                {loading ? (
-'Finding listings…'
-                ) : (
-                  <>
-                    <span className="tabular font-bold text-ink">{count}</span> {count === 1 ? 'item' : 'items'} available
-                  </>
-                )}
+      {/* 4. ABOUT THE SYSTEM & HOW IT WORKS */}
+      <section className="border-t border-line bg-white py-14 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          
+          <div className="grid items-center gap-12 lg:grid-cols-12">
+            
+            {/* Left: About Details */}
+            <div className="lg:col-span-6">
+              <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
+                About the Platform
+              </span>
+              <h2 className="mt-3 text-2xl font-extrabold text-ink sm:text-4xl">
+                A Unified Marketplace Built for Bukidnon Students
+              </h2>
+              <p className="mt-4 text-sm leading-relaxed text-muted sm:text-base">
+                BUKI was conceived to solve a daily struggle on every Bukidnon campus: finding affordable course materials, fitting uniforms, reliable graphing calculators, and second-hand gear without high department store prices or risky stranger transactions.
               </p>
+
+              <div className="mt-6 space-y-4">
+                <div className="flex gap-3">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent font-bold text-xs mt-0.5">
+                    ✓
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-ink">Verified Student Identity Motif</h4>
+                    <p className="text-xs text-muted leading-relaxed">
+                      Every listing follows a structured campus lanyard ID card presentation, ensuring clear prices, item conditions, sizes, and school tags.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent font-bold text-xs mt-0.5">
+                    ✓
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-ink">Direct Messenger Integration</h4>
+                    <p className="text-xs text-muted leading-relaxed">
+                      Seamless one-click deep-linking to the seller’s Facebook Messenger for both mobile and desktop users.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent font-bold text-xs mt-0.5">
+                    ✓
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-ink">Local &amp; Sustainable</h4>
+                    <p className="text-xs text-muted leading-relaxed">
+                      Encouraging circular economy on campus: pass down your books and uniforms to freshmen each semester.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Sort Dropdown */}
-            <div className="flex items-center gap-2">
-              <span className="hidden text-xs font-medium text-muted sm:inline">Sort:</span>
-              <select
-                value={filters.sort}
-                onChange={(e) => update('sort', e.target.value)}
-                className="rounded-xl border border-line bg-white px-3 py-2 text-xs font-semibold text-ink transition-colors hover:border-muted/60 focus:border-primary focus:outline-none sm:text-sm"
-                aria-label="Sort listings"
-              >
-                {Object.entries(SORTS).map(([value, { label }]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+            {/* Right: Steps */}
+            <div className="rounded-2xl border border-line bg-surface p-6 sm:p-8 lg:col-span-6 shadow-sm">
+              <h3 className="text-lg font-bold text-ink">How to Trade in 3 Simple Steps</h3>
+              
+              <div className="mt-6 space-y-6">
+                <div className="flex gap-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-base font-extrabold text-white shadow-xs">
+                    1
+                  </span>
+                  <div>
+                    <h4 className="text-sm font-bold text-ink">Snap &amp; List Your Item</h4>
+                    <p className="mt-1 text-xs text-muted leading-relaxed">
+                      Take photos of your uniform, textbook, or item. Select your school, condition, and set your price (or mark it For Swap).
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-base font-extrabold text-white shadow-xs">
+                    2
+                  </span>
+                  <div>
+                    <h4 className="text-sm font-bold text-ink">Connect With Campus Buyers</h4>
+                    <p className="mt-1 text-xs text-muted leading-relaxed">
+                      Interested students tap &quot;Message Seller on Messenger&quot; to coordinate meetup times and locations right at your school.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink text-base font-extrabold text-white shadow-xs">
+                    3
+                  </span>
+                  <div>
+                    <h4 className="text-sm font-bold text-ink">Hand Over &amp; Mark as Sold</h4>
+                    <p className="mt-1 text-xs text-muted leading-relaxed">
+                      Complete the exchange safely on campus. Mark the item as sold or trade another item right away.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
+
           </div>
 
-          {/* Active Filter Chips */}
-          {active.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 pb-5">
-              <span className="text-xs font-medium text-muted">Active:</span>
-              {active.map((f) => (
-                <FilterChip key={f.key} label={f.label} onRemove={f.clear} />
-              ))}
-              {active.length > 1 && (
-                <button
-                  onClick={clearAll}
-                  className="text-xs font-semibold text-primary underline-offset-2 hover:underline"
-                >
-                  Clear all
-                </button>
-              )}
-            </div>
-          )}
+        </div>
+      </section>
 
-          {/* Grid Layout with Sidebar */}
-          <div className="flex items-start gap-6 lg:gap-8">
-            {/* Desktop Sticky Sidebar */}
-            {showDesktopFilters && (
-              <aside className="hidden w-64 shrink-0 lg:sticky lg:top-20 lg:block" aria-label="Filters">
-                <div className="rounded-2xl border border-line bg-white p-5 shadow-xs">
-                  <div className="flex items-center justify-between border-b border-line pb-3.5">
-                    <span className="flex items-center gap-2 text-sm font-bold text-ink">
-                      <FiltersIcon className="h-4 w-4 text-primary" />
-                      Filters
-                      {activeFilterCount > 0 && (
-                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-white">
-                          {activeFilterCount}
-                        </span>
-                      )}
-                    </span>
-                    <span className="flex items-center gap-3">
-                      {activeFilterCount > 0 && (
-                        <button onClick={resetSidebarFilters} className="text-xs font-semibold text-primary hover:underline">
-                          Reset
-                        </button>
-                      )}
-                      <button onClick={() => setShowDesktopFilters(false)} className="text-xs font-medium text-muted hover:text-ink hover:underline">
-                        Hide
-                      </button>
+      {/* 5. MEET THE DEVELOPERS & CONTACT SECTION */}
+      <section className="border-t border-line bg-surface py-14 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          
+          <div className="text-center max-w-xl mx-auto">
+            <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
+              The Creators
+            </span>
+            <h2 className="mt-3 text-2xl font-extrabold text-ink sm:text-4xl">
+              Meet the Developers
+            </h2>
+            <p className="mt-3 text-sm text-muted">
+              Built with dedication for the student community of Bukidnon. Have feedback, questions, or ideas? Reach out to us directly!
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 max-w-4xl mx-auto">
+            
+            {/* Developer 1: Atheo Jessar R. Caliao */}
+            <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm transition-all hover:shadow-md hover:border-primary/40">
+              {/* ID-style top strip */}
+              <div className="bg-primary px-5 py-3 text-white flex items-center justify-between">
+                <span className="text-xs font-bold tracking-wider uppercase text-on-primary-muted">
+                  Development Team
+                </span>
+                <span className="font-mono text-xs text-on-primary-muted">ID: DEV-01</span>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-xl font-extrabold text-primary border border-primary/20">
+                    AC
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-ink">
+                      Atheo Jessar R. Caliao
+                    </h3>
+                    <span className="inline-block rounded-md bg-accent-soft px-2.5 py-0.5 text-xs font-bold text-accent">
+                      FrontEnd Developer
                     </span>
                   </div>
-
-                  <div className="pt-4">{filterControls}</div>
                 </div>
-              </aside>
-            )}
 
-            {/* Listings Grid Section */}
-            <section className="min-w-0 flex-1" aria-label="Listings Grid">
-              {result.error && (
-                <div
-                  role="alert"
-                  className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-                >
-                  Unable to load listings ({result.error}). Please check your connection and try again.
+                <div className="mt-5 space-y-2.5 border-t border-line pt-4 text-xs sm:text-sm">
+                  <a
+                    href="mailto:ajtheo176@gmail.com"
+                    className="flex items-center gap-2.5 text-muted transition-colors hover:text-primary"
+                  >
+                    <MailIcon className="h-4 w-4 text-primary" />
+                    <span>ajtheo176@gmail.com</span>
+                  </a>
+                  <a
+                    href="tel:09977907786"
+                    className="flex items-center gap-2.5 text-muted transition-colors hover:text-primary"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-primary">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span>09977907786</span>
+                  </a>
                 </div>
-              )}
-
-              {!loading && !result.error && count === 0 && (
-                <EmptyState active={active} onClearAll={clearAll} />
-              )}
-
-              <div
-                className={`grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 ${
-                  showDesktopFilters ? 'xl:grid-cols-3' : 'xl:grid-cols-4'
-                } ${loading && count > 0 ? 'opacity-60 transition-opacity' : ''}`}
-                aria-busy={loading}
-              >
-                {loading && count === 0 && !result.error
-                  ? Array.from({ length: 8 }, (_, i) => <ListingCardSkeleton key={i} index={i} />)
-                  : result.listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}
               </div>
-            </section>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Filters Drawer / Slide-over Modal */}
-      {mobileFiltersOpen && (
-        <div className="fixed inset-0 z-50 flex lg:hidden">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-ink/40 backdrop-blur-xs transition-opacity"
-            onClick={() => setMobileFiltersOpen(false)}
-            aria-hidden="true"
-          />
-
-          {/* Drawer content */}
-          <div className="relative ml-auto flex h-full w-full max-w-sm flex-col bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-line px-5 py-4">
-              <div className="flex items-center gap-2">
-                <FiltersIcon className="h-5 w-5 text-primary" />
-                <h2 className="text-base font-bold text-ink">Filters</h2>
-                {activeFilterCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-white">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={() => setMobileFiltersOpen(false)}
-                className="rounded-full p-1.5 text-muted hover:bg-surface hover:text-ink"
-                aria-label="Close filters"
-              >
-                <CloseIcon className="h-5 w-5" />
-              </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5">{filterControls}</div>
+            {/* Developer 2: Toff Darell B. Vergara */}
+            <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm transition-all hover:shadow-md hover:border-primary/40">
+              {/* ID-style top strip */}
+              <div className="bg-primary px-5 py-3 text-white flex items-center justify-between">
+                <span className="text-xs font-bold tracking-wider uppercase text-on-primary-muted">
+                  Development Team
+                </span>
+                <span className="font-mono text-xs text-on-primary-muted">ID: DEV-02</span>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-xl font-extrabold text-accent border border-accent/20">
+                    TV
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-ink">
+                      Toff Darell B. Vergara
+                    </h3>
+                    <span className="inline-block rounded-md bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary">
+                      FullStack Developer
+                    </span>
+                  </div>
+                </div>
 
-            <div className="flex items-center gap-3 border-t border-line bg-surface p-4">
-              {activeFilterCount > 0 && (
-                <button
-                  type="button"
-                  onClick={resetSidebarFilters}
-                  className="rounded-xl border border-line bg-white px-4 py-3 text-xs font-semibold text-ink hover:bg-surface"
-                >
-                  Reset
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setMobileFiltersOpen(false)}
-                className="flex-1 rounded-xl bg-primary py-3 text-center text-sm font-semibold text-white shadow-xs hover:bg-primary-hover"
-              >
-                Show {count} {count === 1 ? 'result' : 'results'}
-              </button>
+                <div className="mt-5 space-y-2.5 border-t border-line pt-4 text-xs sm:text-sm">
+                  <a
+                    href="mailto:topedarell13@gmail.com"
+                    className="flex items-center gap-2.5 text-muted transition-colors hover:text-primary"
+                  >
+                    <MailIcon className="h-4 w-4 text-primary" />
+                    <span>topedarell13@gmail.com</span>
+                  </a>
+                  <a
+                    href="tel:09977907786"
+                    className="flex items-center gap-2.5 text-muted transition-colors hover:text-primary"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-primary">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span>09977907786</span>
+                  </a>
+                </div>
+              </div>
             </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* 6. BOTTOM CALL TO ACTION */}
+      <section className="relative overflow-hidden bg-primary py-12 text-white sm:py-16">
+        <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+          <div className="mx-auto mb-4 flex justify-center">
+            <Image
+              src="/BUKI.png"
+              alt="BUKI"
+              width={160}
+              height={80}
+              className="h-12 w-auto object-contain"
+            />
+          </div>
+          <h2 className="text-2xl font-extrabold sm:text-4xl">
+            Start Buying, Selling &amp; Swapping Today
+          </h2>
+          <p className="mx-auto mt-3 max-w-lg text-sm text-on-primary-muted sm:text-base">
+            Join students from across Bukidnon campuses. Find great deals and earn money by listing your items right now.
+          </p>
+
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link
+              href="/browse"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-bold text-primary shadow-lg transition-all hover:bg-primary-soft hover:shadow-xl"
+            >
+              <BrowseIcon className="h-5 w-5" />
+              Explore All Listings
+            </Link>
+            <Link
+              href="/post"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-accent-hover hover:shadow-xl"
+            >
+              <PlusIcon className="h-5 w-5" />
+              Post an Item Now
+            </Link>
           </div>
         </div>
-      )}
+      </section>
+
+      {/* 7. FOOTER */}
+      <footer className="border-t border-line bg-white py-8 text-xs text-muted">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2">
+            <span className="font-extrabold text-ink">BUKI</span>
+            <span>&bull;</span>
+            <span>The Student Marketplace &bull; Bukidnon, Philippines</span>
+          </div>
+
+          <div className="flex items-center gap-5">
+            <Link href="/browse" className="hover:text-primary transition-colors">Browse</Link>
+            <Link href="/post" className="hover:text-primary transition-colors">Post Item</Link>
+            <Link href="/login" className="hover:text-primary transition-colors">Account</Link>
+            <a href="mailto:ajtheo176@gmail.com" className="hover:text-primary transition-colors">Contact</a>
+          </div>
+        </div>
+      </footer>
     </main>
   )
 }

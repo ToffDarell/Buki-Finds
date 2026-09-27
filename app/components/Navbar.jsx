@@ -49,7 +49,7 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden items-center gap-6 md:flex">
-          <NavLink href="/" icon={BrowseIcon}>Browse</NavLink>
+          <NavLink href="/browse" icon={BrowseIcon}>Browse</NavLink>
           {mounted && user && <NavLink href="/saved" icon={HeartIcon}>Saved</NavLink>}
           {mounted && user && <NavLink href="/my-listings" icon={ListingsIcon}>My Listings</NavLink>}
         </div>
