@@ -458,18 +458,13 @@ export default function LandingPage() {
                 <span className="font-mono text-xs text-on-primary-muted">ID: DEV-01</span>
               </div>
               <div className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-xl font-extrabold text-primary border border-primary/20">
-                    AC
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-ink">
-                      Atheo Jessar R. Caliao
-                    </h3>
-                    <span className="inline-block rounded-md bg-accent-soft px-2.5 py-0.5 text-xs font-bold text-accent">
-                      FrontEnd Developer
-                    </span>
-                  </div>
+                <div>
+                  <h3 className="text-lg font-bold text-ink">
+                    Atheo Jessar R. Caliao
+                  </h3>
+                  <span className="mt-1 inline-block rounded-md bg-accent-soft px-2.5 py-0.5 text-xs font-bold text-accent">
+                    FrontEnd Developer
+                  </span>
                 </div>
 
                 <div className="mt-5 space-y-2.5 border-t border-line pt-4 text-xs sm:text-sm">
@@ -481,13 +476,13 @@ export default function LandingPage() {
                     <span>ajtheo176@gmail.com</span>
                   </a>
                   <a
-                    href="tel:09977907786"
+                    href="tel:09924908157"
                     className="flex items-center gap-2.5 text-muted transition-colors hover:text-primary"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-primary">
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    <span>09977907786</span>
+                    <span>09924908157</span>
                   </a>
                 </div>
               </div>
@@ -503,18 +498,13 @@ export default function LandingPage() {
                 <span className="font-mono text-xs text-on-primary-muted">ID: DEV-02</span>
               </div>
               <div className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-xl font-extrabold text-accent border border-accent/20">
-                    TV
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-ink">
-                      Toff Darell B. Vergara
-                    </h3>
-                    <span className="inline-block rounded-md bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary">
-                      FullStack Developer
-                    </span>
-                  </div>
+                <div>
+                  <h3 className="text-lg font-bold text-ink">
+                    Toff Darell B. Vergara
+                  </h3>
+                  <span className="mt-1 inline-block rounded-md bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary">
+                    FullStack Developer
+                  </span>
                 </div>
 
                 <div className="mt-5 space-y-2.5 border-t border-line pt-4 text-xs sm:text-sm">
