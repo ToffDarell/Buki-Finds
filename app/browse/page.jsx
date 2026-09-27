@@ -143,11 +143,12 @@ function EmptyState({ active, onClearAll }) {
   )
 }
 
-// Links can open Browse pre-filtered: /browse?school=CMU, /browse?category=Services
+// Links can open Browse pre-filtered: /browse?school=CMU, /browse?category=Services, /browse?type=swap
 function filtersFromUrl(params) {
   const school = typeof params?.school === 'string' ? params.school.slice(0, 100) : ''
   const category = CATEGORIES.includes(params?.category) ? params.category : ''
-  return { ...DEFAULT_FILTERS, school, category }
+  const listingType = ['sell', 'swap'].includes(params?.type) ? params.type : ''
+  return { ...DEFAULT_FILTERS, school, category, listingType }
 }
 
 export default function BrowsePage({ searchParams }) {

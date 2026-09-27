@@ -48,7 +48,7 @@ const USES = [
   {
     title: 'Run a small shop',
     body: 'Resell thrifted clothes, sell homemade snacks, take pre-orders. Put up as many items as you want with the ₱20 pass.',
-    link: ['Browse food', '/browse?category=Food'],
+    link: ['See the ₱20 pass', '/subscribe'],
   },
   {
     title: 'Offer a service',
@@ -58,7 +58,7 @@ const USES = [
   {
     title: 'Swap instead of paying',
     body: 'Mark a listing For Swap and say what you want in return: a size up, a different book, anything you both agree on.',
-    link: ['See swaps', '/browse'],
+    link: ['See swaps', '/browse?type=swap'],
   },
 ]
 
@@ -99,18 +99,20 @@ export default async function LandingPage() {
       {/* First viewport: the promise, both actions, and the rack of cards that proves it. */}
       <section className="overflow-hidden border-b border-line bg-surface">
         <div className={`${wrap} pb-8 pt-10 sm:pt-14 lg:pb-12`}>
-          <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:gap-16">
+          <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-start lg:gap-16">
             <div>
               <h1 className="card-type max-w-[14ch] text-[2.75rem] font-extrabold leading-[0.95] text-ink sm:text-6xl lg:text-7xl">
                 Buy, sell and swap with college students across Bukidnon.
               </h1>
             </div>
-            <div className="lg:pb-2">
-              <p className="max-w-[46ch] text-base leading-relaxed text-muted sm:text-lg">
+            {/* Top-aligned with the headline: the paragraph starts level with its first line. */}
+            <div className="lg:pt-3">
+              <p className="max-w-[46ch] text-pretty text-base leading-relaxed text-muted sm:text-lg">
                 Uniforms, shoes, books, gadgets, homemade snacks and student services, listed by students near
-                your campus. Message the seller on Messenger or Instagram and meet up at university.
+                your campus. Tap Message Seller on any listing and it opens a direct chat with the seller on
+                Messenger or Instagram. Then meet up at your university.
               </p>
-              <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <Link href="/browse" className={btnPrimary}>
                   <BrowseIcon className="h-5 w-5" />
                   Browse Listings
@@ -145,9 +147,10 @@ export default async function LandingPage() {
 
       {/* What you can do: a ruled list, not a grid of icon cards. */}
       <section className="py-16 sm:py-24">
-        <div className={`${wrap} grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16`}>
+        {/* The heading sits vertically centered against the list, so the space around it is balanced. */}
+        <div className={`${wrap} grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:gap-16`}>
           <div>
-            <h2 className="card-type max-w-[16ch] text-3xl font-extrabold leading-tight sm:text-4xl">
+            <h2 className="card-type max-w-[16ch] text-balance text-3xl font-extrabold leading-tight sm:text-4xl">
               Not just uniforms and books.
             </h2>
             <p className="mt-4 max-w-[42ch] text-[15px] leading-relaxed text-muted">
@@ -176,9 +179,9 @@ export default async function LandingPage() {
 
       {/* Cross-campus: a working school search, not a claim. */}
       <section className="border-y border-line bg-surface py-16 sm:py-24">
-        <div className={`${wrap} grid gap-10 lg:grid-cols-2 lg:gap-16`}>
+        <div className={`${wrap} grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-16`}>
           <div>
-            <h2 className="card-type max-w-[18ch] text-3xl font-extrabold leading-tight sm:text-4xl">
+            <h2 className="card-type max-w-[18ch] text-balance text-3xl font-extrabold leading-tight sm:text-4xl">
               Every school in Bukidnon, one feed.
             </h2>
             <p className="mt-4 max-w-[52ch] text-[15px] leading-relaxed text-muted">
@@ -222,7 +225,8 @@ export default async function LandingPage() {
                       href={`/browse?school=${encodeURIComponent(s.aliases[0])}`}
                       className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-3 text-[13px] font-medium text-primary transition-colors hover:border-primary/50"
                     >
-                      {s.short ?? s.aliases[0]}
+                      <span className="font-semibold">{s.short ?? s.aliases[0]}</span>
+                      <span aria-hidden="true" className="text-primary/40">·</span>
                       <span className="text-muted">{s.town}</span>
                     </Link>
                   </li>
@@ -241,27 +245,29 @@ export default async function LandingPage() {
               Message sellers where you already chat.
             </h2>
             <p className="max-w-[56ch] text-[15px] leading-relaxed text-muted lg:pt-2">
-              There’s no chat inside BukiMart. Sellers paste their Facebook, Messenger or Instagram link when they
-              post, whatever the app gave them, even the ones with codes in them. BukiMart finds the account, and
-              buyers get a button that opens the conversation directly.
+              Sellers paste their Facebook, Messenger or Instagram link when they post, whatever the app gives
+              them, even links with codes in them. Buyers get a button that opens the chat directly.
             </p>
           </div>
 
           <div className="mt-10 overflow-hidden rounded-[10px] border border-line shadow-card">
-            <div className="hidden grid-cols-[1.2fr_auto_1fr] gap-6 bg-surface px-5 py-2.5 text-xs font-medium text-muted md:grid">
-              <span>The seller pastes</span>
-              <span aria-hidden="true" />
-              <span>The buyer taps</span>
+            <div className="flex items-center justify-between gap-4 bg-surface px-5 py-2.5 text-xs font-medium text-muted md:grid md:grid-cols-[minmax(0,28rem)_auto_1fr] md:gap-6">
+              <span className="hidden md:inline">The seller pastes</span>
+              <span aria-hidden="true" className="hidden md:inline" />
+              <span className="flex items-center justify-between gap-3">
+                <span className="hidden md:inline">The buyer taps</span>
+                <span className="rounded-sm border border-line bg-white px-1.5 py-0.5 font-semibold text-muted">Example</span>
+              </span>
             </div>
             <ul className="divide-y divide-line bg-white">
               {LINK_EXAMPLES.map(({ pasted, from, icon: Icon, button }) => (
-                <li key={pasted} className="grid gap-3 px-5 py-4 md:grid-cols-[1.2fr_auto_1fr] md:items-center md:gap-6">
+                <li key={pasted} className="grid gap-3 px-5 py-4 md:grid-cols-[minmax(0,28rem)_auto_1fr] md:items-center md:gap-6">
                   <div className="min-w-0">
                     <p className="truncate rounded-sm border border-line bg-surface px-3 py-2 text-sm text-ink">{pasted}</p>
                     <p className="mt-1 text-xs text-muted">{from}</p>
                   </div>
                   <ChevronRightIcon aria-hidden="true" className="hidden h-5 w-5 text-muted md:block" />
-                  <span className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-white md:w-auto md:justify-self-start">
+                  <span className="inline-flex min-h-11 w-full cursor-default select-none items-center justify-center gap-2 rounded-md border border-primary/30 bg-primary-soft px-4 text-sm font-semibold text-primary md:w-auto md:justify-self-start">
                     <Icon className="h-4 w-4" />
                     {button}
                   </span>
@@ -271,7 +277,7 @@ export default async function LandingPage() {
           </div>
           <p className="mt-3 text-xs text-muted">
             Examples use a made-up account. A plain username like juan.delacruz works too. Without a link, buyers
-            see the seller’s email instead.
+            can email the seller instead.
           </p>
         </div>
       </section>
