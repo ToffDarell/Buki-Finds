@@ -15,6 +15,7 @@ import {
   isSwap,
   listingNumber,
   messengerUrl,
+  instagramUrl,
   priceOrSwap,
   purgeDateLabel,
   sortedImages,
@@ -36,6 +37,7 @@ import {
   ChevronRightIcon,
   MailIcon,
   MessengerIcon,
+  InstagramIcon,
   HeartIcon,
   PencilIcon,
   PinIcon,
@@ -186,16 +188,14 @@ function ContactAction({ listing, number, compact = false, signedOut = false }) 
     )
   }
   const messenger = messengerUrl(listing.seller_facebook_username)
+  const instagram = instagramUrl(listing.seller_instagram_username)
+  const filled = `flex items-center justify-center gap-2 rounded-md bg-primary font-semibold text-white transition-colors hover:bg-primary-hover ${size}`
+
+  // Main button: Messenger, else Instagram, else email.
+  let primary = null
   if (messenger) {
-    return (
-      <a
-        href={messenger}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`flex items-center justify-center gap-2 rounded-md bg-primary font-semibold text-white transition-colors hover:bg-primary-hover ${
-          compact ? 'px-4 py-2.5 text-sm' : 'w-full px-4 py-3'
-        }`}
-      >
+    primary = (
+      <a href={messenger} target="_blank" rel="noopener noreferrer" className={filled}>
         <MessengerIcon />
         {/* Small phones and the tablet column are too narrow for the full label; the Messenger icon already says where it goes. */}
         <span>
@@ -204,21 +204,54 @@ function ContactAction({ listing, number, compact = false, signedOut = false }) 
         </span>
       </a>
     )
-  }
-  if (listing.seller_email) {
-    return (
-      <a
-        href={`mailto:${listing.seller_email}?subject=${encodeURIComponent(`Buki-Finds No. ${number}: ${listing.title}`)}`}
-        className={`flex items-center justify-center gap-2 rounded-md bg-primary font-semibold text-white transition-colors hover:bg-primary-hover ${
-          compact ? 'px-4 py-2.5 text-sm' : 'w-full px-4 py-3'
-        }`}
-      >
+  } else if (instagram) {
+    primary = (
+      <a href={instagram} target="_blank" rel="noopener noreferrer" className={filled}>
+        <InstagramIcon />
+        <span>
+          Message Seller
+          {!compact && <span className="hidden sm:inline md:hidden lg:inline"> on Instagram</span>}
+        </span>
+      </a>
+    )
+  } else if (listing.seller_email) {
+    primary = (
+      <a href={`mailto:${listing.seller_email}?subject=${encodeURIComponent(`Buki-Finds No. ${number}: ${listing.title}`)}`} className={filled}>
         <MailIcon />
         Email Seller
       </a>
     )
   }
-  return null
+  if (!primary || !(messenger && instagram)) return primary
+
+  // Sellers with both get Instagram as a second, quieter button (icon-only in the phone bar).
+  return compact ? (
+    <div className="flex shrink-0 gap-2">
+      {primary}
+      <a
+        href={instagram}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Message Seller on Instagram"
+        className="flex w-11 items-center justify-center rounded-md border border-line bg-white text-primary transition-colors hover:bg-surface"
+      >
+        <InstagramIcon />
+      </a>
+    </div>
+  ) : (
+    <div className="flex flex-col gap-2">
+      {primary}
+      <a
+        href={instagram}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex w-full items-center justify-center gap-2 rounded-md border border-line bg-white px-4 py-3 font-semibold text-primary transition-colors hover:bg-surface"
+      >
+        <InstagramIcon />
+        Message on Instagram
+      </a>
+    </div>
+  )
 }
 
 export default function ItemPage() {
@@ -329,7 +362,7 @@ export default function ItemPage() {
   const swap = isSwap(listing)
   const purgeDate = purgeDateLabel(listing)
   const number = listingNumber(listing)
-  const hasContact = Boolean(messengerUrl(listing.seller_facebook_username) || listing.seller_email)
+  const hasContact = Boolean(messengerUrl(listing.seller_facebook_username) || instagramUrl(listing.seller_instagram_username) || listing.seller_email)
   const showMobileBar = !isOwner && !isSold && hasContact
   const signedOut = !userLoading && !user
 
@@ -431,7 +464,7 @@ export default function ItemPage() {
                     </Link>
                   )}
                 </p>
-                {!isOwner && user && listing.seller_email && messengerUrl(listing.seller_facebook_username) && (
+                {!isOwner && user && listing.seller_email && (messengerUrl(listing.seller_facebook_username) || instagramUrl(listing.seller_instagram_username)) && (
                   <a href={`mailto:${listing.seller_email}`} className="truncate text-sm text-primary hover:underline">
                     {listing.seller_email}
                   </a>

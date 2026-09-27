@@ -7,7 +7,7 @@ import {
   CONDITIONS,
   IMAGE_BUCKET,
   MAX_IMAGES,
-  resolveFacebookUsername,
+  resolveSocialUsername,
   normalizeSchool,
   sortedImages,
   formatSize,
@@ -19,7 +19,7 @@ import { displayName } from '@/lib/avatar'
 import { userSchool } from '@/lib/profile'
 import { canonicalSchool } from '@/lib/schools'
 import { freeLimitMessage, isFreeLimitError } from '@/lib/subscription'
-import { CameraIcon, CloseIcon, MessengerIcon } from '@/app/components/icons'
+import { CameraIcon, CloseIcon, InstagramIcon, MessengerIcon } from '@/app/components/icons'
 
 const inputClass =
   'w-full rounded-sm border border-line bg-white px-3 py-2.5 text-[15px] text-ink transition-colors placeholder:text-muted hover:border-muted/60 focus:border-primary focus:outline-none'
@@ -106,6 +106,8 @@ export default function ListingForm({ user, listing, onSaved }) {
   const [school, setSchool] = useState(listing ? (listing.school ?? '') : userSchool(user))
   const [meetupSpot, setMeetupSpot] = useState(listing?.meetup_spot ?? '')
   const [facebook, setFacebook] = useState(listing?.seller_facebook_username ?? '')
+  const [instagram, setInstagram] = useState(listing?.seller_instagram_username ?? '')
+  const [igStatus, setIgStatus] = useState(null) // { ok, text } under the Instagram field
   const [images, setImages] = useState(() =>
     listing ? sortedImages(listing).map((img) => ({ key: img.id, id: img.id, url: img.image_url })) : []
   )
@@ -156,12 +158,25 @@ export default function ListingForm({ user, listing, onSaved }) {
     const raw = facebook.trim()
     if (!raw || /^[A-Za-z0-9.]+$/.test(raw)) return setFbStatus(null)
     setFbStatus({ text: 'Checking your Facebook link…' })
-    const username = await resolveFacebookUsername(raw)
+    const username = await resolveSocialUsername('facebook', raw)
     if (username) {
       setFacebook(username)
-      setFbStatus({ ok: true, text: `Got it: buyers will message facebook.com/${username}` })
+      setFbStatus({ ok: true, text: /^\d+$/.test(username) ? 'Got it: buyers will message your Facebook account' : `Got it: buyers will message facebook.com/${username}` })
     } else {
-      setFbStatus(null)
+      setFbStatus({ text: 'Couldn’t find a profile in that link. Try your username instead.' })
+    }
+  }
+
+  async function checkInstagram() {
+    const raw = instagram.trim()
+    if (!raw || /^[a-z0-9._]+$/.test(raw)) return setIgStatus(null)
+    setIgStatus({ text: 'Checking your Instagram link…' })
+    const username = await resolveSocialUsername('instagram', raw)
+    if (username) {
+      setInstagram(username)
+      setIgStatus({ ok: true, text: `Got it: buyers will message instagram.com/${username}` })
+    } else {
+      setIgStatus({ text: 'Couldn’t find a profile in that link. Try your username instead.' })
     }
   }
 
@@ -170,15 +185,23 @@ export default function ListingForm({ user, listing, onSaved }) {
     setError('')
 
     setSaving(true)
-    const fbUsername = await resolveFacebookUsername(facebook)
+    const [fbUsername, igUsername] = await Promise.all([
+      resolveSocialUsername('facebook', facebook),
+      resolveSocialUsername('instagram', instagram),
+    ])
     setSaving(false)
     if (fbUsername === null) {
       setError('That Facebook link doesn’t lead to a profile. Paste your profile link or just your username, e.g. juan.delacruz.')
       return
     }
     if (fbUsername) setFacebook(fbUsername)
-    if (!user.email && !fbUsername) {
-      setError('Your account has no email address, so add your Facebook username so buyers can reach you.')
+    if (igUsername === null) {
+      setError('That Instagram link doesn’t lead to a profile. Paste your profile link or just your username, e.g. juan.delacruz. Post and reel links don’t work here.')
+      return
+    }
+    if (igUsername) setInstagram(igUsername)
+    if (!user.email && !fbUsername && !igUsername) {
+      setError('Your account has no email address, so add your Facebook or Instagram username so buyers can reach you.')
       return
     }
 
@@ -217,6 +240,7 @@ export default function ListingForm({ user, listing, onSaved }) {
         school: normalizeSchool(canonicalSchool(school)) || null,
         meetup_spot: meetupSpot.replace(/\s+/g, ' ').trim().slice(0, 120) || null,
         seller_facebook_username: fbUsername || null,
+        seller_instagram_username: igUsername || null,
       }
 
       if (isEdit) {
@@ -472,13 +496,13 @@ export default function ListingForm({ user, listing, onSaved }) {
             hint={
               user.email
                 ? `You can paste your full profile link or just your username. Adds a “Message Seller on Messenger” button; leave it blank and students will see your email (${user.email}) instead.`
-                : 'You can paste your full profile link or just your username. Required: your account has no email, so students will contact you through Messenger.'
+                : 'You can paste your full profile link or just your username. Your account has no email, so add Facebook or Instagram for students to contact you.'
             }
           >
             <div className="relative">
               <MessengerIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input
-                required={!user.email}
+                required={!user.email && !instagram.trim()}
                 value={facebook}
                 onChange={(e) => setFacebook(e.target.value)}
                 onBlur={checkFacebook}
@@ -492,6 +516,31 @@ export default function ListingForm({ user, listing, onSaved }) {
             {fbStatus && (
               <p id="facebook-status" aria-live="polite" className={`mt-1.5 text-xs ${fbStatus.ok ? 'text-accent-hover' : 'text-muted'}`}>
                 {fbStatus.text}
+              </p>
+            )}
+          </Field>
+          <Field
+            label="Instagram username"
+            optional
+            hint="You can paste your full profile link or just your username. Adds a “Message on Instagram” button."
+          >
+            <div className="relative">
+              <InstagramIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+              <input
+                required={!user.email && !facebook.trim()}
+                value={instagram}
+                onChange={(e) => setInstagram(e.target.value)}
+                onBlur={checkInstagram}
+                aria-describedby={igStatus ? 'instagram-status' : undefined}
+                placeholder="juan.delacruz or your profile link"
+                className={`${inputClass} pl-9`}
+                autoCapitalize="none"
+                autoCorrect="off"
+              />
+            </div>
+            {igStatus && (
+              <p id="instagram-status" aria-live="polite" className={`mt-1.5 text-xs ${igStatus.ok ? 'text-accent-hover' : 'text-muted'}`}>
+                {igStatus.text}
               </p>
             )}
           </Field>
