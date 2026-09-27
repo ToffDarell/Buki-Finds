@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { nextPath, rememberNext } from '@/lib/afterLogin'
@@ -23,6 +24,9 @@ export default function LoginPage() {
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  // Sign-up needs a clear yes to the Privacy Policy (Data Privacy Act consent).
+  const [agreed, setAgreed] = useState(false)
+  const consentRef = useRef(null)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -41,7 +45,12 @@ export default function LoginPage() {
       if (error) setError(error.message)
       else router.push(nextPath())
     } else {
-      const { data, error } = await supabase.auth.signUp({ email, password })
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        // A record of when this student agreed to the Privacy Policy.
+        options: { data: { privacy_consent_at: new Date().toISOString() } },
+      })
       if (error) setError(error.message)
       else if (data.session) router.push(nextPath())
       else setMessage('Check your email to confirm your account, then log in.')
@@ -53,6 +62,11 @@ export default function LoginPage() {
   async function handleGoogleLogin() {
     setError('')
     setMessage('')
+    if (mode === 'signup' && !agreed) {
+      setError('Please agree to the Privacy Policy first.')
+      consentRef.current?.focus()
+      return
+    }
     setGoogleLoading(true)
     rememberNext()
     const { error } = await supabase.auth.signInWithOAuth({
@@ -162,6 +176,26 @@ export default function LoginPage() {
               </ul>
             )}
 
+            {mode === 'signup' && (
+              <label className="flex items-start gap-2.5 text-xs leading-relaxed text-ink sm:text-sm">
+                <input
+                  ref={consentRef}
+                  type="checkbox"
+                  required
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+                />
+                <span>
+                  I have read the{' '}
+                  <Link href="/privacy" target="_blank" className="font-semibold text-primary hover:underline">
+                    Privacy Policy
+                  </Link>{' '}
+                  and agree that Buki-Finds may collect and use my information as it describes.
+                </span>
+              </label>
+            )}
+
             {error && (
               <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-800 sm:text-sm">
                 {error}
@@ -205,6 +239,15 @@ export default function LoginPage() {
               {googleLoading ? 'Redirecting to Google...' : 'Continue with Google'}
             </button>
           </div>
+
+          <p className="mt-4 text-center text-xs leading-relaxed text-muted">
+            {mode === 'signup' ? 'Signing up with Google also needs the box above ticked. ' : 'By continuing, you agree to how we handle your data in our '}
+            {mode === 'signup' ? (
+              <>Read our <Link href="/privacy" className="font-semibold text-primary hover:underline">Privacy Policy</Link>.</>
+            ) : (
+              <><Link href="/privacy" className="font-semibold text-primary hover:underline">Privacy Policy</Link>.</>
+            )}
+          </p>
 
           <p className="mt-6 text-center text-xs text-muted sm:text-sm">
             {mode === 'login' ? "Don't have an account yet? " : 'Already registered? '}

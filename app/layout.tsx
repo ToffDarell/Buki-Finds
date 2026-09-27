@@ -5,6 +5,8 @@ import Navbar from "./components/Navbar";
 import AuthErrorBanner from "./components/AuthErrorBanner";
 import BottomNav from "./components/BottomNav";
 import AfterLoginRedirect from "./components/AfterLoginRedirect";
+import SiteFooter from "./components/SiteFooter";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 import { AuthProvider } from "@/lib/useAuth";
 
@@ -19,8 +21,48 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Buki-Finds",
-  description: "Buy, sell and swap uniforms, books and school supplies with college students across Bukidnon.",
+  metadataBase: new URL(SITE_URL),
+  // Pages set their own title; it shows as "Hoodie – ₱1,500 | Buki-Finds".
+  title: {
+    default: `${SITE_NAME} – Student marketplace in Bukidnon`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "Buki-Finds",
+    "Bukidnon",
+    "student marketplace",
+    "buy and sell",
+    "swap",
+    "pre-loved",
+    "school uniforms",
+    "school shoes",
+    "textbooks",
+    "BukSU",
+    "Bukidnon State University",
+    "CMU",
+    "Central Mindanao University",
+    "Malaybalay",
+    "Valencia",
+    "Maramag",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "en_PH",
+    url: "/",
+    title: `${SITE_NAME} – Student marketplace in Bukidnon`,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} – Student marketplace in Bukidnon`,
+    description: SITE_DESCRIPTION,
+  },
+  robots: { index: true, follow: true },
+  formatDetection: { telephone: false },
 };
 
 // Lets fixed bottom bars pad for the iPhone home indicator with env(safe-area-inset-bottom).
@@ -39,6 +81,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Navbar />
           <AuthErrorBanner />
           {children}
+          <SiteFooter />
           <BottomNav />
           <AfterLoginRedirect />
         </AuthProvider>
