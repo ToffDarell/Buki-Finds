@@ -71,7 +71,7 @@ export default function ReportDialog({ listingId, user }) {
         {state.done ? (
           <div className="px-5 py-6">
             <p className="text-[15px] font-semibold">Thanks, we got your report.</p>
-            <p className="mt-1 text-sm text-muted">The Buki-Finds team will take a look. You won&rsquo;t see a reply here.</p>
+            <p className="mt-1 text-sm text-muted">The BukiMart team will take a look. You won&rsquo;t see a reply here.</p>
             <button onClick={close} className="mt-5 min-h-11 w-full rounded-md bg-primary text-[15px] font-semibold text-white hover:bg-primary-hover">
               Done
             </button>

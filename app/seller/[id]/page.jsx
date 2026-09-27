@@ -84,7 +84,7 @@ export default function SellerPage() {
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-start gap-3 px-4 py-16 sm:px-6">
         <p className="card-type text-3xl font-bold text-ink">No listings here yet.</p>
         <p className="text-muted">This seller hasn’t posted anything, or their listings have ended.</p>
-        <Link href="/" className="font-semibold text-primary hover:underline">Browse other items</Link>
+        <Link href="/browse" className="font-semibold text-primary hover:underline">Browse other items</Link>
       </main>
     )
   }
@@ -92,7 +92,7 @@ export default function SellerPage() {
   return (
     <main className="flex-1 bg-surface">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-        <Link href="/" className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+        <Link href="/browse" className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
           <ArrowLeftIcon className="h-4 w-4" />
           Back to browse
         </Link>
@@ -141,7 +141,7 @@ export default function SellerPage() {
               <dd className="tabular mt-0.5 text-base font-semibold text-ink">{soldCount}</dd>
             </div>
             <div className="px-5 py-3">
-              <dt className="text-xs font-medium text-muted">On Buki-Finds since</dt>
+              <dt className="text-xs font-medium text-muted">On BukiMart since</dt>
               <dd className="mt-0.5 text-base font-semibold text-ink">{since ? monthYear(since) : '—'}</dd>
             </div>
           </dl>

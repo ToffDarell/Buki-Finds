@@ -69,7 +69,7 @@ function ReviewLinkPanel({ listing }) {
       {state.link ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <input readOnly value={state.link} onFocus={(e) => e.target.select()} aria-label="Review link" className="min-w-0 flex-1 rounded-sm border border-line bg-white px-2.5 py-2 text-sm text-ink" />
-          <ShareButton title="Review your Buki-Finds seller" text={`How was buying "${listing.title}"? Leave a quick review:`} url={state.link} label="Send Link" />
+          <ShareButton title="Review your BukiMart seller" text={`How was buying "${listing.title}"? Leave a quick review:`} url={state.link} label="Send Link" />
         </div>
       ) : (
         <button
@@ -216,7 +216,7 @@ function ContactAction({ listing, number, compact = false, signedOut = false }) 
     )
   } else if (listing.seller_email) {
     primary = (
-      <a href={`mailto:${listing.seller_email}?subject=${encodeURIComponent(`Buki-Finds No. ${number}: ${listing.title}`)}`} className={filled}>
+      <a href={`mailto:${listing.seller_email}?subject=${encodeURIComponent(`BukiMart No. ${number}: ${listing.title}`)}`} className={filled}>
         <MailIcon />
         Email Seller
       </a>
@@ -350,7 +350,7 @@ export default function ItemPage() {
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col items-start gap-3 px-4 py-16 sm:px-6">
         <p className="card-type text-3xl font-bold text-ink">This listing is gone.</p>
         <p className="text-muted">The seller may have deleted it.</p>
-        <Link href="/" className="font-semibold text-primary hover:underline">Browse other items</Link>
+        <Link href="/browse" className="font-semibold text-primary hover:underline">Browse other items</Link>
       </main>
     )
   }
@@ -370,7 +370,7 @@ export default function ItemPage() {
     <main className={`w-full flex-1 bg-surface ${showMobileBar ? 'pb-28 md:pb-10' : 'pb-10'}`}>
       {dialog}
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-      <Link href="/" className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+      <Link href="/browse" className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
         <ArrowLeftIcon className="h-4 w-4" />
         Back to browse
       </Link>
@@ -548,7 +548,7 @@ export default function ItemPage() {
                     </span>
                   </span>
                 )}
-                <ShareButton title={listing.title} text={`${listing.title} · ${priceOrSwap(listing)} on Buki-Finds`} />
+                <ShareButton title={listing.title} text={`${listing.title} · ${priceOrSwap(listing)} on BukiMart`} />
                 {!isOwner && (
                   <span className="ml-auto">
                     <ReportDialog listingId={listing.id} user={user} />

@@ -1,15 +1,29 @@
 import Link from 'next/link'
-import { SITE_NAME } from '@/lib/site'
+
+const links = [
+  ['Browse', '/browse'],
+  ['Post Item', '/post'],
+  ['Account', '/login'],
+  ['Privacy Policy', '/privacy'],
+]
 
 export default function SiteFooter() {
   return (
     <footer className="border-t border-line bg-white">
-      <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-5 text-xs text-muted sm:px-6">
-        <p>© {new Date().getFullYear()} {SITE_NAME} · Student marketplace in Bukidnon</p>
-        <nav aria-label="Legal" className="flex gap-4">
-          <Link href="/privacy" className="font-medium hover:text-primary hover:underline">
-            Privacy Policy
-          </Link>
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-6 text-xs text-muted sm:px-6 md:flex-row md:items-start md:justify-between">
+        <div className="max-w-[60ch] space-y-1">
+          <p>© {new Date().getFullYear()} BukiMart · Student marketplace in Bukidnon</p>
+          <p>A student project. Not officially affiliated with any school, college or university.</p>
+        </div>
+        <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-2">
+          {links.map(([label, href]) => (
+            <Link key={href} href={href} className="font-medium hover:text-primary hover:underline">
+              {label}
+            </Link>
+          ))}
+          <a href="mailto:ajtheo176@gmail.com" className="font-medium hover:text-primary hover:underline">
+            Contact
+          </a>
         </nav>
       </div>
     </footer>

@@ -36,7 +36,7 @@ Built for Bukidnon students. Every listing is from a student in the province, an
 
 ## Brand Commitments
 
-- Name: Buki-Finds, a collaboration with an existing entrepreneurship team that owns the brand. Neutral branding, not tied to any single school. The official logo is `public/LOGO BUKIFINDS.jpg`; the palette is measured from it.
+- Name: BukiMart, a collaboration with an existing entrepreneurship team that owns the brand. Neutral branding, not tied to any single school. The wordmark is `public/BUKI.png` (white "BukiMart" with a green dot on the i); the favicon is its B and dot on navy. The palette was measured from the earlier Buki-Finds logo, `public/LOGO BUKIFINDS.jpg`.
 - Unofficial student project: it must not look like, or claim to be, an official site of any school or the government. No seals, crests or official marks.
 - Voice: plain, friendly English with a casual student feel.
 - Palette from the official logo: logo blue #00528A as the brand color on white, and logo green #0B813E as the accent for creating and trading (Post Item, swaps, available), used sparingly. Neutrals are blue-tinted. Red is used only for errors and destructive actions.

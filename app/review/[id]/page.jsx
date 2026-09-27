@@ -14,7 +14,7 @@ const WORDS = ['', 'Bad', 'Not great', 'Okay', 'Good', 'Great']
 const MESSAGES = {
   invalid: ['This review link isn’t valid.', 'Ask the seller to send you a fresh link from their listing.'],
   own: ['This is your own listing.', 'Send this link to your buyer on Messenger so they can review you.'],
-  reviewed: ['This sale already has a review.', 'Each sale gets one review. Thanks for keeping Buki-Finds trustworthy.'],
+  reviewed: ['This sale already has a review.', 'Each sale gets one review. Thanks for keeping BukiMart trustworthy.'],
   gone: ['This listing has ended.', 'Sold listings are removed after 7 days, and the review link goes with it.'],
 }
 

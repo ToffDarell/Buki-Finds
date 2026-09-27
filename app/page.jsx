@@ -1,593 +1,391 @@
-'use client'
-
-import Image from 'next/image'
 import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
+import { BROWSE_STATUSES, LISTING_WITH_IMAGES, coverImage } from '@/lib/listings'
+import { BUKIDNON_SCHOOLS } from '@/lib/schools'
+import { FREE_ACTIVE_LISTINGS, PAYMENT_METHODS, SUBSCRIPTION_PRICE } from '@/lib/subscription'
+import LandingRack from '@/app/components/LandingRack'
 import {
   BrowseIcon,
   CheckIcon,
   ChevronRightIcon,
-  HeartIcon,
+  InstagramIcon,
   MailIcon,
+  MessengerIcon,
   PlusIcon,
-  SwapIcon,
-  UserIcon,
+  SearchIcon,
 } from '@/app/components/icons'
 
-export default function LandingPage() {
-  const schools = [
-    { name: 'Bukidnon State University', short: 'BukSU' },
-    { name: 'Central Mindanao University', short: 'CMU' },
-    { name: 'San Isidro College', short: 'SIC' },
-    { name: 'STI College Malaybalay', short: 'STI' },
-    { name: 'Mountain View College', short: 'MVC' },
-    { name: 'Philippine College Foundation', short: 'PCF' },
-  ]
+// The rack shows the newest real listings (refreshed every 5 minutes) and fills the rest of
+// its five hooks with labeled samples, so the page never looks empty or pretends.
+export const revalidate = 300
 
-  const features = [
-    {
-      title: 'Start Your Student Business',
-      desc: 'Turn your unused textbooks, uniforms, gadgets, and creative crafts into extra allowance. Zero listing fees, 100% student-focused.',
-      badge: 'Student Entrepreneurship',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6 text-accent">
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ),
-    },
-    {
-      title: 'Campus-to-Campus Trading',
-      desc: 'Easily filter by your university or city. Arrange safe, quick handoffs and meetups right outside your lecture hall or campus gates.',
-      badge: 'Safe & Local',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6 text-primary">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="12" cy="10" r="3" />
-        </svg>
-      ),
-    },
-    {
-      title: 'Cashless Item Swapping',
-      desc: 'Need a different uniform size or textbook edition? Put your items up "For Swap" and trade directly with fellow students without spending cash.',
-      badge: 'Sustainable Campus',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6 text-highlight">
-          <path d="M4 8h13M13.5 4.5 17 8l-3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M20 16H7M10.5 12.5 7 16l3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ),
-    },
-    {
-      title: 'Campus ID Card Experience',
-      desc: 'Every listing is formatted cleanly like a vertical campus lanyard ID, keeping vital details like price, size, school, and condition front and center.',
-      badge: 'Student Identity',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6 text-primary">
-          <rect x="3" y="4" width="18" height="16" rx="3" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="12" cy="10" r="3" />
-          <path d="M7 17h10" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ),
-    },
-  ]
+const RACK_SIZE = 5
+const SAMPLES = [
+  { id: 'sample-uniform', sample: true, title: 'PE uniform set, shirt and jogging pants', category: 'Uniforms', price: 350, size: 'M', school: 'Bukidnon State University', listing_type: 'sell' },
+  { id: 'sample-book', sample: true, title: 'Calculus 1 textbook, 3rd edition', category: 'Books', listing_type: 'swap', swap_for: 'Physics 1 book', school: 'Central Mindanao University' },
+  { id: 'sample-service', sample: true, title: 'Thesis layout and printing help', category: 'Services', price: 150, school: 'STI College Valencia', listing_type: 'sell' },
+  { id: 'sample-shoes', sample: true, title: 'Black leather school shoes', category: 'School Shoes', price: 400, size: '8', school: 'San Isidro College', listing_type: 'sell' },
+  { id: 'sample-food', sample: true, title: 'Homemade polvoron, 10 pieces', category: 'Food', price: 60, school: 'Mountain View College', listing_type: 'sell' },
+]
+
+async function rackListings() {
+  const { data } = await supabase
+    .from('listings')
+    .select(LISTING_WITH_IMAGES)
+    .in('status', BROWSE_STATUSES)
+    .order('created_at', { ascending: false })
+    .limit(12)
+  const real = (data ?? []).filter((l) => coverImage(l)).slice(0, RACK_SIZE)
+  return [...real, ...SAMPLES].slice(0, RACK_SIZE)
+}
+
+const USES = [
+  {
+    title: 'Clear out what you’ve outgrown',
+    body: 'Last year’s uniform, shoes that no longer fit, books from a finished subject. Someone a year behind you needs them.',
+    link: ['Browse uniforms', '/browse?category=Uniforms'],
+  },
+  {
+    title: 'Run a small shop',
+    body: 'Resell thrifted clothes, sell homemade snacks, take pre-orders. Put up as many items as you want with the ₱20 pass.',
+    link: ['Browse food', '/browse?category=Food'],
+  },
+  {
+    title: 'Offer a service',
+    body: 'Tutoring, printing, thesis layout, phone repairs, haircuts in the dorm. List it like any item and set your rate.',
+    link: ['Browse services', '/browse?category=Services'],
+  },
+  {
+    title: 'Swap instead of paying',
+    body: 'Mark a listing For Swap and say what you want in return: a size up, a different book, anything you both agree on.',
+    link: ['See swaps', '/browse'],
+  },
+]
+
+const LINK_EXAMPLES = [
+  { pasted: 'facebook.com/share/1LmyGgyssq/', from: 'Facebook app, Copy link', icon: MessengerIcon, button: 'Message Seller on Messenger' },
+  { pasted: 'm.me/juan.delacruz?hash=AbaV…', from: 'Messenger, Share profile', icon: MessengerIcon, button: 'Message Seller on Messenger' },
+  { pasted: 'instagram.com/juan.delacruz?igsh=…', from: 'Instagram, Copy profile URL', icon: InstagramIcon, button: 'Message on Instagram' },
+]
+
+const STEPS = [
+  { title: 'Sign up', body: 'Use your email or Google. Anyone can browse without an account, but you need to log in to contact a seller or post an item.' },
+  { title: 'Browse or post', body: 'Filter by university/college, size, category and price. Posting takes a few photos and a price.' },
+  { title: 'Message and meet', body: 'Tap Message Seller, agree on a spot at university, hand it over. Mark it as sold when it’s gone.' },
+  {
+    title: 'Get reviewed',
+    body: 'After you mark an item sold, send the buyer your review link. Their star rating shows on your seller profile, so every sale helps the next buyer trust you.',
+  },
+]
+
+const CREDITS = [
+  { name: 'Atheo Jessar R. Caliao', role: 'Front-end developer', email: 'ajtheo176@gmail.com' },
+  { name: 'Toff Darell B. Vergara', role: 'Full-stack developer', email: 'topedarell13@gmail.com' },
+]
+
+const wrap = 'mx-auto w-full max-w-7xl px-4 sm:px-6'
+const btnPrimary =
+  'inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-primary px-5 text-[15px] font-semibold text-white shadow-card transition-colors hover:bg-primary-hover'
+const btnPost =
+  'inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-accent px-5 text-[15px] font-semibold text-white shadow-card transition-colors hover:bg-accent-hover'
+
+export default async function LandingPage() {
+  const rack = await rackListings()
+  const schools = BUKIDNON_SCHOOLS.filter((s) => s.town)
+  const payments = PAYMENT_METHODS.map((m) => m.label).join(' or ')
 
   return (
-    <main className="flex-1 bg-surface text-ink">
-      {/* 1. HERO SECTION */}
-      <section className="relative overflow-hidden border-b border-line bg-gradient-to-b from-white via-white to-surface py-12 md:py-20">
-        {/* Subtle decorative grid/glow */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.08),transparent_50%)]"
-        />
-
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-8">
-            
-            {/* Left Column: Hero Text */}
-            <div className="text-center lg:col-span-7 lg:text-left">
-              {/* Campus pill */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-soft px-3.5 py-1.5 text-xs font-semibold text-primary sm:text-sm">
-                <span className="flex h-2 w-2 rounded-full bg-accent animate-pulse" />
-                <span>The Student Marketplace of Bukidnon</span>
-              </div>
-
-              {/* Main Headline */}
-              <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-ink sm:text-5xl sm:leading-tight lg:text-5xl">
-                Buy, Sell &amp; Grow Your <br className="hidden sm:inline" />
-                <span className="text-primary">Campus Business</span> in Bukidnon
+    <main className="flex-1 bg-white text-ink">
+      {/* First viewport: the promise, both actions, and the rack of cards that proves it. */}
+      <section className="overflow-hidden border-b border-line bg-surface">
+        <div className={`${wrap} pb-8 pt-10 sm:pt-14 lg:pb-12`}>
+          <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:gap-16">
+            <div>
+              <h1 className="card-type max-w-[14ch] text-[2.75rem] font-extrabold leading-[0.95] text-ink sm:text-6xl lg:text-7xl">
+                Buy, sell and swap with students across Bukidnon.
               </h1>
-
-              {/* Subtitle */}
-              <p className="mt-4 text-base leading-relaxed text-muted sm:text-lg lg:max-w-xl">
-                <strong>BUKI</strong> connects students across <strong>BukSU, CMU, STI, San Isidro</strong>, and neighboring colleges. Trade uniforms, books, gadgets, and dorm supplies, or launch your own student side-hustle with zero platform fees.
+            </div>
+            <div className="lg:pb-2">
+              <p className="max-w-[46ch] text-base leading-relaxed text-muted sm:text-lg">
+                Uniforms, shoes, books, gadgets, homemade snacks and student services, listed by students near
+                your campus. Message the seller on Messenger or Instagram and meet up at university.
               </p>
-
-              {/* CTAs */}
-              <div className="mt-8 flex flex-col gap-3.5 sm:flex-row sm:justify-center lg:justify-start">
-                <Link
-                  href="/browse"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-primary-hover hover:shadow-lg focus-visible:outline-2 focus-visible:outline-primary"
-                >
+              <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
+                <Link href="/browse" className={btnPrimary}>
                   <BrowseIcon className="h-5 w-5" />
-                  Start Browsing
+                  Browse Listings
                 </Link>
-
-                <Link
-                  href="/post"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3.5 text-base font-bold text-white shadow-md transition-all hover:bg-accent-hover hover:shadow-lg focus-visible:outline-2 focus-visible:outline-accent"
-                >
-                  <PlusIcon className="h-5 w-5" />
-                  Post an Item
+                <Link href="/post" className={btnPost}>
+                  <PlusIcon className="h-5 w-5" strokeWidth="2.25" />
+                  Post Item
                 </Link>
-              </div>
-
-              {/* Quick Trust Highlights */}
-              <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs font-medium text-muted sm:text-sm lg:justify-start">
-                <div className="flex items-center gap-1.5">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent/15 text-accent font-bold">✓</span>
-                  <span>100% Free for Students</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-primary font-bold">✓</span>
-                  <span>Campus ID Card Listings</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-highlight/20 text-highlight font-bold">✓</span>
-                  <span>Direct Messenger Chat</span>
-                </div>
               </div>
             </div>
+          </div>
 
-            {/* Right Column: Hero Visual Card Mockup */}
-            <div className="flex justify-center lg:col-span-5">
-              <div className="relative w-full max-w-sm">
-                
-                {/* Glow accent behind card */}
-                <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-primary/30 to-accent/30 opacity-70 blur-xl" />
+          <div className="mt-10 sm:mt-12">
+            <LandingRack listings={rack} />
+          </div>
 
-                {/* Floating "Campus ID Card" Mockup */}
-                <div className="relative overflow-hidden rounded-2xl border border-line bg-white shadow-2xl transition-transform hover:-translate-y-1">
-                  
-                  {/* Signature Navy ID Strip Header */}
-                  <div className="relative bg-primary px-5 py-3.5 text-white">
-                    {/* Centered Lanyard Slot Punch */}
-                    <div className="mx-auto mb-2 h-1.5 w-12 rounded-full bg-white/30" />
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold tracking-wider text-on-primary-muted uppercase">
-                        Uniform &bull; College
-                      </span>
-                      <span className="font-mono text-xs font-medium text-on-primary-muted">
-                        No. BUK-2026
-                      </span>
-                    </div>
-                  </div>
+          {/* The old checkmark row, rewritten as ID-card fields: label over value. */}
+          <dl className="mt-8 grid gap-px overflow-hidden rounded-[10px] border border-line bg-line sm:grid-cols-3">
+            {[
+              ['Browsing', 'Free, no account needed'],
+              ['Posting', `${FREE_ACTIVE_LISTINGS} free listings, or unlimited for ₱${SUBSCRIPTION_PRICE}`],
+              ['Contacting sellers', 'Log in, then message on Messenger or Instagram'],
+            ].map(([label, value]) => (
+              <div key={label} className="bg-white px-4 py-3">
+                <dt className="text-xs font-medium text-muted">{label}</dt>
+                <dd className="mt-0.5 text-sm font-semibold text-ink">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
 
-                  {/* Card Body */}
-                  <div className="p-5">
-                    {/* Centered Logo Preview */}
-                    <div className="relative mb-4 flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl border border-line bg-surface p-4">
-                      <Image
-                        src="/1.png"
-                        alt="BUKI Official Logo"
-                        width={200}
-                        height={200}
-                        priority
-                        className="h-36 w-36 object-contain drop-shadow-sm transition-transform hover:scale-105"
-                      />
-                      <span className="absolute top-2.5 right-2.5 rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-bold text-white shadow-xs">
-                        Available
-                      </span>
-                    </div>
+      {/* What you can do: a ruled list, not a grid of icon cards. */}
+      <section className="py-16 sm:py-24">
+        <div className={`${wrap} grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16`}>
+          <div>
+            <h2 className="card-type max-w-[16ch] text-3xl font-extrabold leading-tight sm:text-4xl">
+              Not just uniforms and books.
+            </h2>
+            <p className="mt-4 max-w-[42ch] text-[15px] leading-relaxed text-muted">
+              If a student in Bukidnon would pay for it, trade for it, or book it, it can go on BukiMart.
+            </p>
+          </div>
+          <ul className="divide-y divide-dashed divide-line border-y border-line">
+            {USES.map((use) => (
+              <li key={use.title} className="grid gap-2 py-6 sm:grid-cols-[1fr_auto] sm:items-baseline sm:gap-8">
+                <div>
+                  <h3 className="text-lg font-bold text-ink">{use.title}</h3>
+                  <p className="mt-1.5 max-w-[60ch] text-[15px] leading-relaxed text-muted">{use.body}</p>
+                </div>
+                <Link
+                  href={use.link[1]}
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                >
+                  {use.link[0]}
+                  <ChevronRightIcon className="h-4 w-4" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
-                    {/* Price & Title */}
-                    <div className="flex items-baseline justify-between">
-                      <span className="card-type text-2xl font-extrabold text-primary tabular">
-                        ₱250
-                      </span>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-bold text-accent">
-                        <SwapIcon className="h-3.5 w-3.5" /> For Swap Available
-                      </span>
-                    </div>
+      {/* Cross-campus: a working school search, not a claim. */}
+      <section className="border-y border-line bg-surface py-16 sm:py-24">
+        <div className={`${wrap} grid gap-10 lg:grid-cols-2 lg:gap-16`}>
+          <div>
+            <h2 className="card-type max-w-[18ch] text-3xl font-extrabold leading-tight sm:text-4xl">
+              Every school in Bukidnon, one feed.
+            </h2>
+            <p className="mt-4 max-w-[52ch] text-[15px] leading-relaxed text-muted">
+              Students from any college or university in the province can buy and sell here, not just one campus.
+              Filter by school and you might find someone selling exactly what you need a few minutes from your
+              classroom. Your school not listed? Type it anyway; any school works.
+            </p>
+          </div>
 
-                    <h2 className="mt-1.5 text-base font-bold text-ink">
-                      BukSU College Polo Uniform (Size M)
-                    </h2>
-
-                    {/* Details row */}
-                    <div className="mt-4 grid grid-cols-3 gap-2 border-t border-dashed border-line pt-3 text-center">
-                      <div className="rounded-lg bg-surface py-1.5">
-                        <span className="block text-[10px] uppercase font-semibold text-muted">School</span>
-                        <span className="text-xs font-bold text-ink">BukSU</span>
-                      </div>
-                      <div className="rounded-lg bg-surface py-1.5">
-                        <span className="block text-[10px] uppercase font-semibold text-muted">Size</span>
-                        <span className="text-xs font-bold text-ink">Medium</span>
-                      </div>
-                      <div className="rounded-lg bg-surface py-1.5">
-                        <span className="block text-[10px] uppercase font-semibold text-muted">Condition</span>
-                        <span className="text-xs font-bold text-ink">Like New</span>
-                      </div>
-                    </div>
-
-                    {/* Mock action button */}
+          <div className="overflow-hidden rounded-[10px] border border-line bg-white shadow-card">
+            <div className="bg-primary px-5 pb-3 pt-3.5 text-center">
+              <span aria-hidden="true" className="mx-auto block h-1.5 w-12 rounded-full bg-white shadow-[inset_0_1px_1px_rgb(6_36_63/0.35)]" />
+              <p className="mt-2 text-sm font-semibold text-white">Find listings at your school</p>
+            </div>
+            <div className="p-5">
+              <form action="/browse" className="flex flex-col gap-2 sm:flex-row">
+                <label className="sr-only" htmlFor="landing-school">School</label>
+                <div className="relative flex-1">
+                  <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                  <input
+                    id="landing-school"
+                    name="school"
+                    list="landing-schools"
+                    placeholder="e.g. CMU, BukSU, San Isidro College"
+                    autoComplete="off"
+                    className="h-12 w-full rounded-md border border-line bg-white pl-9 pr-3 text-[15px] text-ink placeholder:text-muted focus:border-primary focus:outline-none"
+                  />
+                  <datalist id="landing-schools">
+                    {BUKIDNON_SCHOOLS.map((s) => (
+                      <option key={s.name} value={s.name} />
+                    ))}
+                  </datalist>
+                </div>
+                <button type="submit" className={btnPrimary}>Search</button>
+              </form>
+              <p className="mt-5 text-xs font-medium text-muted">Or jump to a school</p>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {schools.map((s) => (
+                  <li key={s.name}>
                     <Link
-                      href="/browse"
-                      className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-2.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover"
+                      href={`/browse?school=${encodeURIComponent(s.aliases[0])}`}
+                      className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft px-3 text-[13px] font-medium text-primary transition-colors hover:border-primary/50"
                     >
-                      Message Seller &bull; View Item
+                      {s.short ?? s.aliases[0]}
+                      <span className="text-muted">{s.town}</span>
                     </Link>
-                  </div>
-                </div>
-
-              </div>
+                  </li>
+                ))}
+              </ul>
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* 2. CAMPUSES COVERED STRIP */}
-      <section className="border-b border-line bg-white py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-xs font-bold uppercase tracking-wider text-muted">
-            Supporting Students &amp; Campuses Across Bukidnon
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-            {schools.map((s) => (
-              <Link
-                key={s.short}
-                href={`/browse?school=${encodeURIComponent(s.short)}`}
-                className="flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2 text-xs font-bold text-ink shadow-xs transition-all hover:border-primary/50 hover:bg-primary-soft hover:text-primary sm:text-sm"
-              >
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-[10px] font-extrabold text-primary">
-                  {s.short[0]}
-                </span>
-                <span>{s.name}</span>
-                <span className="text-[11px] font-medium text-muted">({s.short})</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 3. STUDENT ENTREPRENEURSHIP & BUSINESS HUB */}
-      <section className="py-14 sm:py-20 bg-surface">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-2xl mx-auto">
-            <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-bold text-accent">
-              Empowering Student Sellers
-            </span>
-            <h2 className="mt-3 text-2xl font-extrabold text-ink sm:text-4xl">
-              Turn Campus Needs into Your Own Business
+      {/* Messaging: what the seller pastes, and what the buyer taps. */}
+      <section className="py-16 sm:py-24">
+        <div className={wrap}>
+          <div className="grid gap-4 lg:grid-cols-2 lg:gap-16">
+            <h2 className="card-type max-w-[18ch] text-3xl font-extrabold leading-tight sm:text-4xl">
+              Message sellers where you already chat.
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-              BUKI isn’t just a classifieds board—it’s an open launchpad for Bukidnon students to earn, trade, and provide affordable essentials for each other.
+            <p className="max-w-[56ch] text-[15px] leading-relaxed text-muted lg:pt-2">
+              There’s no chat inside BukiMart. Sellers paste their Facebook, Messenger or Instagram link when they
+              post, whatever the app gave them, even the ones with codes in them. BukiMart finds the account, and
+              buyers get a button that opens the conversation directly.
             </p>
           </div>
 
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((f, i) => (
-              <div
-                key={i}
-                className="group relative flex flex-col justify-between rounded-2xl border border-line bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-md"
-              >
-                <div>
-                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-surface border border-line shadow-2xs group-hover:scale-110 transition-transform">
-                    {f.icon}
+          <div className="mt-10 overflow-hidden rounded-[10px] border border-line shadow-card">
+            <div className="hidden grid-cols-[1.2fr_auto_1fr] gap-6 bg-surface px-5 py-2.5 text-xs font-medium text-muted md:grid">
+              <span>The seller pastes</span>
+              <span aria-hidden="true" />
+              <span>The buyer taps</span>
+            </div>
+            <ul className="divide-y divide-line bg-white">
+              {LINK_EXAMPLES.map(({ pasted, from, icon: Icon, button }) => (
+                <li key={pasted} className="grid gap-3 px-5 py-4 md:grid-cols-[1.2fr_auto_1fr] md:items-center md:gap-6">
+                  <div className="min-w-0">
+                    <p className="truncate rounded-sm border border-line bg-surface px-3 py-2 text-sm text-ink">{pasted}</p>
+                    <p className="mt-1 text-xs text-muted">{from}</p>
                   </div>
-                  <span className="block text-[11px] font-bold uppercase tracking-wider text-muted">
-                    {f.badge}
+                  <ChevronRightIcon aria-hidden="true" className="hidden h-5 w-5 text-muted md:block" />
+                  <span className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-white md:w-auto md:justify-self-start">
+                    <Icon className="h-4 w-4" />
+                    {button}
                   </span>
-                  <h3 className="mt-1 text-base font-bold text-ink">
-                    {f.title}
-                  </h3>
-                  <p className="mt-2 text-xs leading-relaxed text-muted sm:text-sm">
-                    {f.desc}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p className="mt-3 text-xs text-muted">
+            Examples use a made-up account. A plain username like juan.delacruz works too. Without a link, buyers
+            see the seller’s email instead.
+          </p>
+        </div>
+      </section>
+
+      {/* How it works, then what it costs. */}
+      <section className="border-t border-line bg-surface py-16 sm:py-24">
+        <div className={`${wrap} grid gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16`}>
+          <div>
+            <h2 className="card-type text-3xl font-extrabold leading-tight sm:text-4xl">How it works</h2>
+            <ol className="mt-8 space-y-0">
+              {STEPS.map((step, i) => (
+                <li key={step.title} className="relative grid grid-cols-[2.5rem_1fr] gap-4 pb-8 last:pb-0">
+                  {i < STEPS.length - 1 && (
+                    <span aria-hidden="true" className="absolute bottom-0 left-5 top-10 w-0.5 -translate-x-1/2 bg-line" />
+                  )}
+                  <span className="card-type tabular flex h-10 w-10 items-center justify-center rounded-full bg-primary text-base font-extrabold text-white">
+                    {i + 1}
+                  </span>
+                  <div className="pt-1.5">
+                    <h3 className="text-lg font-bold text-ink">{step.title}</h3>
+                    <p className="mt-1 max-w-[52ch] text-[15px] leading-relaxed text-muted">{step.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div>
+            <h2 className="card-type text-3xl font-extrabold leading-tight sm:text-4xl">Free to start</h2>
+            <p className="mt-3 max-w-[48ch] text-[15px] leading-relaxed text-muted">
+              Most students never pay. If you sell a lot, a ₱{SUBSCRIPTION_PRICE} pass lifts the limit for a month.
+            </p>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              <div className="overflow-hidden rounded-[10px] border border-line bg-white shadow-card">
+                <div className="border-b border-line px-4 py-3">
+                  <p className="text-sm font-semibold text-ink">Free</p>
+                </div>
+                <div className="px-4 py-4">
+                  <p className="card-type tabular text-3xl font-extrabold leading-none text-primary">₱0</p>
+                  <ul className="mt-4 space-y-2 text-sm text-ink">
+                    <li className="flex gap-2"><CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{FREE_ACTIVE_LISTINGS} active listings at a time</li>
+                    <li className="flex gap-2"><CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Browse and message sellers</li>
+                    <li className="flex gap-2"><CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Sell or swap</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="overflow-hidden rounded-[10px] border border-accent/40 bg-white shadow-card">
+                <div className="bg-accent px-4 py-3">
+                  <p className="text-sm font-semibold text-white">Unlimited pass</p>
+                </div>
+                <div className="px-4 py-4">
+                  <p className="card-type tabular text-3xl font-extrabold leading-none text-accent">
+                    ₱{SUBSCRIPTION_PRICE}
+                    <span className="ml-1 text-base font-semibold text-muted">for 30 days</span>
                   </p>
+                  <ul className="mt-4 space-y-2 text-sm text-ink">
+                    <li className="flex gap-2"><CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />Unlimited active listings</li>
+                    <li className="flex gap-2"><CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />Pay once with {payments}</li>
+                    <li className="flex gap-2"><CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />No auto-renew</li>
+                  </ul>
+                  <Link href="/subscribe" className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-accent-hover hover:underline">
+                    Get the pass
+                    <ChevronRightIcon className="h-4 w-4" />
+                  </Link>
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Business Pitch Banner */}
-          <div className="mt-12 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary to-primary-hover p-6 text-white sm:p-8">
-            <div className="grid items-center gap-6 lg:grid-cols-12">
-              <div className="lg:col-span-8">
-                <span className="inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-xs">
-                  Zero Commission &bull; Instant Student Peer-to-Peer
-                </span>
-                <h3 className="mt-3 text-xl font-extrabold sm:text-2xl">
-                  Have textbooks, dorm supplies, or crafts to sell?
-                </h3>
-                <p className="mt-2 text-xs text-on-primary-muted sm:text-sm leading-relaxed max-w-xl">
-                  Post in under 2 minutes. Your fellow classmates and dorm mates are already looking for what you have. Set your price, meet at the campus library or canteen, and get paid directly.
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 lg:col-span-4 lg:justify-end">
-                <Link
-                  href="/post"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-primary shadow-sm transition-colors hover:bg-primary-soft"
-                >
-                  <PlusIcon className="h-4 w-4" />
-                  Create Your Listing
-                </Link>
-                <Link
-                  href="/login"
-                  className="inline-flex items-center justify-center rounded-xl border border-white/30 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10"
-                >
-                  Sign Up Free
-                </Link>
               </div>
             </div>
           </div>
-
         </div>
       </section>
 
-      {/* 4. ABOUT THE SYSTEM & HOW IT WORKS */}
-      <section className="border-t border-line bg-white py-14 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          
-          <div className="grid items-center gap-12 lg:grid-cols-12">
-            
-            {/* Left: About Details */}
-            <div className="lg:col-span-6">
-              <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
-                About the Platform
-              </span>
-              <h2 className="mt-3 text-2xl font-extrabold text-ink sm:text-4xl">
-                A Unified Marketplace Built for Bukidnon Students
-              </h2>
-              <p className="mt-4 text-sm leading-relaxed text-muted sm:text-base">
-                BUKI was conceived to solve a daily struggle on every Bukidnon campus: finding affordable course materials, fitting uniforms, reliable graphing calculators, and second-hand gear without high department store prices or risky stranger transactions.
-              </p>
-
-              <div className="mt-6 space-y-4">
-                <div className="flex gap-3">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent font-bold text-xs mt-0.5">
-                    ✓
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-ink">Verified Student Identity Motif</h4>
-                    <p className="text-xs text-muted leading-relaxed">
-                      Every listing follows a structured campus lanyard ID card presentation, ensuring clear prices, item conditions, sizes, and school tags.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent font-bold text-xs mt-0.5">
-                    ✓
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-ink">Direct Messenger Integration</h4>
-                    <p className="text-xs text-muted leading-relaxed">
-                      Seamless one-click deep-linking to the seller’s Facebook Messenger for both mobile and desktop users.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent font-bold text-xs mt-0.5">
-                    ✓
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-ink">Local &amp; Sustainable</h4>
-                    <p className="text-xs text-muted leading-relaxed">
-                      Encouraging circular economy on campus: pass down your books and uniforms to freshmen each semester.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Steps */}
-            <div className="rounded-2xl border border-line bg-surface p-6 sm:p-8 lg:col-span-6 shadow-sm">
-              <h3 className="text-lg font-bold text-ink">How to Trade in 3 Simple Steps</h3>
-              
-              <div className="mt-6 space-y-6">
-                <div className="flex gap-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-base font-extrabold text-white shadow-xs">
-                    1
-                  </span>
-                  <div>
-                    <h4 className="text-sm font-bold text-ink">Snap &amp; List Your Item</h4>
-                    <p className="mt-1 text-xs text-muted leading-relaxed">
-                      Take photos of your uniform, textbook, or item. Select your school, condition, and set your price (or mark it For Swap).
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-base font-extrabold text-white shadow-xs">
-                    2
-                  </span>
-                  <div>
-                    <h4 className="text-sm font-bold text-ink">Connect With Campus Buyers</h4>
-                    <p className="mt-1 text-xs text-muted leading-relaxed">
-                      Interested students tap &quot;Message Seller on Messenger&quot; to coordinate meetup times and locations right at your school.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink text-base font-extrabold text-white shadow-xs">
-                    3
-                  </span>
-                  <div>
-                    <h4 className="text-sm font-bold text-ink">Hand Over &amp; Mark as Sold</h4>
-                    <p className="mt-1 text-xs text-muted leading-relaxed">
-                      Complete the exchange safely on campus. Mark the item as sold or trade another item right away.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* 5. MEET THE DEVELOPERS & CONTACT SECTION */}
-      <section className="border-t border-line bg-surface py-14 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-xl mx-auto">
-            <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
-              The Creators
-            </span>
-            <h2 className="mt-3 text-2xl font-extrabold text-ink sm:text-4xl">
-              Meet the Developers
+      {/* Close: the two actions again, then who made it. */}
+      <section className="bg-primary text-white">
+        <div className={`${wrap} flex flex-col gap-6 py-14 sm:py-16 lg:flex-row lg:items-center lg:justify-between`}>
+          <div>
+            <span aria-hidden="true" className="block h-1.5 w-12 rounded-full bg-white shadow-[inset_0_1px_1px_rgb(6_36_63/0.35)]" />
+            <h2 className="card-type mt-5 max-w-[20ch] text-3xl font-extrabold leading-tight sm:text-4xl">
+              Someone near your campus has what you need.
             </h2>
-            <p className="mt-3 text-sm text-muted">
-              Built with dedication for the student community of Bukidnon. Have feedback, questions, or ideas? Reach out to us directly!
-            </p>
           </div>
-
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 max-w-4xl mx-auto">
-            
-            {/* Developer 1: Atheo Jessar R. Caliao */}
-            <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm transition-all hover:shadow-md hover:border-primary/40">
-              {/* ID-style top strip */}
-              <div className="bg-primary px-5 py-3 text-white flex items-center justify-between">
-                <span className="text-xs font-bold tracking-wider uppercase text-on-primary-muted">
-                  Development Team
-                </span>
-                <span className="font-mono text-xs text-on-primary-muted">ID: DEV-01</span>
-              </div>
-              <div className="p-6">
-                <div>
-                  <h3 className="text-lg font-bold text-ink">
-                    Atheo Jessar R. Caliao
-                  </h3>
-                  <span className="mt-1 inline-block rounded-md bg-accent-soft px-2.5 py-0.5 text-xs font-bold text-accent">
-                    FrontEnd Developer
-                  </span>
-                </div>
-
-                <div className="mt-5 space-y-2.5 border-t border-line pt-4 text-xs sm:text-sm">
-                  <a
-                    href="mailto:ajtheo176@gmail.com"
-                    className="flex items-center gap-2.5 text-muted transition-colors hover:text-primary"
-                  >
-                    <MailIcon className="h-4 w-4 text-primary" />
-                    <span>ajtheo176@gmail.com</span>
-                  </a>
-                  <a
-                    href="tel:09924908157"
-                    className="flex items-center gap-2.5 text-muted transition-colors hover:text-primary"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-primary">
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span>09924908157</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Developer 2: Toff Darell B. Vergara */}
-            <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-sm transition-all hover:shadow-md hover:border-primary/40">
-              {/* ID-style top strip */}
-              <div className="bg-primary px-5 py-3 text-white flex items-center justify-between">
-                <span className="text-xs font-bold tracking-wider uppercase text-on-primary-muted">
-                  Development Team
-                </span>
-                <span className="font-mono text-xs text-on-primary-muted">ID: DEV-02</span>
-              </div>
-              <div className="p-6">
-                <div>
-                  <h3 className="text-lg font-bold text-ink">
-                    Toff Darell B. Vergara
-                  </h3>
-                  <span className="mt-1 inline-block rounded-md bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary">
-                    FullStack Developer
-                  </span>
-                </div>
-
-                <div className="mt-5 space-y-2.5 border-t border-line pt-4 text-xs sm:text-sm">
-                  <a
-                    href="mailto:topedarell13@gmail.com"
-                    className="flex items-center gap-2.5 text-muted transition-colors hover:text-primary"
-                  >
-                    <MailIcon className="h-4 w-4 text-primary" />
-                    <span>topedarell13@gmail.com</span>
-                  </a>
-                  <a
-                    href="tel:09977907786"
-                    className="flex items-center gap-2.5 text-muted transition-colors hover:text-primary"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-primary">
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span>09977907786</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* 6. BOTTOM CALL TO ACTION */}
-      <section className="relative overflow-hidden bg-primary py-12 text-white sm:py-16">
-        <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <div className="mx-auto mb-4 flex justify-center">
-            <Image
-              src="/BUKI.png"
-              alt="BUKI"
-              width={160}
-              height={80}
-              className="h-12 w-auto object-contain"
-            />
-          </div>
-          <h2 className="text-2xl font-extrabold sm:text-4xl">
-            Start Buying, Selling &amp; Swapping Today
-          </h2>
-          <p className="mx-auto mt-3 max-w-lg text-sm text-on-primary-muted sm:text-base">
-            Join students from across Bukidnon campuses. Find great deals and earn money by listing your items right now.
-          </p>
-
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <div className="flex flex-col gap-2.5 sm:flex-row">
             <Link
               href="/browse"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-bold text-primary shadow-lg transition-all hover:bg-primary-soft hover:shadow-xl"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-white px-5 text-[15px] font-semibold text-primary transition-colors hover:bg-primary-soft"
             >
               <BrowseIcon className="h-5 w-5" />
-              Explore All Listings
+              Browse Listings
             </Link>
-            <Link
-              href="/post"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-7 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-accent-hover hover:shadow-xl"
-            >
-              <PlusIcon className="h-5 w-5" />
-              Post an Item Now
+            <Link href="/post" className={btnPost}>
+              <PlusIcon className="h-5 w-5" strokeWidth="2.25" />
+              Post Item
             </Link>
           </div>
         </div>
       </section>
 
-      {/* 7. FOOTER */}
-      <footer className="border-t border-line bg-white py-8 text-xs text-muted">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2">
-            <span className="font-extrabold text-ink">BUKI</span>
-            <span>&bull;</span>
-            <span>The Student Marketplace &bull; Bukidnon, Philippines</span>
-          </div>
-
-          <div className="flex items-center gap-5">
-            <Link href="/browse" className="hover:text-primary transition-colors">Browse</Link>
-            <Link href="/post" className="hover:text-primary transition-colors">Post Item</Link>
-            <Link href="/login" className="hover:text-primary transition-colors">Account</Link>
-            <a href="mailto:ajtheo176@gmail.com" className="hover:text-primary transition-colors">Contact</a>
-          </div>
+      <section className="py-10">
+        <div className={`${wrap} flex flex-col gap-4 sm:flex-row sm:items-baseline sm:justify-between`}>
+          <p className="text-sm font-semibold text-ink">Made by students in Bukidnon</p>
+          <ul className="flex flex-col gap-3 sm:flex-row sm:gap-10">
+            {CREDITS.map((c) => (
+              <li key={c.email} className="text-sm">
+                <p className="font-semibold text-ink">
+                  {c.name} <span className="font-normal text-muted">· {c.role}</span>
+                </p>
+                <a href={`mailto:${c.email}`} className="mt-0.5 inline-flex items-center gap-1.5 text-primary hover:underline">
+                  <MailIcon className="h-3.5 w-3.5" />
+                  {c.email}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
-      </footer>
+      </section>
     </main>
   )
 }

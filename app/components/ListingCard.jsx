@@ -5,7 +5,7 @@ import SaveButton from '@/app/components/SaveButton'
 import { schoolLocationLabel } from '@/lib/schools'
 import { CameraIcon, PinIcon, SwapIcon } from '@/app/components/icons'
 
-// Price in brand green, as in the team's Buki-Finds prototype; swaps get a drawn Swap mark
+// Price in brand green, as in the team's BukiMart prototype; swaps get a drawn Swap mark
 // (words in the price slot would read as a price).
 function BigNumber({ listing, sold }) {
   if (isSwap(listing)) {
@@ -23,7 +23,7 @@ function BigNumber({ listing, sold }) {
   )
 }
 
-// Photo-first card following the team's Buki-Finds prototype: bold title, green price, then
+// Photo-first card following the team's BukiMart prototype: bold title, green price, then
 // "CMU • Musuan, Maramag" and a quiet size/condition line. `preview` renders it without a link.
 export function ListingIdCard({ listing, cover, preview = false }) {
   const photo = cover === undefined ? coverImage(listing) : cover

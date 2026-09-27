@@ -12,7 +12,7 @@ function Mark() {
   return (
     <Image
       src="/BUKI.png"
-      alt="BUKI"
+      alt="BukiMart"
       width={160}
       height={80}
       priority
@@ -44,7 +44,13 @@ export default function Navbar() {
   return (
     <header className="bg-primary shadow-xs [&_:focus-visible]:outline-white">
       <nav className="mx-auto flex max-w-7xl items-center gap-8 px-4 py-2.5 sm:px-6 md:py-3">
-        <Link href="/" className="flex items-center text-white" aria-label="BUKI home">
+        {/* Signed-in students already know the site: the logo takes them to the listings.
+            The landing page stays open to everyone at "/". */}
+        <Link
+          href={mounted && user ? '/browse' : '/'}
+          className="flex items-center text-white"
+          aria-label={mounted && user ? 'BukiMart, browse listings' : 'BukiMart home'}
+        >
           <Mark />
         </Link>
 

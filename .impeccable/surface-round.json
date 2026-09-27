@@ -1,0 +1,63 @@
+{
+  "title": "Choose the landing page structure",
+  "question": "Same BukiMart look (navy on white, ID-card listings). Three ways to lay out the page; pick one, steer it, or re-roll.",
+  "options": [
+    {
+      "id": "enrollment",
+      "label": "The Enrollment Slip",
+      "kicker": "THE ROLL",
+      "thesis": "The page reads like a campus registration slip you fill top to bottom: Step 1 sign up, Step 2 post or browse, Step 3 message.",
+      "palette": ["#00528a", "#ffffff", "#0b813e", "#06243f"],
+      "materials": ["printed form fields", "dashed tear lines", "fee receipt"],
+      "viewport": "Headline and both buttons on the left; on the right a filled-in slip showing a real listing's fields and a Message button.",
+      "risk": "If the form metaphor is overdone it can feel like paperwork instead of a quick marketplace.",
+      "wireframe": {"cols": 12, "rows": 12, "regions": [
+        {"label": "headline + Browse / Post", "x": 0, "y": 0, "w": 6, "h": 4, "accent": true},
+        {"label": "filled slip (sample listing)", "x": 7, "y": 0, "w": 5, "h": 4},
+        {"label": "what you can sell: 4 slip fields", "x": 0, "y": 5, "w": 12, "h": 2},
+        {"label": "any school: school field + chips", "x": 0, "y": 7, "w": 7, "h": 2},
+        {"label": "₱20 fee receipt", "x": 8, "y": 7, "w": 4, "h": 2, "accent": true},
+        {"label": "Step 1 · 2 · 3 + paste-your-link demo", "x": 0, "y": 9, "w": 12, "h": 2},
+        {"label": "credits + footer", "x": 0, "y": 11, "w": 12, "h": 1}
+      ]}
+    },
+    {
+      "id": "lanyard",
+      "label": "The Lanyard Rack",
+      "thesis": "The first thing you see is a rack of sample ID-card listings hanging from lanyards, so the page shows the product instead of describing it.",
+      "palette": ["#00528a", "#ffffff", "#0b813e", "#f3f7fa"],
+      "materials": ["lanyard cords", "ID cards", "slot punches"],
+      "viewport": "Short headline above a row of 4-5 swinging sample cards (uniform, shoes, book, a service, a swap), buttons under the rack.",
+      "risk": "Sample cards must be clearly labeled as examples, and the rack scrolls sideways on phones.",
+      "wireframe": {"cols": 12, "rows": 12, "regions": [
+        {"label": "headline + Browse / Post", "x": 2, "y": 0, "w": 8, "h": 2, "accent": true},
+        {"label": "rack of sample ID cards", "x": 0, "y": 2, "w": 12, "h": 3},
+        {"label": "any school: search by school", "x": 0, "y": 6, "w": 6, "h": 2},
+        {"label": "message via Messenger / IG", "x": 6, "y": 6, "w": 6, "h": 2},
+        {"label": "3 steps", "x": 0, "y": 8, "w": 8, "h": 2},
+        {"label": "₱20 / 30 days", "x": 8, "y": 8, "w": 4, "h": 2, "accent": true},
+        {"label": "credits + footer", "x": 0, "y": 10, "w": 12, "h": 2}
+      ]}
+    },
+    {
+      "id": "map",
+      "label": "The Province Map",
+      "thesis": "Bukidnon drawn as a simple route map with towns as stops, making the cross-campus reach the first idea.",
+      "palette": ["#00528a", "#ffffff", "#0b813e", "#d6e2ec"],
+      "materials": ["route-map lines", "town stops", "ID cards pinned to stops"],
+      "viewport": "Headline over a stylised line map (Malaybalay, Valencia, Maramag and more) with one sample card pinned to a stop; buttons under it.",
+      "risk": "A map implies coverage data we don't have; it must stay schematic, not claim real listing counts.",
+      "wireframe": {"cols": 12, "rows": 12, "regions": [
+        {"label": "headline + Browse / Post", "x": 0, "y": 0, "w": 5, "h": 4, "accent": true},
+        {"label": "Bukidnon route map, towns as stops", "x": 5, "y": 0, "w": 7, "h": 5},
+        {"label": "what you can sell", "x": 0, "y": 5, "w": 12, "h": 2},
+        {"label": "3 steps + paste your link", "x": 0, "y": 7, "w": 8, "h": 2},
+        {"label": "₱20 / 30 days", "x": 8, "y": 7, "w": 4, "h": 2, "accent": true},
+        {"label": "credits + footer", "x": 0, "y": 9, "w": 12, "h": 2}
+      ]}
+    }
+  ],
+  "reroll": true,
+  "steer": true,
+  "buildPath": {"value": "code", "toggle": false}
+}

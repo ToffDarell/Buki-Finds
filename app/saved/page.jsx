@@ -70,7 +70,7 @@ export default function SavedPage() {
               Tap the heart on any listing while browsing to easily compare prices, sizes, and meet-up spots.
             </p>
             <Link
-              href="/"
+              href="/browse"
               className="mt-6 inline-flex items-center rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-xs transition-colors hover:bg-primary-hover"
             >
               Browse Listings

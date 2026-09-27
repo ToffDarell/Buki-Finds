@@ -12,7 +12,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Buki-Finds palette, measured from the official logo (public/LOGO BUKIFINDS.jpg).
+/* BukiMart palette, measured from the official logo (public/LOGO BUKIFINDS.jpg).
    Blue = the logo's B, ring and magnifier. Green = the logo's hills, used only for making and
    trading (Post Item, swaps, available). Neutrals are tinted toward the logo blue.
    Not Tailwind's stock blue-600 / emerald-500: those don't match the logo in the navbar. */
@@ -126,6 +126,55 @@ a {
 
   .menu-drop {
     animation: panel-drop 200ms var(--ease-out-expo);
+  }
+}
+
+/* Landing page rack: ID cards hanging from one rail on cords of different lengths.
+   Phones swipe the rack sideways; from 1024px the five cards share the width. */
+.rack-scroll {
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 1rem;
+  scrollbar-width: none;
+}
+.rack-scroll::-webkit-scrollbar {
+  display: none;
+}
+.rack-item {
+  display: flex;
+  width: 10rem; /* narrow enough on phones that a third card peeks in: the rack swipes */
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  scroll-snap-align: start;
+  transform-origin: 50% 0;
+  rotate: var(--tilt, 0deg);
+}
+.rack-item:nth-child(5n + 1) { --cord: 20px; --tilt: -1.25deg; }
+.rack-item:nth-child(5n + 2) { --cord: 52px; --tilt: 1deg; }
+.rack-item:nth-child(5n + 3) { --cord: 32px; --tilt: -0.75deg; }
+.rack-item:nth-child(5n + 4) { --cord: 64px; --tilt: 1.25deg; }
+.rack-item:nth-child(5n + 5) { --cord: 40px; --tilt: -1deg; }
+.rack-cord {
+  display: block;
+  width: 2px;
+  height: var(--cord, 32px);
+  background: var(--color-primary);
+}
+@media (min-width: 640px) {
+  .rack-item { width: 12.5rem; }
+}
+@media (min-width: 1024px) {
+  .rack-item { width: auto; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rack-item {
+    animation: id-sway 3.4s var(--ease-in-out-sine) infinite;
+    animation-delay: calc(var(--i, 0) * -700ms);
+  }
+  /* A card someone is reaching for stops swinging. */
+  .rack-item:hover,
+  .rack-item:focus-within {
+    animation-play-state: paused;
   }
 }
 

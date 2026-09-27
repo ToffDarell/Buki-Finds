@@ -231,7 +231,7 @@ export default function PrivacyPage() {
         </div>
 
         <p className="mt-10 border-t border-line pt-6 text-sm text-muted">
-          <Link href="/" className="font-semibold text-primary hover:underline">Back to browsing</Link>
+          <Link href="/browse" className="font-semibold text-primary hover:underline">Back to browsing</Link>
         </p>
       </article>
     </main>

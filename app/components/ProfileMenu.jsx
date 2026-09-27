@@ -113,7 +113,7 @@ function ProfileMenuItems({ user, onChoose, firstRef }) {
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600">
             <LogOutIcon className="h-5 w-5" />
           </span>
-          <h2 id="logout-title" className="mt-3 text-lg font-bold">Log out of Buki-Finds?</h2>
+          <h2 id="logout-title" className="mt-3 text-lg font-bold">Log out of BukiMart?</h2>
           <p id="logout-body" className="mt-1 text-sm text-muted">
             You’ll need to log in again to post items, message sellers, and see your saved listings.
           </p>

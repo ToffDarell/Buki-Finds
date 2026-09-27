@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import {
@@ -143,11 +143,19 @@ function EmptyState({ active, onClearAll }) {
   )
 }
 
-export default function BrowsePage() {
-  const [filters, setFilters] = useState(DEFAULT_FILTERS)
+// Links can open Browse pre-filtered: /browse?school=CMU, /browse?category=Services
+function filtersFromUrl(params) {
+  const school = typeof params?.school === 'string' ? params.school.slice(0, 100) : ''
+  const category = CATEGORIES.includes(params?.category) ? params.category : ''
+  return { ...DEFAULT_FILTERS, school, category }
+}
+
+export default function BrowsePage({ searchParams }) {
+  const initial = filtersFromUrl(use(searchParams))
+  const [filters, setFilters] = useState(initial)
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
-  const [schoolInput, setSchoolInput] = useState('')
+  const [schoolInput, setSchoolInput] = useState(initial.school)
   const [sizes, setSizes] = useState([])
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
@@ -485,11 +493,10 @@ export default function BrowsePage() {
               above the heading. */}
           <div>
             <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-ink sm:text-3xl lg:text-4xl">
-              Good finds. <span className="text-accent">Greater impact.</span>
+              Find it in your size, near your university.
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
-              A student-to-student marketplace for Bukidnon. Buy affordable pre-loved school essentials, sell what you no
-              longer need, or swap with fellow students.
+              Search for an item, then narrow it down by university, size and price.
             </p>
           </div>
 
