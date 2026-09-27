@@ -185,10 +185,11 @@ function ContactAction({ listing, number, compact = false, signedOut = false }) 
       </Link>
     )
   }
-  if (listing.seller_facebook_username) {
+  const messenger = messengerUrl(listing.seller_facebook_username)
+  if (messenger) {
     return (
       <a
-        href={messengerUrl(listing.seller_facebook_username)}
+        href={messenger}
         target="_blank"
         rel="noopener noreferrer"
         className={`flex items-center justify-center gap-2 rounded-md bg-primary font-semibold text-white transition-colors hover:bg-primary-hover ${
@@ -328,7 +329,7 @@ export default function ItemPage() {
   const swap = isSwap(listing)
   const purgeDate = purgeDateLabel(listing)
   const number = listingNumber(listing)
-  const hasContact = Boolean(listing.seller_facebook_username || listing.seller_email)
+  const hasContact = Boolean(messengerUrl(listing.seller_facebook_username) || listing.seller_email)
   const showMobileBar = !isOwner && !isSold && hasContact
   const signedOut = !userLoading && !user
 
@@ -430,7 +431,7 @@ export default function ItemPage() {
                     </Link>
                   )}
                 </p>
-                {!isOwner && user && listing.seller_email && listing.seller_facebook_username && (
+                {!isOwner && user && listing.seller_email && messengerUrl(listing.seller_facebook_username) && (
                   <a href={`mailto:${listing.seller_email}`} className="truncate text-sm text-primary hover:underline">
                     {listing.seller_email}
                   </a>

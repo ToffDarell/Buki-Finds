@@ -155,7 +155,7 @@ export default function ListingForm({ user, listing, onSaved }) {
 
     const fbUsername = normalizeFacebookUsername(facebook)
     if (fbUsername === null) {
-      setError('That Facebook username doesn’t look right. Use only the part after facebook.com/, e.g. juan.delacruz')
+      setError('That Facebook link doesn’t lead to a profile. Paste your profile link (facebook.com/yourname) or just your username, e.g. juan.delacruz. “Share” links from the Facebook app don’t work here.')
       return
     }
     if (!user.email && !fbUsername) {
@@ -452,8 +452,8 @@ export default function ListingForm({ user, listing, onSaved }) {
             optional={Boolean(user.email)}
             hint={
               user.email
-                ? `Adds a “Message Seller on Messenger” button. Leave it blank and students will see your email (${user.email}) instead.`
-                : 'Required: your account has no email, so students will contact you through Messenger.'
+                ? `You can paste your full profile link or just your username. Adds a “Message Seller on Messenger” button; leave it blank and students will see your email (${user.email}) instead.`
+                : 'You can paste your full profile link or just your username. Required: your account has no email, so students will contact you through Messenger.'
             }
           >
             <div className="relative">
