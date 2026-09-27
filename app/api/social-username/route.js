@@ -24,11 +24,11 @@ function toUrl(link) {
   }
 }
 
-// Links whose path is a code rather than a username: only trust what the redirect says.
-function isCodeLink(platform, url) {
-  const host = url.hostname.toLowerCase()
-  if (/^\/share\//i.test(url.pathname)) return true
-  return platform === 'facebook' && /(^|\.)(m\.me|fb\.me)$/.test(host)
+// share/<code> links hide the username entirely, so only the redirect can tell us who it is.
+// Other links (m.me/toffdarell?hash=…, instagram.com/name?igsh=…) carry the name in the path,
+// so when the site won't answer us we can still read it from the link itself.
+function isCodeLink(url) {
+  return /^\/share\//i.test(url.pathname)
 }
 
 async function follow(platform, start) {
@@ -58,9 +58,8 @@ async function follow(platform, start) {
     // m.me/<name or code> -> messenger.com/t/<numeric id>; an unknown code lands on messenger.com/.
     if (platform === 'facebook' && /(^|\.)messenger\.com$/i.test(next.hostname)) {
       const id = next.pathname.match(/^\/t\/([A-Za-z0-9.]{1,100})\/?$/)?.[1]
-      if (id) return { username: id }
-      // Home page = unknown name/code. (A login page just means Messenger wants a session.)
-      return { username: null, definite: next.pathname === '/' }
+      // Home or login page: Messenger wouldn't say (it answers servers unevenly), so fall back.
+      return { username: id ?? null }
     }
     if (/^\/(login|accounts\/login)/i.test(next.pathname)) return { username: null }
 
@@ -80,12 +79,11 @@ export async function POST(request) {
     return Response.json({ error: 'Not a Facebook, Messenger or Instagram link.' }, { status: 400 })
   }
 
-  const code = isCodeLink(platform, url)
+  const code = isCodeLink(url)
   try {
     const found = await follow(platform, url)
     if (found.username) return Response.json({ username: found.username })
-    // The site said this code/name leads nowhere (e.g. m.me/<unknown> -> messenger.com home).
-    if (found.definite || code) return Response.json({ username: null })
+    if (code) return Response.json({ username: null })
   } catch {
     // Facebook or Instagram didn't answer; the link's own path is the best we have.
     if (code) return Response.json({ error: 'Couldn’t reach Facebook or Instagram.' }, { status: 502 })
