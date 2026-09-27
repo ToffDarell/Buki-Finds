@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { nextPath, rememberNext } from '@/lib/afterLogin'
-import { CheckIcon } from '@/app/components/icons'
+import { CheckIcon, EyeIcon, EyeOffIcon } from '@/app/components/icons'
 
 // New accounts only: at least 8 characters including a special character (anything that isn't
 // a letter or a number). Login doesn't check this, so older accounts with shorter passwords still work.
@@ -15,11 +15,48 @@ const PASSWORD_RULES = [
   { id: 'special', label: 'At least 1 special character (e.g. ! @ # $ %)', test: (p) => /[^A-Za-z0-9]/.test(p) },
 ]
 
+// A password input with a show/hide eye button. The button sits inside the field on the right.
+function PasswordField({ id, label, value, onChange, autoComplete, placeholder, minLength, describedBy, invalid = false }) {
+  const [shown, setShown] = useState(false)
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-xs font-semibold text-ink sm:text-sm">{label}</label>
+      <div className="relative">
+        <input
+          id={id}
+          type={shown ? 'text' : 'password'}
+          autoComplete={autoComplete}
+          required
+          placeholder={placeholder}
+          minLength={minLength}
+          aria-describedby={describedBy}
+          aria-invalid={invalid || undefined}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`w-full rounded-xl border bg-surface py-2.5 pl-3.5 pr-12 text-sm text-ink transition-all placeholder:text-muted focus:bg-white focus:outline-none focus:ring-4 ${
+            invalid ? 'border-red-300 focus:border-red-500 focus:ring-red-100' : 'border-line focus:border-primary focus:ring-primary/10'
+          }`}
+        />
+        <button
+          type="button"
+          onClick={() => setShown((v) => !v)}
+          aria-label={shown ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+          aria-pressed={shown}
+          className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-xl text-muted transition-colors hover:text-ink"
+        >
+          {shown ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const [mode, setMode] = useState('login') // 'login' | 'signup'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -36,6 +73,12 @@ export default function LoginPage() {
 
     if (mode === 'signup' && !PASSWORD_RULES.every((rule) => rule.test(password))) {
       setError('Your password needs at least 8 characters, including a special character like ! @ # $ %.')
+      setSubmitting(false)
+      return
+    }
+
+    if (mode === 'signup' && password !== confirm) {
+      setError('The two passwords don’t match. Type the same password in both boxes.')
       setSubmitting(false)
       return
     }
@@ -147,20 +190,16 @@ export default function LoginPage() {
               />
             </label>
 
-            <label className="flex flex-col gap-1.5 text-xs font-semibold text-ink sm:text-sm">
-              Password
-              <input
-                type="password"
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                required
-                placeholder={mode === 'login' ? 'Your password' : 'At least 8 characters, with a symbol'}
-                minLength={mode === 'signup' ? 8 : undefined}
-                aria-describedby={mode === 'signup' ? 'password-rules' : undefined}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink transition-all placeholder:text-muted focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10"
-              />
-            </label>
+            <PasswordField
+              id="password"
+              label="Password"
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              placeholder={mode === 'login' ? 'Your password' : 'At least 8 characters, with a symbol'}
+              minLength={mode === 'signup' ? 8 : undefined}
+              describedBy={mode === 'signup' ? 'password-rules' : undefined}
+              value={password}
+              onChange={setPassword}
+            />
 
             {mode === 'signup' && (
               <ul id="password-rules" className="-mt-2 flex flex-col gap-1 text-xs" aria-live="polite">
@@ -177,6 +216,39 @@ export default function LoginPage() {
                   )
                 })}
               </ul>
+            )}
+
+            {mode === 'signup' && (
+              <div className="flex flex-col gap-1.5">
+                <PasswordField
+                  id="confirm-password"
+                  label="Confirm password"
+                  autoComplete="new-password"
+                  placeholder="Type your password again"
+                  describedBy="password-match"
+                  value={confirm}
+                  onChange={setConfirm}
+                  invalid={confirm !== '' && confirm !== password}
+                />
+                {confirm !== '' && (
+                  <p
+                    id="password-match"
+                    aria-live="polite"
+                    className={`flex items-center gap-1.5 text-xs ${confirm === password ? 'font-semibold text-accent-hover' : 'text-red-700'}`}
+                  >
+                    {confirm === password ? (
+                      <>
+                        <span aria-hidden="true" className="flex h-4 w-4 items-center justify-center rounded-full border border-accent bg-accent text-white">
+                          <CheckIcon className="h-3 w-3" strokeWidth="3" />
+                        </span>
+                        Passwords match
+                      </>
+                    ) : (
+                      'Passwords don’t match yet'
+                    )}
+                  </p>
+                )}
+              </div>
             )}
 
             {mode === 'signup' && (
