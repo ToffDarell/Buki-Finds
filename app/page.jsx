@@ -4,6 +4,7 @@ import { BROWSE_STATUSES, LISTING_WITH_IMAGES, coverImage } from '@/lib/listings
 import { BUKIDNON_SCHOOLS } from '@/lib/schools'
 import { FREE_ACTIVE_LISTINGS, PAYMENT_METHODS, SUBSCRIPTION_PRICE } from '@/lib/subscription'
 import LandingRack from '@/app/components/LandingRack'
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 import {
   BrowseIcon,
   CheckIcon,
@@ -14,6 +15,40 @@ import {
   PlusIcon,
   SearchIcon,
 } from '@/app/components/icons'
+
+// What Google shows for the home page: the words students actually search for, in plain English.
+export const metadata = {
+  title: { absolute: 'BukiMart – Buy, Sell & Swap with College Students in Bukidnon' },
+  description:
+    'The student marketplace for Bukidnon. Buy and sell pre-loved uniforms, school shoes, books, gadgets and student services from BukSU, CMU and colleges in Malaybalay and Valencia.',
+  alternates: { canonical: '/' },
+}
+
+// Tells search engines what BukiMart is, and lets Google offer a search box that opens Browse.
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      name: SITE_NAME,
+      url: SITE_URL,
+      description: SITE_DESCRIPTION,
+      inLanguage: 'en-PH',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/browse?q={search_term_string}` },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: `${SITE_URL}/icon.png`,
+      areaServed: { '@type': 'AdministrativeArea', name: 'Bukidnon, Philippines' },
+    },
+  ],
+}
 
 // The rack shows the newest real listings (refreshed every 5 minutes) and fills the rest of
 // its five hooks with labeled samples, so the page never looks empty or pretends.
@@ -96,6 +131,10 @@ export default async function LandingPage() {
 
   return (
     <main className="flex-1 bg-white text-ink">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+      />
       {/* First viewport: the promise, both actions, and the rack of cards that proves it. */}
       <section className="overflow-hidden border-b border-line bg-surface">
         <div className={`${wrap} pb-8 pt-10 sm:pt-14 lg:pb-12`}>
@@ -108,9 +147,9 @@ export default async function LandingPage() {
             {/* Top-aligned with the headline: the paragraph starts level with its first line. */}
             <div className="lg:pt-3">
               <p className="max-w-[46ch] text-pretty text-base leading-relaxed text-muted sm:text-lg">
-                Uniforms, shoes, books, gadgets, homemade snacks and student services, listed by students near
-                your campus. Tap Message Seller on any listing and it opens a direct chat with the seller on
-                Messenger or Instagram. Then meet up at your university.
+                Pre-loved uniforms, school shoes, books, gadgets, homemade snacks and student services from college
+                students at BukSU, CMU and schools across Malaybalay and Valencia. Tap Message Seller on any listing
+                and it opens a direct chat with the seller on Messenger or Instagram. Then meet up at your university.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <Link href="/browse" className={btnPrimary}>

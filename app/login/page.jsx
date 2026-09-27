@@ -134,14 +134,14 @@ export default function LoginPage() {
               width={1477}
               height={342}
               priority
-              className="h-11 w-auto object-contain sm:h-12"
+              className="h-9 w-auto object-contain sm:h-10"
             />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-            {mode === 'login' ? 'Welcome back' : 'Create an account'}
+          <h1 className="text-lg font-bold tracking-tight text-ink sm:text-xl">
+            {mode === 'login' ? 'Welcome' : 'Create an account'}
           </h1>
           <p className="mt-1 text-xs text-muted sm:text-sm">
-            Student marketplace across Bukidnon campuses
+            Student marketplace for Bukidnon colleges
           </p>
 
           {/* Segmented Switcher (Log in / Sign up) */}

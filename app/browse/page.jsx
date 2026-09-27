@@ -148,14 +148,16 @@ function filtersFromUrl(params) {
   const school = typeof params?.school === 'string' ? params.school.slice(0, 100) : ''
   const category = CATEGORIES.includes(params?.category) ? params.category : ''
   const listingType = ['sell', 'swap'].includes(params?.type) ? params.type : ''
-  return { ...DEFAULT_FILTERS, school, category, listingType }
+  const q = typeof params?.q === 'string' ? params.q.slice(0, 100) : ''
+  return { ...DEFAULT_FILTERS, school, category, listingType, q }
 }
 
 export default function BrowsePage({ searchParams }) {
-  const initial = filtersFromUrl(use(searchParams))
+  const { q, ...initial } = filtersFromUrl(use(searchParams))
   const [filters, setFilters] = useState(initial)
-  const [searchInput, setSearchInput] = useState('')
-  const [search, setSearch] = useState('')
+  // ?q= lets a link (or Google's search box for BukiMart) open Browse with a search already typed.
+  const [searchInput, setSearchInput] = useState(q)
+  const [search, setSearch] = useState(cleanSearchText(q))
   const [schoolInput, setSchoolInput] = useState(initial.school)
   const [sizes, setSizes] = useState([])
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)

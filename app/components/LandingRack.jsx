@@ -49,7 +49,7 @@ function Photo({ listing }) {
       <img
         src={thumbUrl(photo)}
         onError={fallbackToFull(photo)}
-        alt=""
+        alt={listing.title}
         loading="lazy"
         className="id-photo h-full w-full object-cover"
       />
