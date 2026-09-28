@@ -12,7 +12,7 @@ export default function SiteFooter() {
     <footer className="border-t border-line bg-white">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-6 text-xs text-muted sm:px-6 md:flex-row md:items-start md:justify-between">
         <div className="max-w-[60ch] space-y-1">
-          <p>© {new Date().getFullYear()} BukiMart · Student marketplace in Bukidnon</p>
+          <p>© {new Date().getFullYear()} BukiFinds · Student marketplace in Bukidnon</p>
           <p>A student project. Not officially affiliated with any school, college or university.</p>
         </div>
         <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-2">

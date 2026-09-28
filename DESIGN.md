@@ -1,5 +1,5 @@
 ---
-name: BukiMart
+name: BukiFinds
 description: A student marketplace where every listing is issued like a campus ID card, in the logo's blue and green on white.
 colors:
   primary: "#00528a"
@@ -185,7 +185,7 @@ components:
     padding: "12px 24px"
 ---
 
-# Design System: BukiMart
+# Design System: BukiFinds
 
 ## Overview
 
@@ -329,7 +329,7 @@ Buttons are solid and plain, with navy doing the talking.
 - **Error:** an inline alert box with the error background, error border, and strong error text.
 
 ### Navigation
-- **Top strip:** a full-bleed Logo Green (#0B813E) strip, by owner request. The wordmark is the official round logo in a 36px white circle plus "BukiMart" in 18px Geist bold. On phones (below 768px) the strip holds only the wordmark; navigation lives in the bottom tab bar. From 768px up: Browse and My Listings as 16px icon + 14px medium label in full white (faded white fails contrast on green), active marked by a 2px white underline bar and hover by a 50% one; then flush right the Post Item button in white with green text (a green button would vanish on the green bar) and the profile button (a person icon in a 15%-white circle plus the first name), or "Log in" with the person icon when signed out.
+- **Top strip:** a full-bleed Logo Green (#0B813E) strip, by owner request. The wordmark is the official round logo in a 36px white circle plus "BukiFinds" in 18px Geist bold. On phones (below 768px) the strip holds only the wordmark; navigation lives in the bottom tab bar. From 768px up: Browse and My Listings as 16px icon + 14px medium label in full white (faded white fails contrast on green), active marked by a 2px white underline bar and hover by a 50% one; then flush right the Post Item button in white with green text (a green button would vanish on the green bar) and the profile button (a person icon in a 15%-white circle plus the first name), or "Log in" with the person icon when signed out.
 - **Phone tab bar (below 768px):** fixed to the bottom, white, Ruled Line top border, the bottom-bar shadow, padded for the iPhone home indicator (`env(safe-area-inset-bottom)`, with `viewport-fit=cover`). Four equal tabs: Browse, My Listings, Post Item, Profile, each a 24px icon over a 12px label, at least 56px tall; idle is muted medium, active is blue semibold with a 3px blue bar on the top edge and `aria-current="page"` (two cues, not colour alone). No chat tab: students contact sellers on Messenger. **Post Item** matches the desktop button exactly in wording, plus icon, green fill and 6px corners, shrunk to a 36x28 chip that sits level in the bar (not raised), so it reads as the same action on every device. While the session loads, Profile is a same-size inert placeholder, never a wrong link. An in-flow spacer keeps the last content row clear of it. The bar is not rendered on the item detail page, whose own price + Message Seller bar is the only bottom bar there.
 - **Profile menu:** one set of contents, two presenters. Header is an ID strip (navy, slot punch, the name in 16px Geist semibold, the email in Strip Frost), then 48px rows with muted 20px icons (the Post Item plus in green): My Listings, Post Item, and after a rule, Log out (ink, not red: signing out is not destructive). Phones: a bottom sheet (16px top corners) over a 40% ink backdrop that slides up (280ms, ease-out-expo) and adds a full-width Close button; focus moves in and is kept in, Escape or a backdrop tap closes it, and focus returns to the Profile tab. Desktop: a 256px dropdown under the profile button (12px corners, card-lift shadow) that closes on outside click or Escape.
 - **Icon rule:** the same glyph means the same place everywhere: compass = Browse, tag = My Listings, plus = Post Item, person = Profile / Log in, door-arrow = Log out.

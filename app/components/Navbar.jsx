@@ -11,12 +11,12 @@ import { BrowseIcon, HeartIcon, ListingsIcon, PlusIcon, UserIcon } from '@/app/c
 function Mark() {
   return (
     <Image
-      src="/BUKI.png"
-      alt="BukiMart"
-      width={160}
-      height={80}
+      src="/bukifinds-wordmark-white.png"
+      alt="BukiFinds"
+      width={1955}
+      height={448}
       priority
-      className="h-10 w-auto object-contain transition-transform hover:scale-[1.02] sm:h-11"
+      className="h-5 w-auto object-contain transition-transform hover:scale-[1.02] sm:h-[22px]"
     />
   )
 }
@@ -49,7 +49,7 @@ export default function Navbar() {
         <Link
           href={mounted && user ? '/browse' : '/'}
           className="flex items-center text-white"
-          aria-label={mounted && user ? 'BukiMart, browse listings' : 'BukiMart home'}
+          aria-label={mounted && user ? 'BukiFinds, browse listings' : 'BukiFinds home'}
         >
           <Mark />
         </Link>

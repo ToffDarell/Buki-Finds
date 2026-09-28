@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  // Pages set their own title; it shows as "Hoodie – ₱1,500 | BukiMart".
+  // Pages set their own title; it shows as "Hoodie – ₱1,500 | BukiFinds".
   title: {
     default: `${SITE_NAME} – Student marketplace in Bukidnon`,
     template: `%s | ${SITE_NAME}`,
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
   keywords: [
-    "BukiMart",
+    "BukiFinds",
     "Bukidnon",
     "student marketplace",
     "buy and sell",

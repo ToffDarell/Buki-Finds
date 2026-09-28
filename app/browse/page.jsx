@@ -155,7 +155,7 @@ function filtersFromUrl(params) {
 export default function BrowsePage({ searchParams }) {
   const { q, ...initial } = filtersFromUrl(use(searchParams))
   const [filters, setFilters] = useState(initial)
-  // ?q= lets a link (or Google's search box for BukiMart) open Browse with a search already typed.
+  // ?q= lets a link (or Google's search box for BukiFinds) open Browse with a search already typed.
   const [searchInput, setSearchInput] = useState(q)
   const [search, setSearch] = useState(cleanSearchText(q))
   const [schoolInput, setSchoolInput] = useState(initial.school)

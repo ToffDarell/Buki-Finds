@@ -214,7 +214,7 @@ export default function SubscribePage() {
 
                 <li>
                   <p className="text-sm font-semibold text-ink">2. Upload your payment receipt screenshot</p>
-                  <p className="mt-1 text-xs text-muted">Make sure the amount, date and reference number are visible. Only you and the BukiMart team can see it.</p>
+                  <p className="mt-1 text-xs text-muted">Make sure the amount, date and reference number are visible. Only you and the BukiFinds team can see it.</p>
                   {preview ? (
                     <div className="relative mt-3 w-fit">
                       {/* eslint-disable-next-line @next/next/no-img-element */}

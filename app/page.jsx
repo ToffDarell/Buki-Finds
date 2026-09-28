@@ -4,6 +4,7 @@ import { BROWSE_STATUSES, LISTING_WITH_IMAGES, coverImage } from '@/lib/listings
 import { BUKIDNON_SCHOOLS } from '@/lib/schools'
 import { FREE_ACTIVE_LISTINGS, PAYMENT_METHODS, SUBSCRIPTION_PRICE } from '@/lib/subscription'
 import LandingRack from '@/app/components/LandingRack'
+import VenturePartners from '@/app/components/VenturePartners'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 import {
   BrowseIcon,
@@ -18,13 +19,13 @@ import {
 
 // What Google shows for the home page: the words students actually search for, in plain English.
 export const metadata = {
-  title: { absolute: 'BukiMart – Buy, Sell & Swap with College Students in Bukidnon' },
+  title: { absolute: 'BukiFinds – Buy, Sell & Swap with College Students in Bukidnon' },
   description:
     'The student marketplace for Bukidnon. Buy and sell pre-loved uniforms, school shoes, books, gadgets and student services from BukSU, CMU and colleges in Malaybalay and Valencia.',
   alternates: { canonical: '/' },
 }
 
-// Tells search engines what BukiMart is, and lets Google offer a search box that opens Browse.
+// Tells search engines what BukiFinds is, and lets Google offer a search box that opens Browse.
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -193,7 +194,7 @@ export default async function LandingPage() {
               Not just uniforms and books.
             </h2>
             <p className="mt-4 max-w-[42ch] text-[15px] leading-relaxed text-muted">
-              If a student in Bukidnon would pay for it, trade for it, or book it, it can go on BukiMart.
+              If a student in Bukidnon would pay for it, trade for it, or book it, it can go on BukiFinds.
             </p>
           </div>
           <ul className="divide-y divide-dashed divide-line border-y border-line">
@@ -414,22 +415,25 @@ export default async function LandingPage() {
       </section>
 
       <section className="py-10">
-        {/* The label sits right above the names so the credits read as one group. */}
-        <div className={wrap}>
-          <p className="text-xs font-medium text-muted">Made by students in Bukidnon</p>
-          <ul className="mt-3 flex flex-col gap-4 sm:flex-row sm:gap-12">
-            {CREDITS.map((c) => (
-              <li key={c.email} className="text-sm">
-                <p className="font-semibold text-ink">
-                  {c.name} <span className="font-normal text-muted">· {c.role}</span>
-                </p>
-                <a href={`mailto:${c.email}`} className="mt-0.5 inline-flex items-center gap-1.5 text-primary hover:underline">
-                  <MailIcon className="h-3.5 w-3.5" />
-                  {c.email}
-                </a>
-              </li>
-            ))}
-          </ul>
+        {/* Two credit groups: the students behind the venture, and the students who built the site. */}
+        <div className={`${wrap} grid gap-8 md:grid-cols-2 md:gap-12`}>
+          <VenturePartners />
+          <div>
+            <p className="text-xs font-medium text-muted">Made by students in Bukidnon</p>
+            <ul className="mt-3 flex flex-col gap-4">
+              {CREDITS.map((c) => (
+                <li key={c.email} className="text-sm">
+                  <p className="font-semibold text-ink">
+                    {c.name} <span className="font-normal text-muted">· {c.role}</span>
+                  </p>
+                  <a href={`mailto:${c.email}`} className="mt-0.5 inline-flex items-center gap-1.5 text-primary hover:underline">
+                    <MailIcon className="h-3.5 w-3.5" />
+                    {c.email}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
     </main>

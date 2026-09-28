@@ -69,7 +69,7 @@ function ReviewLinkPanel({ listing }) {
       {state.link ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <input readOnly value={state.link} onFocus={(e) => e.target.select()} aria-label="Review link" className="min-w-0 flex-1 rounded-sm border border-line bg-white px-2.5 py-2 text-sm text-ink" />
-          <ShareButton title="Review your BukiMart seller" text={`How was buying "${listing.title}"? Leave a quick review:`} url={state.link} label="Send Link" />
+          <ShareButton title="Review your BukiFinds seller" text={`How was buying "${listing.title}"? Leave a quick review:`} url={state.link} label="Send Link" />
         </div>
       ) : (
         <button
@@ -216,7 +216,7 @@ function ContactAction({ listing, number, compact = false, signedOut = false }) 
     )
   } else if (listing.seller_email) {
     primary = (
-      <a href={`mailto:${listing.seller_email}?subject=${encodeURIComponent(`BukiMart No. ${number}: ${listing.title}`)}`} className={filled}>
+      <a href={`mailto:${listing.seller_email}?subject=${encodeURIComponent(`BukiFinds No. ${number}: ${listing.title}`)}`} className={filled}>
         <MailIcon />
         Email Seller
       </a>
@@ -543,7 +543,7 @@ export default function ItemPage() {
                     </span>
                   </span>
                 )}
-                <ShareButton title={listing.title} text={`${listing.title} · ${priceOrSwap(listing)} on BukiMart`} />
+                <ShareButton title={listing.title} text={`${listing.title} · ${priceOrSwap(listing)} on BukiFinds`} />
                 {!isOwner && (
                   <span className="ml-auto">
                     <ReportDialog listingId={listing.id} user={user} />

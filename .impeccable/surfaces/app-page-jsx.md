@@ -7,8 +7,8 @@ related_targets: []
 
 # Landing page (/)
 
-Scope: the public homepage, Persuade mode. Visitor: a Bukidnon college student (or small student reseller) arriving from a shared link or search, usually on a phone. Job: understand what BukiMart is in one viewport, then Browse Listings or Post an Item.
-Proof/content: no real listing volume yet, so the product demonstrates itself with clearly labeled sample ID cards. Facts that must be stated: any school in Bukidnon; filter by school; buyers message sellers on Messenger/Facebook/Instagram because sellers paste their profile link in any format; 3 free active listings, ₱20 unlocks unlimited posting for 30 days; developer credits with emails only (no phone numbers). Brand name on this page: BukiMart.
+Scope: the public homepage, Persuade mode. Visitor: a Bukidnon college student (or small student reseller) arriving from a shared link or search, usually on a phone. Job: understand what BukiFinds is in one viewport, then Browse Listings or Post an Item.
+Proof/content: no real listing volume yet, so the product demonstrates itself with clearly labeled sample ID cards. Facts that must be stated: any school in Bukidnon; filter by school; buyers message sellers on Messenger/Facebook/Instagram because sellers paste their profile link in any format; 3 free active listings, ₱20 unlocks unlimited posting for 30 days; developer credits with emails only (no phone numbers). Brand name on this page: BukiFinds.
 
 ## Direction contract
 

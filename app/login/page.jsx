@@ -125,16 +125,16 @@ export default function LoginPage() {
   return (
     <main className="flex flex-1 items-center justify-center bg-surface px-4 py-8 sm:py-12">
       <div className="w-full max-w-md overflow-hidden rounded-2xl border border-line bg-white shadow-xl">
-        {/* Card header: the BukiMart wordmark in navy (the navbar uses the white one) */}
+        {/* Card header: the BukiFinds wordmark in navy (the navbar uses the white one) */}
         <div className="bg-white p-6 pb-2 text-center sm:p-8 sm:pb-3">
           <div className="mx-auto mb-3 flex items-center justify-center">
             <Image
-              src="/bukimart-wordmark.png"
-              alt="BukiMart"
-              width={1477}
-              height={342}
+              src="/bukifinds-wordmark.png"
+              alt="BukiFinds"
+              width={1955}
+              height={448}
               priority
-              className="h-9 w-auto object-contain sm:h-10"
+              className="h-10 w-auto object-contain sm:h-11"
             />
           </div>
           <h1 className="text-lg font-bold tracking-tight text-ink sm:text-xl">
@@ -266,7 +266,7 @@ export default function LoginPage() {
                   <Link href="/privacy" target="_blank" className="font-semibold text-primary hover:underline">
                     Privacy Policy
                   </Link>{' '}
-                  and agree that BukiMart may collect and use my information as it describes.
+                  and agree that BukiFinds may collect and use my information as it describes.
                 </span>
               </label>
             )}
@@ -288,7 +288,7 @@ export default function LoginPage() {
               disabled={submitting}
               className="mt-1 rounded-xl bg-primary py-3 text-sm font-bold text-white shadow-xs transition-all hover:bg-primary-hover hover:shadow-md disabled:opacity-60"
             >
-              {submitting ? 'Please wait…' : mode === 'login' ? 'Log in to BukiMart' : 'Create Account'}
+              {submitting ? 'Please wait…' : mode === 'login' ? 'Log in to BukiFinds' : 'Create Account'}
             </button>
           </form>
 

@@ -12,7 +12,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* BukiMart palette, measured from the official logo (public/LOGO BUKIFINDS.jpg).
+/* BukiFinds palette, measured from the official logo (public/LOGO BUKIFINDS.jpg).
    Blue = the logo's B, ring and magnifier. Green = the logo's hills, used only for making and
    trading (Post Item, swaps, available). Neutrals are tinted toward the logo blue.
    Not Tailwind's stock blue-600 / emerald-500: those don't match the logo in the navbar. */

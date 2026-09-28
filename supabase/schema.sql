@@ -1,4 +1,4 @@
--- Full BukiMart schema for a FRESH Supabase project: paste the whole file into the
+-- Full BukiFinds schema for a FRESH Supabase project: paste the whole file into the
 -- SQL editor and click Run. The live project already has all of this (it was built up by the
 -- earlier migrations 004-007), so do not run it there.
 --

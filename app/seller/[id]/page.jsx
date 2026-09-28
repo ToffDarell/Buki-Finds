@@ -141,7 +141,7 @@ export default function SellerPage() {
               <dd className="tabular mt-0.5 text-base font-semibold text-ink">{soldCount}</dd>
             </div>
             <div className="px-5 py-3">
-              <dt className="text-xs font-medium text-muted">On BukiMart since</dt>
+              <dt className="text-xs font-medium text-muted">On BukiFinds since</dt>
               <dd className="mt-0.5 text-base font-semibold text-ink">{since ? monthYear(since) : '—'}</dd>
             </div>
           </dl>
