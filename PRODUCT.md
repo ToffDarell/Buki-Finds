@@ -28,7 +28,7 @@ Built for Bukidnon students. Every listing is from a student in the province, an
 ## Capabilities and Constraints
 
 - Next.js App Router (JavaScript), Tailwind CSS v4, Supabase (auth, Postgres with RLS, storage bucket `listing-images`).
-- Categories: Uniforms, School Shoes, Shoes, Clothing, Books, School Supplies, Electronics, Food, Services, Other.
+- Categories: Uniforms, School Shoes, Shoes, Clothing, Books, School Supplies, Electronics, Food, Services, Bags & Accessories, Phones & Gadgets, Dorm & Home, Beauty & Personal Care, Sports & Hobbies, Handmade & Crafts, Other.
 - Conditions: New, Like New, Used - Good, Used - Fair.
 - School is free text, not a fixed list: there is no complete list of every school in Bukidnon. Suggestions come from schools sellers have already entered, and the Browse school filter does a partial, case-insensitive match.
 - No in-app chat, payments or delivery. Do not imply they exist.

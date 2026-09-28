@@ -6,7 +6,9 @@ import AuthErrorBanner from "./components/AuthErrorBanner";
 import BottomNav from "./components/BottomNav";
 import AfterLoginRedirect from "./components/AfterLoginRedirect";
 import SiteFooter from "./components/SiteFooter";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import InstallPrompt from "./components/InstallPrompt";
+import RegisterServiceWorker from "./components/ServiceWorker";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, THEME_COLOR } from "@/lib/site";
 
 import { AuthProvider } from "@/lib/useAuth";
 
@@ -63,11 +65,17 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
   formatDetection: { telephone: false },
+  // Installed on an iPhone home screen: opens full screen with this name under the icon.
+  // The home screen icon itself is app/apple-icon.png.
+  appleWebApp: { capable: true, title: SITE_NAME, statusBarStyle: "default" },
+  // Next prints the newer mobile-web-app-capable tag; older iPhones only know this one.
+  other: { "apple-mobile-web-app-capable": "yes" },
 };
 
 // Lets fixed bottom bars pad for the iPhone home indicator with env(safe-area-inset-bottom).
 export const viewport: Viewport = {
   viewportFit: "cover",
+  themeColor: THEME_COLOR,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -80,10 +88,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <AuthProvider>
           <Navbar />
           <AuthErrorBanner />
+          <InstallPrompt />
           {children}
           <SiteFooter />
           <BottomNav />
           <AfterLoginRedirect />
+          <RegisterServiceWorker />
         </AuthProvider>
       </body>
     </html>

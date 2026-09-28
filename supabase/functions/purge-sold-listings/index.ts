@@ -1,4 +1,5 @@
 // Deletes listings that have been Sold/Swapped for 7+ days, and their photos in storage.
+// A reviewed listing's cover photo is kept, because its review shows it (migration 018).
 // Called once a day by the pg_cron job in supabase/migrations_006_auto_purge.sql.
 //
 // Deploy: Supabase dashboard > Edge Functions > Deploy a new function > Via Editor.
@@ -46,6 +47,22 @@ Deno.serve(async () => {
   const due = found.data ?? []
   if (due.length === 0) return Response.json({ deleted: 0 })
 
+  // 1b. Reviews show the item's cover photo (migration 018), so keep that photo (and its thumbnail)
+  //     for listings that were reviewed. Read before deleting: the review loses its link after.
+  const keep = new Set<string>()
+  const reviewed = await supabase
+    .from('reviews')
+    .select('listing_photo')
+    .in('listing_id', due.map((l) => l.id))
+    .not('listing_photo', 'is', null)
+  for (const review of reviewed.data ?? []) {
+    const path = storagePath(review.listing_photo)
+    if (path) {
+      keep.add(path)
+      keep.add(thumbPath(path))
+    }
+  }
+
   // 2. Delete the rows first, re-checking the conditions so a listing marked Available a moment
   //    ago is left alone. listing_images rows go with ON DELETE CASCADE.
   const removed = await supabase
@@ -74,6 +91,8 @@ Deno.serve(async () => {
       }
     }
   }
+
+  for (const path of keep) paths.delete(path)
 
   let storageError: string | null = null
   if (paths.size > 0) {

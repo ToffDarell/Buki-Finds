@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { BROWSE_STATUSES, LISTING_WITH_IMAGES } from '@/lib/listings'
-import { formatRating } from '@/lib/reviews'
+import { BROWSE_STATUSES, LISTING_WITH_IMAGES, fallbackToFull, formatPrice } from '@/lib/listings'
+import { thumbUrl } from '@/lib/images'
+import { REVIEW_TAGS, formatRating } from '@/lib/reviews'
 import { avatarUrl, displayName } from '@/lib/avatar'
 import { useUser } from '@/lib/useAuth'
 import Avatar from '@/app/components/Avatar'
@@ -20,17 +21,78 @@ const monthYear = (iso) => new Date(iso).toLocaleDateString('en-PH', { month: 'l
 const shortDate = (iso) => new Date(iso).toLocaleDateString('en-PH', { dateStyle: 'medium' })
 
 function ReviewItem({ review }) {
+  const name = review.reviewer_name?.split(' ')[0] || 'A buyer'
+  const tags = (review.tags ?? []).filter((t) => REVIEW_TAGS[t])
+  const photo = review.listing_photo
+  const price = review.listing_type === 'swap' ? 'Swap' : review.listing_price != null ? formatPrice(review.listing_price) : null
+  const itemBody = (
+    <>
+      {photo && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={thumbUrl(photo)}
+          onError={fallbackToFull(photo)}
+          alt=""
+          loading="lazy"
+          className="h-12 w-12 shrink-0 rounded-md bg-surface object-cover"
+        />
+      )}
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-medium text-ink">{review.listing_title}</span>
+        {price && <span className="tabular block text-sm font-semibold text-ink">{price}</span>}
+      </span>
+    </>
+  )
+
   return (
-    <li className="border-t border-line py-4 first:border-t-0 first:pt-0">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <Stars rating={review.rating} className="h-4 w-4" />
-        <span className="text-sm font-semibold text-ink">{review.reviewer_name?.split(' ')[0] || 'A buyer'}</span>
-        <span className="text-xs text-muted">· {shortDate(review.created_at)}</span>
+    <li className="flex gap-3 border-t border-line py-4 first:border-t-0 first:pt-0">
+      <Avatar src={review.reviewer_avatar} name={name} className="h-10 w-10 text-sm" bg="bg-primary" />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm">
+          <span className="font-semibold text-ink">{name}</span>
+          <span className="text-muted"> · review from buyer · {shortDate(review.created_at)}</span>
+        </p>
+        <Stars rating={review.rating} className="mt-1 h-4 w-4" />
+        {tags.length > 0 && (
+          <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="What went well">
+            {tags.map((t) => (
+              <li key={t} className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-medium text-primary">
+                {REVIEW_TAGS[t]}
+              </li>
+            ))}
+          </ul>
+        )}
+        {review.comment && <p className="mt-2 max-w-[65ch] whitespace-pre-line text-[15px] leading-relaxed text-ink">{review.comment}</p>}
+        {review.listing_title &&
+          (photo || price ? (
+            review.listing_id ? (
+              <Link
+                href={`/item/${review.listing_id}`}
+                className="mt-3 flex max-w-sm items-center gap-3 rounded-lg border border-line p-2 transition-colors hover:border-muted/60"
+              >
+                {itemBody}
+              </Link>
+            ) : (
+              <div className="mt-3 flex max-w-sm items-center gap-3 rounded-lg border border-line p-2">{itemBody}</div>
+            )
+          ) : (
+            <p className="mt-1 text-xs text-muted">Bought: {review.listing_title}</p>
+          ))}
       </div>
-      {review.comment && <p className="mt-1.5 max-w-[65ch] whitespace-pre-line text-[15px] leading-relaxed text-ink">{review.comment}</p>}
-      {review.listing_title && <p className="mt-1 text-xs text-muted">Bought: {review.listing_title}</p>}
     </li>
   )
+}
+
+// Reviews with the item card (migration 018); before it runs, the older columns only.
+async function fetchReviews(id) {
+  const base = 'id, rating, comment, reviewer_name, listing_title, created_at'
+  const full = await supabase
+    .from('reviews')
+    .select(`${base}, listing_id, reviewer_avatar, listing_price, listing_type, listing_photo, tags`)
+    .eq('seller_id', id)
+    .order('created_at', { ascending: false })
+  if (!full.error) return full
+  return supabase.from('reviews').select(base).eq('seller_id', id).order('created_at', { ascending: false })
 }
 
 // Name, photo and university (migration 013). Falls back to just the photo (012), then to nothing,
@@ -51,7 +113,7 @@ export default function SellerPage() {
     let cancelled = false
     Promise.all([
       supabase.from('listings').select(LISTING_WITH_IMAGES).eq('seller_id', id).order('created_at', { ascending: false }),
-      supabase.from('reviews').select('id, rating, comment, reviewer_name, listing_title, created_at').eq('seller_id', id).order('created_at', { ascending: false }),
+      fetchReviews(id),
       fetchSellerProfile(id),
     ]).then(([listings, reviews, profile]) => {
       if (cancelled) return
@@ -77,6 +139,10 @@ export default function SellerPage() {
   const school = isMe ? userSchool(user) : profile?.school
   const schools = school ? [school] : [...new Set(listings.map((l) => l.school).filter(Boolean))]
   const since = [...listings, ...reviews].map((x) => x.created_at).sort()[0]
+  const tagCounts = Object.keys(REVIEW_TAGS)
+    .map((t) => [t, reviews.filter((r) => r.tags?.includes(t)).length])
+    .filter(([, n]) => n > 0)
+    .sort((x, y) => y[1] - x[1])
   const average = reviews.length ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length : null
 
   if (loaded && !error && !isMe && listings.length === 0 && reviews.length === 0) {
@@ -168,11 +234,22 @@ export default function SellerPage() {
                 No reviews yet. Buyers can review this seller through a link the seller sends after a sale.
               </p>
             ) : (
-              <ul>
-                {reviews.map((r) => (
-                  <ReviewItem key={r.id} review={r} />
-                ))}
-              </ul>
+              <>
+                {tagCounts.length > 0 && (
+                  <ul className="mb-4 flex flex-wrap gap-2 border-b border-line pb-4" aria-label="What buyers said">
+                    {tagCounts.map(([t, n]) => (
+                      <li key={t} className="rounded-full border border-line px-3 py-1 text-sm text-ink">
+                        {REVIEW_TAGS[t]} <span className="tabular font-semibold text-primary">{n}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <ul>
+                  {reviews.map((r) => (
+                    <ReviewItem key={r.id} review={r} />
+                  ))}
+                </ul>
+              </>
             )}
           </div>
         </section>

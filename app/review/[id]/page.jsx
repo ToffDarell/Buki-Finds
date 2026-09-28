@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { REVIEW_TAGS } from '@/lib/reviews'
 import { useUser } from '@/lib/useAuth'
 import { LISTING_WITH_IMAGES, coverImage, fallbackToFull } from '@/lib/listings'
 import { thumbUrl } from '@/lib/images'
@@ -39,6 +40,7 @@ function ReviewForm() {
   const [state, setState] = useState({ loaded: false, listing: null, status: '' })
   const [rating, setRating] = useState(0)
   const [comment, setComment] = useState('')
+  const [tags, setTags] = useState([])
   const [submit, setSubmit] = useState({ sending: false, done: false, error: '' })
 
   useEffect(() => {
@@ -64,7 +66,7 @@ function ReviewForm() {
   async function onSubmit(e) {
     e.preventDefault()
     setSubmit({ sending: true, done: false, error: '' })
-    const { error } = await supabase.rpc('submit_review', { p_listing_id: id, p_token: token, p_rating: rating, p_comment: comment })
+    const { error } = await supabase.rpc('submit_review', { p_listing_id: id, p_token: token, p_rating: rating, p_comment: comment, p_tags: tags })
     if (error) setSubmit({ sending: false, done: false, error: error.message })
     else setSubmit({ sending: false, done: true, error: '' })
   }
@@ -129,6 +131,30 @@ function ReviewForm() {
                       </button>
                     ))}
                     <span className="ml-2 text-sm font-medium text-muted" aria-live="polite">{WORDS[rating]}</span>
+                  </div>
+                </fieldset>
+
+                <fieldset>
+                  <legend className="text-sm font-semibold text-ink">
+                    What went well? <span className="font-normal text-muted">optional</span>
+                  </legend>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {Object.entries(REVIEW_TAGS).map(([key, label]) => {
+                      const on = tags.includes(key)
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          aria-pressed={on}
+                          onClick={() => setTags((prev) => (on ? prev.filter((t) => t !== key) : [...prev, key]))}
+                          className={`min-h-10 rounded-full border px-3.5 text-sm font-medium transition-colors ${
+                            on ? 'border-primary bg-primary-soft text-primary' : 'border-line bg-white text-ink hover:border-muted/60'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      )
+                    })}
                   </div>
                 </fieldset>
 
