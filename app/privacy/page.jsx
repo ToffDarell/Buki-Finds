@@ -84,8 +84,9 @@ export default function PrivacyPage() {
                 username; we keep only the username, not the link.
               </li>
               <li>
-                <strong>Activity:</strong> listings you save, reviews you give or receive (rating, comment, your first
-                name and the item title), and reports you file about a listing.
+                <strong>Activity:</strong> listings you save, notifications (for example, who saved your listing),
+                reviews you give or receive (rating, comment, your first name and the item title), and reports you file
+                about a listing.
               </li>
               <li>
                 <strong>Subscription payments:</strong> the screenshot of your GCash or GoTyme payment you upload, the
@@ -127,8 +128,12 @@ export default function PrivacyPage() {
                 <strong>Only signed-in students:</strong> the email address shown on a listing so buyers can reach you.
               </li>
               <li>
-                <strong>Only you (and the site administrator):</strong> your saved listings, the reports you file, and
-                your payment screenshots.
+                <strong>The seller of a listing you save:</strong> your name and profile photo, in a notification
+                saying you saved their item. Your full list of saved listings stays private.
+              </li>
+              <li>
+                <strong>Only you (and the site administrator):</strong> your list of saved listings, your
+                notifications, the reports you file, and your payment screenshots.
               </li>
             </List>
             <p>

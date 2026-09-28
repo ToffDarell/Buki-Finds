@@ -62,6 +62,7 @@ function productJsonLd(listing) {
     description: listing.description || undefined,
     image: images.length ? images : undefined,
     category: listing.category,
+    brand: listing.brand ? { '@type': 'Brand', name: listing.brand } : undefined,
     offers: {
       '@type': 'Offer',
       url: `${SITE_URL}/item/${listing.id}`,

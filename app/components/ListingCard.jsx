@@ -1,9 +1,9 @@
 import Link from 'next/link'
-import { coverImage, doneLabel, fallbackToFull, formatSize, isReserved, isSwap, priceOrSwap } from '@/lib/listings'
+import { categoryFields, coverImage, doneLabel, fallbackToFull, formatSize, isReserved, isSwap, offersDelivery, priceOrSwap } from '@/lib/listings'
 import { thumbUrl } from '@/lib/images'
 import SaveButton from '@/app/components/SaveButton'
 import { schoolLocationLabel } from '@/lib/schools'
-import { CameraIcon, PinIcon, SwapIcon } from '@/app/components/icons'
+import { CameraIcon, PinIcon, SwapIcon, TruckIcon } from '@/app/components/icons'
 
 // Price in brand green, as in the team's BukiFinds prototype; swaps get a drawn Swap mark
 // (words in the price slot would read as a price).
@@ -29,8 +29,9 @@ export function ListingIdCard({ listing, cover, preview = false }) {
   const photo = cover === undefined ? coverImage(listing) : cover
   const sold = listing.status === 'sold'
   const location = schoolLocationLabel(listing.school)
-  const size = formatSize(listing.size)
-  const details = [size && `Size ${size}`, listing.condition].filter(Boolean).join(' · ')
+  const f = categoryFields(listing.category)
+  const size = f.size ? formatSize(listing.size) : ''
+  const details = [size && `Size ${size}`, f.brand && listing.brand, f.condition && listing.condition].filter(Boolean).join(' · ')
 
   return (
     <>
@@ -58,6 +59,12 @@ export function ListingIdCard({ listing, cover, preview = false }) {
         {!sold && isReserved(listing) && (
           <span className="absolute bottom-2 left-2 rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-primary shadow-card">
             Reserved
+          </span>
+        )}
+        {!sold && offersDelivery(listing) && (
+          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-primary shadow-card">
+            <TruckIcon className="h-3.5 w-3.5" />
+            Delivery
           </span>
         )}
       </div>
@@ -99,7 +106,7 @@ export default function ListingCard({ listing }) {
       <Link
         href={`/item/${listing.id}`}
         className={`${shell} transition-[border-color,box-shadow] duration-300 group-hover:border-primary/30 group-hover:shadow-card-lift`}
-        aria-label={`${listing.title}, ${isSwap(listing) ? 'for swap' : priceOrSwap(listing)}${formatSize(listing.size) ? `, size ${formatSize(listing.size)}` : ''}${status}`}
+        aria-label={`${listing.title}, ${isSwap(listing) ? 'for swap' : priceOrSwap(listing)}${categoryFields(listing.category).size && formatSize(listing.size) ? `, size ${formatSize(listing.size)}` : ''}${status}`}
       >
         <ListingIdCard listing={listing} />
       </Link>

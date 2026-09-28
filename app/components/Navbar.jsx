@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useUser } from '@/lib/useAuth'
 import { useIsClient } from '@/lib/useIsClient'
 import { ProfileDropdown } from '@/app/components/ProfileMenu'
+import NotificationBell from '@/app/components/NotificationBell'
 import { BrowseIcon, HeartIcon, ListingsIcon, PlusIcon, UserIcon } from '@/app/components/icons'
 
 function Mark() {
@@ -60,7 +61,15 @@ export default function Navbar() {
           {mounted && user && <NavLink href="/my-listings" icon={ListingsIcon}>My Listings</NavLink>}
         </div>
 
+        {/* Phones: the bottom tab bar is full, so the bell sits at the right of the top bar. */}
+        {mounted && user && (
+          <div className="ml-auto md:hidden">
+            <NotificationBell />
+          </div>
+        )}
+
         <div className="ml-auto hidden items-center gap-4 md:flex">
+          {mounted && user && <NotificationBell dropdown />}
           <Link
             href="/post"
             className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-bold text-white shadow-xs transition-colors hover:bg-accent-hover"

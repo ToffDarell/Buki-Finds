@@ -59,7 +59,7 @@ const RACK_SIZE = 5
 const SAMPLES = [
   { id: 'sample-uniform', sample: true, title: 'PE uniform set, shirt and jogging pants', category: 'Uniforms', price: 350, size: 'M', school: 'Bukidnon State University', listing_type: 'sell' },
   { id: 'sample-book', sample: true, title: 'Calculus 1 textbook, 3rd edition', category: 'Books', listing_type: 'swap', swap_for: 'Physics 1 book', school: 'Central Mindanao University' },
-  { id: 'sample-service', sample: true, title: 'Thesis layout and printing help', category: 'Services', price: 150, school: 'STI College Valencia', listing_type: 'sell' },
+  { id: 'sample-service', sample: true, title: 'Thesis layout and printing help', category: 'Services', price: 150, school: 'STI College Valencia', listing_type: 'sell', details: { rate_unit: 'project', where: 'flexible' } },
   { id: 'sample-shoes', sample: true, title: 'Black leather school shoes', category: 'School Shoes', price: 400, size: '8', school: 'San Isidro College', listing_type: 'sell' },
   { id: 'sample-food', sample: true, title: 'Homemade polvoron, 10 pieces', category: 'Food', price: 60, school: 'Mountain View College', listing_type: 'sell' },
 ]

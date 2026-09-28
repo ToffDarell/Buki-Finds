@@ -12,9 +12,13 @@ import {
   cleanSearchText,
   formatPrice,
   formatSize,
+  formatBrand,
+  DEAL_METHODS,
+  categoryFields,
 } from '@/lib/listings'
 import ListingCard, { ListingCardSkeleton } from '@/app/components/ListingCard'
 import SchoolInput from '@/app/components/SchoolInput'
+import WhatsNewBanner from '@/app/components/WhatsNewBanner'
 import { matchSchools, schoolConditions } from '@/lib/schools'
 import { CloseIcon, FiltersIcon, PlusIcon, SearchIcon } from '@/app/components/icons'
 
@@ -23,6 +27,8 @@ const DEFAULT_FILTERS = {
   category: '',
   school: '',
   size: '',
+  brand: '',
+  deal: '',
   condition: '',
   minPrice: '',
   maxPrice: '',
@@ -64,12 +70,14 @@ function fetchListings(filters, search) {
   if (filters.school) query = query.or(schoolConditions(filters.school).join(','))
   // ilike ignores capitals, so the "L" chip also finds listings typed as "l".
   if (filters.size) query = query.ilike('size', filters.size.replace(/[\\%_]/g, '\\$&'))
+  if (filters.brand) query = query.ilike('brand', filters.brand.replace(/[\\%_]/g, '\\$&'))
+  if (filters.deal) query = query.contains('deal_methods', [filters.deal])
   if (filters.condition) query = query.eq('condition', filters.condition)
   if (filters.minPrice !== '') query = query.gte('price', Number(filters.minPrice))
   if (filters.maxPrice !== '') query = query.lte('price', Number(filters.maxPrice))
   if (search) {
     // Searching a school's name or acronym also finds listings from that school.
-    const conditions = [`title.ilike.%${search}%`, `description.ilike.%${search}%`]
+    const conditions = [`title.ilike.%${search}%`, `description.ilike.%${search}%`, `brand.ilike.%${search}%`]
     if (matchSchools(search).length) conditions.push(...schoolConditions(search))
     query = query.or(conditions.join(','))
   }
@@ -143,13 +151,16 @@ function EmptyState({ active, onClearAll }) {
   )
 }
 
-// Links can open Browse pre-filtered: /browse?school=CMU, /browse?category=Services, /browse?type=swap
+// Links can open Browse pre-filtered: /browse?school=CMU, /browse?category=Services, /browse?type=swap,
+// /browse?brand=Nike, /browse?deal=delivery
 function filtersFromUrl(params) {
   const school = typeof params?.school === 'string' ? params.school.slice(0, 100) : ''
   const category = CATEGORIES.includes(params?.category) ? params.category : ''
   const listingType = ['sell', 'swap'].includes(params?.type) ? params.type : ''
+  const brand = typeof params?.brand === 'string' ? formatBrand(params.brand) : ''
+  const deal = params?.deal in DEAL_METHODS ? params.deal : ''
   const q = typeof params?.q === 'string' ? params.q.slice(0, 100) : ''
-  return { ...DEFAULT_FILTERS, school, category, listingType, q }
+  return { ...DEFAULT_FILTERS, school, category, listingType, brand, deal, q }
 }
 
 export default function BrowsePage({ searchParams }) {
@@ -160,6 +171,7 @@ export default function BrowsePage({ searchParams }) {
   const [search, setSearch] = useState(cleanSearchText(q))
   const [schoolInput, setSchoolInput] = useState(initial.school)
   const [sizes, setSizes] = useState([])
+  const [brands, setBrands] = useState([])
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [showDesktopFilters, setShowDesktopFilters] = useState(true)
   const [result, setResult] = useState({ key: null, listings: [], error: '' })
@@ -208,6 +220,23 @@ export default function BrowsePage({ searchParams }) {
       })
   }, [])
 
+  // The most common brands among available listings (at most 12), most-listed first.
+  useEffect(() => {
+    supabase
+      .from('listings')
+      .select('brand')
+      .in('status', BROWSE_STATUSES)
+      .not('brand', 'is', null)
+      .then(({ data }) => {
+        const counts = new Map()
+        for (const row of data ?? []) {
+          const name = formatBrand(row.brand)
+          if (name) counts.set(name, (counts.get(name) ?? 0) + 1)
+        }
+        setBrands([...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 12).map(([name]) => name))
+      })
+  }, [])
+
   function update(name, value) {
     setFilters((prev) => ({ ...prev, [name]: value }))
   }
@@ -224,6 +253,18 @@ export default function BrowsePage({ searchParams }) {
     setFilters(DEFAULT_FILTERS)
     setSearchInput('')
     setSchoolInput('')
+  }
+
+  // Picking a category drops a size or brand filter that category doesn't have, so the results
+  // aren't silently filtered by something the student can no longer see.
+  function chooseCategory(category) {
+    const f = categoryFields(category)
+    setFilters((prev) => ({
+      ...prev,
+      category,
+      size: !category || f.size ? prev.size : '',
+      brand: !category || f.brand ? prev.brand : '',
+    }))
   }
 
   function selectPopularSchool(name) {
@@ -270,6 +311,12 @@ export default function BrowsePage({ searchParams }) {
       },
     },
     filters.size && { key: 'size', label: `Size ${filters.size}`, clear: () => update('size', '') },
+    filters.brand && { key: 'brand', label: `Brand: ${filters.brand}`, clear: () => update('brand', '') },
+    filters.deal && {
+      key: 'deal',
+      label: filters.deal === 'delivery' ? 'Delivery available' : 'Meet-up',
+      clear: () => update('deal', ''),
+    },
     filters.condition && { key: 'condition', label: filters.condition, clear: () => update('condition', '') },
     (filters.minPrice !== '' || filters.maxPrice !== '') && {
       key: 'price',
@@ -281,6 +328,8 @@ export default function BrowsePage({ searchParams }) {
   const activeFilterCount = [
     'school',
     'size',
+    'brand',
+    'deal',
     'condition',
     'minPrice',
     'maxPrice',
@@ -292,6 +341,8 @@ export default function BrowsePage({ searchParams }) {
       ...prev,
       school: '',
       size: '',
+      brand: '',
+      deal: '',
       condition: '',
       minPrice: '',
       maxPrice: '',
@@ -420,7 +471,7 @@ export default function BrowsePage({ searchParams }) {
       )}
 
       {/* Size Filter */}
-      {sizes.length > 0 && (
+      {sizes.length > 0 && (!filters.category || categoryFields(filters.category).size) && (
         <div className="border-t border-line/60 pt-5">
           <div className="flex items-center justify-between pb-2">
             <span className="text-sm font-semibold text-ink">Size</span>
@@ -451,6 +502,70 @@ export default function BrowsePage({ searchParams }) {
           </div>
         </div>
       )}
+
+      {/* Brand Filter: the most common brands as chips */}
+      {brands.length > 0 && (!filters.category || categoryFields(filters.category).brand) && (
+        <div className="border-t border-line/60 pt-5">
+          <div className="flex items-center justify-between pb-2">
+            <span className="text-sm font-semibold text-ink">Brand</span>
+            {filters.brand && (
+              <button onClick={() => update('brand', '')} className="text-xs font-medium text-primary hover:underline">
+                Clear
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {brands.map((b) => {
+              const isSelected = filters.brand.toLowerCase() === b.toLowerCase()
+              return (
+                <button
+                  key={b}
+                  type="button"
+                  onClick={() => update('brand', isSelected ? '' : b)}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
+                    isSelected
+                      ? 'border border-primary/40 bg-primary-soft text-primary'
+                      : 'border border-line bg-white text-muted hover:border-primary/40 hover:text-ink'
+                  }`}
+                >
+                  {b}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Deal method Filter */}
+      <div className="border-t border-line/60 pt-5">
+        <div className="flex items-center justify-between pb-2">
+          <span className="text-sm font-semibold text-ink">Deal method</span>
+          {filters.deal && (
+            <button onClick={() => update('deal', '')} className="text-xs font-medium text-primary hover:underline">
+              Clear
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {Object.entries(DEAL_METHODS).map(([value, label]) => {
+            const isSelected = filters.deal === value
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => update('deal', isSelected ? '' : value)}
+                className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
+                  isSelected
+                    ? 'border border-primary/40 bg-primary-soft text-primary'
+                    : 'border border-line bg-white text-muted hover:border-primary/40 hover:text-ink'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
       {/* Condition Filter */}
       <div className="border-t border-line/60 pt-5">
@@ -487,6 +602,7 @@ export default function BrowsePage({ searchParams }) {
 
   return (
     <main className="flex flex-1 flex-col">
+      <WhatsNewBanner />
       {/* Hero & Search Header */}
       <section className="border-b border-line bg-white pb-6 pt-5 sm:pb-8 sm:pt-7">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -565,7 +681,7 @@ export default function BrowsePage({ searchParams }) {
               return (
                 <button
                   key={category || 'all'}
-                  onClick={() => update('category', category)}
+                  onClick={() => chooseCategory(category)}
                   aria-pressed={selected}
                   className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all sm:text-sm ${
                     selected

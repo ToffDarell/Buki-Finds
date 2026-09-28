@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { coverImage, fallbackToFull, formatSize, isSwap, priceOrSwap } from '@/lib/listings'
+import { categoryFields, coverImage, dealLabel, detailValue, fallbackToFull, formatSize, isSwap, priceOrSwap } from '@/lib/listings'
 import { thumbUrl } from '@/lib/images'
 import { schoolLocationLabel } from '@/lib/schools'
 import { PinIcon, SwapIcon } from '@/app/components/icons'
@@ -41,6 +41,8 @@ const SAMPLE_ART = {
   ),
 }
 
+SAMPLE_ART.Shoes = SAMPLE_ART['School Shoes']
+
 function Photo({ listing }) {
   const photo = coverImage(listing)
   if (photo) {
@@ -65,7 +67,15 @@ function Photo({ listing }) {
 // One ID card on its cord. Real listings open the item; samples open Browse on that category.
 function HangingCard({ listing, index }) {
   const swap = isSwap(listing)
-  const size = formatSize(listing.size)
+  const f = categoryFields(listing.category)
+  // The card's first fact: size for clothes, condition for most goods, otherwise how or where it happens.
+  const [factLabel, factValue] = f.size
+    ? ['Size', formatSize(listing.size)]
+    : f.condition
+      ? ['Condition', listing.condition]
+      : f.deal
+        ? ['Deal', dealLabel(listing)]
+        : ['Where', detailValue('where', listing.details?.where)]
   const where = schoolLocationLabel(listing.school)
   const href = listing.sample ? `/browse?category=${encodeURIComponent(listing.category)}` : `/item/${listing.id}`
   const label = `${listing.sample ? 'Sample listing: ' : ''}${listing.title}, ${swap ? 'for swap' : priceOrSwap(listing)}`
@@ -103,8 +113,8 @@ function HangingCard({ listing, index }) {
           {swap && listing.swap_for && <p className="mt-0.5 truncate text-xs text-muted">Wants {listing.swap_for}</p>}
           <dl className="mt-auto grid grid-cols-2 gap-x-2 border-t border-dashed border-line pt-2 text-xs">
             <div className="min-w-0">
-              <dt className="text-muted">Size</dt>
-              <dd className="truncate font-semibold text-ink">{size || '—'}</dd>
+              <dt className="text-muted">{factLabel}</dt>
+              <dd className="truncate font-semibold text-ink">{factValue || '—'}</dd>
             </div>
             <div className="min-w-0">
               <dt className="text-muted">School</dt>

@@ -12,6 +12,12 @@ import {
   doneLabel,
   fallbackToFull,
   isReserved,
+  dealLabel,
+  dealMethods,
+  offersDelivery,
+  categoryFields,
+  detailValue,
+  DETAIL_FIELDS,
   isSwap,
   listingNumber,
   messengerUrl,
@@ -41,6 +47,7 @@ import {
   HeartIcon,
   PencilIcon,
   PinIcon,
+  TruckIcon,
   StarIcon,
   TrashIcon,
   UndoIcon,
@@ -161,6 +168,25 @@ function Gallery({ images, title, sold }) {
       )}
     </div>
   )
+}
+
+// The label/value pairs shown in the item's details grid, in order. Category extras come from
+// listings.details; the long "Known issues" note is shown separately below the grid.
+function itemFacts(listing) {
+  const f = categoryFields(listing.category)
+  const facts = []
+  if (f.condition) facts.push(['Condition', listing.condition])
+  if (f.size) facts.push(['Size', formatSize(listing.size)])
+  if (f.brand) facts.push(['Brand', listing.brand])
+  for (const key of f.details) {
+    if (key === 'issues' || key === 'rate_unit') continue // issues: own box; rate unit: shown with the price
+    const label = key === 'schedule' ? 'Available' : DETAIL_FIELDS[key].label
+    facts.push([label, detailValue(key, listing.details?.[key])])
+  }
+  if (f.deal) facts.push(['Deal', dealLabel(listing)])
+  facts.push(['University', listing.school])
+  facts.push(['Posted', new Date(listing.created_at).toLocaleDateString('en-PH', { dateStyle: 'medium' })])
+  return facts
 }
 
 function Field({ label, value }) {
@@ -426,18 +452,35 @@ export default function ItemPage() {
               </div>
             )}
 
+            {/* Only the fields this listing's category uses (see CATEGORY_FIELDS in lib/listings.js). */}
             <dl className="mt-5 grid grid-cols-2 rounded-md border border-line">
-              <Field label="Condition" value={listing.condition} />
-              <Field label="Size" value={formatSize(listing.size)} />
-              <Field label="University" value={listing.school} />
-              <Field label="Posted" value={new Date(listing.created_at).toLocaleDateString('en-PH', { dateStyle: 'medium' })} />
+              {itemFacts(listing).map(([label, value]) => (
+                <Field key={label} label={label} value={value} />
+              ))}
             </dl>
 
-            {listing.meetup_spot && (
+            {listing.details?.issues && categoryFields(listing.category).details.includes('issues') && (
+              <p className="mt-3 rounded-md border border-line px-3.5 py-2.5 text-[15px] text-ink">
+                <span className="text-xs font-medium text-muted">Known issues</span>
+                <span className="block whitespace-pre-line font-semibold">{listing.details.issues}</span>
+              </p>
+            )}
+
+            {offersDelivery(listing) && listing.delivery_note && (
+              <p className="mt-3 flex items-start gap-2 rounded-md border border-line px-3.5 py-2.5 text-[15px] text-ink">
+                <TruckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span>
+                  <span className="text-xs font-medium text-muted">Delivery</span>
+                  <span className="block font-semibold">{listing.delivery_note}</span>
+                </span>
+              </p>
+            )}
+
+            {listing.meetup_spot && dealMethods(listing).includes('meetup') && (
               <p className="mt-3 flex items-start gap-2 rounded-md border border-line px-3.5 py-2.5 text-[15px] text-ink">
                 <PinIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <span>
-                  <span className="text-xs font-medium text-muted">Meet-up spot</span>
+                  <span className="text-xs font-medium text-muted">{categoryFields(listing.category).meetupLabel ?? 'Meet-up spot'}</span>
                   <span className="block font-semibold">{listing.meetup_spot}</span>
                 </span>
               </p>

@@ -117,6 +117,14 @@ export const EyeOffIcon = (p) => (
   </Icon>
 )
 
+export const TruckIcon = (p) => (
+  <Icon {...p}>
+    <path d="M3 6.5h11v9.5H3zM14 9.5h3.5l3 3.2V16H14" />
+    <circle cx="7" cy="17.5" r="1.8" />
+    <circle cx="17" cy="17.5" r="1.8" />
+  </Icon>
+)
+
 export const ImageIcon = (p) => (
   <Icon {...p}>
     <rect x="4" y="4.5" width="16" height="15" rx="2" />
@@ -151,6 +159,14 @@ export const LogOutIcon = (p) => (
   <Icon {...p}>
     <path d="M14 4.5H6.5A1.5 1.5 0 0 0 5 6v12a1.5 1.5 0 0 0 1.5 1.5H14" />
     <path d="M10 12h10M16.5 8.5 20 12l-3.5 3.5" />
+  </Icon>
+)
+
+// Notifications.
+export const BellIcon = (p) => (
+  <Icon {...p}>
+    <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z" />
+    <path d="M10 20.5a2.2 2.2 0 0 0 4 0" />
   </Icon>
 )
 

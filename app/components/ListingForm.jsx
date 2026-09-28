@@ -11,6 +11,13 @@ import {
   normalizeSchool,
   sortedImages,
   formatSize,
+  formatBrand,
+  MAX_BRAND_LENGTH,
+  dealMethods,
+  DETAIL_FIELDS,
+  categoryFields,
+  categoryProblem,
+  cleanDetails,
 } from '@/lib/listings'
 import { MAX_RAW_IMAGE_BYTES, MAX_UNCOMPRESSED_BYTES, imageStoragePaths, prepareImage } from '@/lib/images'
 import { ListingCardPreview } from '@/app/components/ListingCard'
@@ -23,6 +30,11 @@ import { CameraIcon, CloseIcon, InstagramIcon, MessengerIcon } from '@/app/compo
 
 const inputClass =
   'w-full rounded-sm border border-line bg-white px-3 py-2.5 text-[15px] text-ink transition-colors placeholder:text-muted hover:border-muted/60 focus:border-primary focus:outline-none'
+
+// Database rule messages start with a code ("OTHER_DESCRIPTION: ..."); show only the readable part.
+function plainDbError(message) {
+  return message.replace(/^.*OTHER_DESCRIPTION:\s*/, '')
+}
 
 const TYPE_OPTIONS = [
   ['sell', 'I want to Sell this', 'Set a price. Buyers pay you when you meet.'],
@@ -101,7 +113,16 @@ export default function ListingForm({ user, listing, onSaved }) {
   const [swapFor, setSwapFor] = useState(listing?.swap_for ?? '')
   const [category, setCategory] = useState(listing?.category ?? '')
   const [condition, setCondition] = useState(listing?.condition ?? '')
+  // Category-specific extras (model, quantity, rate unit, ...); stored in listings.details.
+  const [details, setDetails] = useState(() => listing?.details ?? {})
+  // What this category shows (CATEGORY_FIELDS in lib/listings.js).
+  const cf = categoryFields(category)
   const [size, setSize] = useState(listing?.size ?? '')
+  const [brand, setBrand] = useState(listing?.brand ?? '')
+  const [brandOptions, setBrandOptions] = useState([])
+  // How the item changes hands; new listings start as meet-up only.
+  const [deal, setDeal] = useState(() => new Set(dealMethods(listing)))
+  const [deliveryNote, setDeliveryNote] = useState(listing?.delivery_note ?? '')
   // New listings start with the university from the seller's profile.
   const [school, setSchool] = useState(listing ? (listing.school ?? '') : userSchool(user))
   const [meetupSpot, setMeetupSpot] = useState(listing?.meetup_spot ?? '')
@@ -114,6 +135,50 @@ export default function ListingForm({ user, listing, onSaved }) {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [fbStatus, setFbStatus] = useState(null) // { ok, text } under the Facebook field
+
+  // Brands other sellers already used, so everyone picks the same spelling ("Nike", not "nike").
+  useEffect(() => {
+    supabase
+      .from('listings')
+      .select('brand')
+      .not('brand', 'is', null)
+      .limit(1000)
+      .then(({ data }) => {
+        const seen = new Map()
+        for (const row of data ?? []) {
+          const name = formatBrand(row.brand)
+          if (name && !seen.has(name.toLowerCase())) seen.set(name.toLowerCase(), name)
+        }
+        setBrandOptions([...seen.values()].sort((a, b) => a.localeCompare(b)))
+      })
+  }, [])
+
+  // Switching category clears whatever the new category doesn't use, so nothing stale is saved.
+  function changeCategory(next) {
+    setCategory(next)
+    const f = categoryFields(next)
+    if (!f.size) setSize('')
+    if (!f.brand) setBrand('')
+    if (!f.condition) setCondition('')
+    if (!f.deal) {
+      setDeal(new Set(['meetup']))
+      setDeliveryNote('')
+    }
+    setDetails((prev) => Object.fromEntries(f.details.filter((k) => prev[k]).map((k) => [k, prev[k]])))
+  }
+
+  function setDetail(key, value) {
+    setDetails((prev) => ({ ...prev, [key]: value }))
+  }
+
+  function toggleDeal(method) {
+    setDeal((prev) => {
+      const next = new Set(prev)
+      if (next.has(method)) next.delete(method)
+      else next.add(method)
+      return next
+    })
+  }
 
   // Free the preview blob URLs when the form goes away.
   const imagesRef = useRef(images)
@@ -183,6 +248,15 @@ export default function ListingForm({ user, listing, onSaved }) {
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
+    if (cf.deal && deal.size === 0) {
+      setError('Choose how the item changes hands: Meet-up, Delivery, or both.')
+      return
+    }
+    const problem = categoryProblem({ category, condition, description, details })
+    if (problem) {
+      setError(problem)
+      return
+    }
 
     setSaving(true)
     const [fbUsername, igUsername] = await Promise.all([
@@ -234,18 +308,23 @@ export default function ListingForm({ user, listing, onSaved }) {
         price: listingType === 'swap' ? null : Number(price),
         swap_for: listingType === 'swap' ? swapFor.trim() || null : null,
         category,
-        condition: condition || null,
-        size: formatSize(size) || null,
+        // Fields the category doesn't use are saved empty, whatever the inputs last held.
+        condition: cf.condition ? condition || null : null,
+        size: cf.size ? formatSize(size) || null : null,
+        brand: cf.brand ? formatBrand(brand) || null : null,
+        details: cleanDetails(category, details),
         // "cmu" is saved as "Central Mindanao University" so listings group under one name.
         school: normalizeSchool(canonicalSchool(school)) || null,
-        meetup_spot: meetupSpot.replace(/\s+/g, ' ').trim().slice(0, 120) || null,
+        meetup_spot: !cf.deal || deal.has('meetup') ? meetupSpot.replace(/\s+/g, ' ').trim().slice(0, 120) || null : null,
+        deal_methods: cf.deal ? ['meetup', 'delivery'].filter((m) => deal.has(m)) : ['meetup'],
+        delivery_note: cf.deal && deal.has('delivery') ? deliveryNote.replace(/\s+/g, ' ').trim().slice(0, 80) || null : null,
         seller_facebook_username: fbUsername || null,
         seller_instagram_username: igUsername || null,
       }
 
       if (isEdit) {
         const { error: updateError } = await supabase.from('listings').update(fields).eq('id', listingId)
-        if (updateError) throw new Error(updateError.message)
+        if (updateError) throw new Error(plainDbError(updateError.message))
       } else {
         const { error: insertError } = await supabase.from('listings').insert({
           id: listingId,
@@ -255,7 +334,7 @@ export default function ListingForm({ user, listing, onSaved }) {
           ...fields,
         })
         // Over the free limit (checked by the database): show the plain-English reason.
-        if (insertError) throw new Error(isFreeLimitError(insertError.message) ? freeLimitMessage(insertError.message) : insertError.message)
+        if (insertError) throw new Error(isFreeLimitError(insertError.message) ? freeLimitMessage(insertError.message) : plainDbError(insertError.message))
       }
 
       // 3. Sync listing_images: delete removed photos, re-number kept ones, insert new ones.
@@ -308,8 +387,11 @@ export default function ListingForm({ user, listing, onSaved }) {
     swap_for: swapFor.trim(),
     price,
     category,
-    condition,
-    size: size.trim(),
+    brand: cf.brand ? formatBrand(brand) : '',
+    size: cf.size ? size.trim() : '',
+    condition: cf.condition ? condition : '',
+    details: cleanDetails(category, details),
+    deal_methods: cf.deal ? ['meetup', 'delivery'].filter((m) => deal.has(m)) : ['meetup'],
     school: normalizeSchool(canonicalSchool(school)),
     status: listing?.status ?? 'available',
   }
@@ -418,9 +500,12 @@ export default function ListingForm({ user, listing, onSaved }) {
               className={inputClass}
             />
           </Field>
-          <Field label="Description" optional>
+          <Field label="Description" optional={!cf.descriptionMin} hint={cf.descriptionHint}>
             <textarea
               rows={4}
+              required={Boolean(cf.descriptionMin)}
+              minLength={cf.descriptionMin}
+              maxLength={2000}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Measurements, flaws, where on campus you can meet…"
@@ -429,10 +514,10 @@ export default function ListingForm({ user, listing, onSaved }) {
           </Field>
         </Section>
 
-        <Section title={listingType === 'swap' ? 'Details and fit' : 'Price and fit'}>
+        <Section title={`${listingType === 'swap' ? 'Details' : 'Price'} and ${cf.size ? 'fit' : 'details'}`}>
           <div className="grid gap-4 sm:grid-cols-2">
             {listingType === 'sell' && (
-              <Field label="Price (₱)">
+              <Field label={cf.priceLabel ?? 'Price (₱)'}>
                 <input
                   type="number"
                   required
@@ -446,25 +531,89 @@ export default function ListingForm({ user, listing, onSaved }) {
                 />
               </Field>
             )}
-            <Field label="Category">
-              <select required value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
+            <Field label="Category" hint={cf.categoryHint}>
+              <select required value={category} onChange={(e) => changeCategory(e.target.value)} className={inputClass}>
                 <option value="" disabled>Choose a category</option>
                 {CATEGORIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </Field>
-            <Field label="Condition">
-              <select required value={condition} onChange={(e) => setCondition(e.target.value)} className={inputClass}>
-                <option value="" disabled>Choose condition</option>
-                {CONDITIONS.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+            {cf.condition && (
+              <Field label="Condition" optional={cf.condition === 'optional'}>
+                <select
+                  required={cf.condition === 'required'}
+                  value={condition}
+                  onChange={(e) => setCondition(e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="" disabled={cf.condition === 'required'}>
+                    {cf.condition === 'required' ? 'Choose condition' : 'Not specified'}
+                  </option>
+                  {CONDITIONS.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </Field>
+            )}
+            {cf.size && (
+              <Field label="Size" optional hint="e.g. M, XL, 7.5. Buyers filter by this.">
+                <input maxLength={20} value={size} onChange={(e) => setSize(e.target.value)} className={inputClass} />
+              </Field>
+            )}
+            {cf.brand && (
+            <Field label="Brand" optional hint="e.g. Nike, Adidas, Casio. Buyers filter by this.">
+              <input
+                maxLength={MAX_BRAND_LENGTH}
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                onBlur={() => setBrand((b) => formatBrand(b))}
+                list="brand-options"
+                autoComplete="off"
+                className={inputClass}
+              />
+              <datalist id="brand-options">
+                {brandOptions.map((b) => (
+                  <option key={b} value={b} />
                 ))}
-              </select>
+              </datalist>
             </Field>
-            <Field label="Size" optional hint="e.g. M, XL, 7.5. Buyers filter by this.">
-              <input maxLength={20} value={size} onChange={(e) => setSize(e.target.value)} className={inputClass} />
-            </Field>
+            )}
+            {cf.details.map((key) => {
+              const f = DETAIL_FIELDS[key]
+              const value = details[key] ?? (f.options ? f.default : '')
+              return (
+                <div key={key} className={f.notes ? 'sm:col-span-2' : undefined}>
+                  <Field label={f.label} optional={!f.required} hint={f.hint}>
+                    {f.options ? (
+                      <select required={f.required} value={value} onChange={(e) => setDetail(key, e.target.value)} className={inputClass}>
+                        {Object.entries(f.options).map(([v, label]) => (
+                          <option key={v} value={v}>{label}</option>
+                        ))}
+                      </select>
+                    ) : f.notes ? (
+                      <textarea
+                        rows={2}
+                        maxLength={f.max}
+                        value={value}
+                        onChange={(e) => setDetail(key, e.target.value)}
+                        placeholder={f.placeholder}
+                        className={inputClass}
+                      />
+                    ) : (
+                      <input
+                        required={f.required}
+                        maxLength={f.max}
+                        value={value}
+                        onChange={(e) => setDetail(key, e.target.value)}
+                        placeholder={f.placeholder}
+                        className={inputClass}
+                      />
+                    )}
+                  </Field>
+                </div>
+              )
+            })}
           </div>
           <Field
             label="University"
@@ -481,15 +630,56 @@ export default function ListingForm({ user, listing, onSaved }) {
         </Section>
 
         <Section title="How students reach you">
-          <Field label="Meet-up spot" optional hint="Where you’d hand it over. Buyers see this on the listing.">
-            <input
-              maxLength={120}
-              value={meetupSpot}
-              onChange={(e) => setMeetupSpot(e.target.value)}
-              placeholder="e.g. BukSU main gate, CMU library, Valencia plaza"
-              className={inputClass}
-            />
-          </Field>
+          {cf.deal && (
+          <fieldset className="flex flex-col gap-1.5">
+            <legend className="text-sm font-semibold text-ink">Deal method</legend>
+            <div className="mt-1.5 flex flex-wrap gap-2">
+              {[
+                ['meetup', 'Meet-up'],
+                ['delivery', 'Delivery'],
+              ].map(([value, label]) => (
+                <label
+                  key={value}
+                  className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-md border px-3.5 text-sm font-medium transition-colors ${
+                    deal.has(value) ? 'border-primary bg-primary-soft text-primary' : 'border-line bg-white text-ink hover:border-muted/60'
+                  }`}
+                >
+                  <input type="checkbox" checked={deal.has(value)} onChange={() => toggleDeal(value)} className="h-4 w-4 accent-primary" />
+                  {label}
+                </label>
+              ))}
+            </div>
+            <span className="text-xs leading-relaxed text-muted">
+              Pick both if you can meet up and also ship to students in other towns.
+            </span>
+          </fieldset>
+          )}
+          {(!cf.deal || deal.has('meetup')) && (
+            <Field
+              label={cf.meetupLabel ?? 'Meet-up spot'}
+              optional
+              hint={cf.meetupHint ?? 'Where you’d hand it over. Buyers see this on the listing.'}
+            >
+              <input
+                maxLength={120}
+                value={meetupSpot}
+                onChange={(e) => setMeetupSpot(e.target.value)}
+                placeholder="e.g. BukSU main gate, CMU library, Valencia plaza"
+                className={inputClass}
+              />
+            </Field>
+          )}
+          {cf.deal && deal.has('delivery') && (
+            <Field label="Delivery details" optional hint="How you ship and who pays. Buyers see this on the listing.">
+              <input
+                maxLength={80}
+                value={deliveryNote}
+                onChange={(e) => setDeliveryNote(e.target.value)}
+                placeholder="e.g. J&T or Flash, buyer pays shipping"
+                className={inputClass}
+              />
+            </Field>
+          )}
           <Field
             label="Facebook username"
             optional={Boolean(user.email)}
