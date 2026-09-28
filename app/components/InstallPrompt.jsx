@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useSyncExternalStore } from 'react'
+import { usePathname } from 'next/navigation'
 import { CloseIcon } from '@/app/components/icons'
 import { getInstallEvent, isInstalled, isIOS, promptInstall, subscribeInstall } from '@/lib/install'
 
@@ -61,9 +62,13 @@ function Banner({ children, onDismiss, label }) {
 }
 
 export default function InstallPrompt() {
+  // Browse has its own install announcement (WhatsNewBanner), so no second prompt there. The iOS
+  // tip isn't even read on Browse, so it isn't used up there.
+  const onBrowse = usePathname() === '/browse'
+  const never = () => false
   // Server render and first paint: nothing, so nothing flashes for people who closed it.
-  const androidBanner = useSyncExternalStore(subscribe, readAndroidBanner, () => false)
-  const showIosTip = useSyncExternalStore(subscribe, readIosTip, () => false)
+  const androidBanner = useSyncExternalStore(subscribe, onBrowse ? never : readAndroidBanner, never)
+  const showIosTip = useSyncExternalStore(subscribe, onBrowse ? never : readIosTip, never)
   const installEvent = useSyncExternalStore(subscribeInstall, getInstallEvent, () => null)
   const [closed, setClosed] = useState(false)
 

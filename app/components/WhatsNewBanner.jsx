@@ -1,20 +1,15 @@
 'use client'
 
 import { useState, useSyncExternalStore } from 'react'
-import { CloseIcon } from '@/app/components/icons'
+import { CloseIcon, DownloadIcon } from '@/app/components/icons'
+import { getInstallEvent, installPlatform, promptInstall, subscribeInstall } from '@/lib/install'
 
-// A one-time "What's new" note. Change WHATS_NEW_ID when there's a new update to announce;
+// A one-time "What's new" note on Browse. Change WHATS_NEW_ID when there's a new update to announce;
 // students who dismissed the last one will then see the new one.
-const WHATS_NEW_ID = '2026-09-28'
+// This update: BukiFinds can be installed on phones. Hidden inside the installed app and in browsers
+// that can't install it.
+const WHATS_NEW_ID = '2026-09-29-install'
 const KEY = `bukifinds:whats-new-dismissed:${WHATS_NEW_ID}`
-
-const ITEMS = [
-  ['Brand filter', 'Add the brand when you post, and filter Browse by brand.'],
-  ['Meet-up or delivery', 'Sellers can say if they ship. Use the Delivery filter to find items that can be sent to your town.'],
-  ['Forms that fit your item', 'Food, services and electronics now ask for the details that matter, like quantity, rate per hour, or model.'],
-  ['Shoes category', 'Sneakers, slides and other shoes now have their own category, separate from School Shoes.'],
-  ['Notifications', 'Tap the bell to see who saved your listings and who reviewed you.'],
-]
 
 function readDismissed() {
   try {
@@ -28,10 +23,14 @@ const subscribe = () => () => {}
 export default function WhatsNewBanner() {
   // Server render and first paint: treat as dismissed, so the banner never flashes for people who closed it.
   const stored = useSyncExternalStore(subscribe, readDismissed, () => true)
+  const platform = useSyncExternalStore(subscribe, installPlatform, () => 'installed')
+  const installEvent = useSyncExternalStore(subscribeInstall, getInstallEvent, () => null)
   const [dismissed, setDismissed] = useState(false)
-  const [open, setOpen] = useState(false)
+  const [showSteps, setShowSteps] = useState(false)
 
-  if (stored || dismissed) return null
+  if (stored || dismissed || platform === 'installed') return null
+  if (platform === 'other' && !installEvent) return null
+  const ios = platform === 'ios'
 
   function dismiss() {
     setDismissed(true)
@@ -42,23 +41,34 @@ export default function WhatsNewBanner() {
     }
   }
 
+  async function install() {
+    if (ios) {
+      setShowSteps((v) => !v)
+      return
+    }
+    await promptInstall()
+    dismiss()
+  }
+
   return (
     <div className="border-b border-accent/25 bg-accent-soft">
       <div className="mx-auto max-w-7xl px-4 py-2.5 sm:px-6">
-        <div className="flex items-start gap-3">
+        <div className="flex items-center gap-3">
           <p className="min-w-0 flex-1 text-sm text-accent-hover">
             <span className="mr-1.5 inline-block rounded-sm bg-accent px-1.5 py-0.5 text-xs font-bold text-white">New</span>
-            Brand filter, delivery option, a Shoes category and notifications.{' '}
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              aria-expanded={open}
-              aria-controls="whats-new-list"
-              className="font-semibold underline underline-offset-2 hover:no-underline"
-            >
-              {open ? 'Hide' : 'See what’s new'}
-            </button>
+            <span className="font-semibold">Install BukiFinds on your phone.</span> It opens from your home screen, like an
+            app.
           </p>
+          <button
+            type="button"
+            onClick={install}
+            aria-expanded={ios ? showSteps : undefined}
+            aria-controls={ios ? 'whats-new-steps' : undefined}
+            className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-md bg-accent px-3 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
+          >
+            <DownloadIcon className="h-4 w-4" />
+            Install Now
+          </button>
           <button
             type="button"
             onClick={dismiss}
@@ -68,14 +78,11 @@ export default function WhatsNewBanner() {
             <CloseIcon className="h-4 w-4" />
           </button>
         </div>
-        {open && (
-          <ul id="whats-new-list" className="mt-2 grid gap-x-8 gap-y-1.5 pb-1 text-sm text-ink sm:grid-cols-2">
-            {ITEMS.map(([title, body]) => (
-              <li key={title}>
-                <span className="font-semibold">{title}.</span> <span className="text-muted">{body}</span>
-              </li>
-            ))}
-          </ul>
+        {ios && showSteps && (
+          <p id="whats-new-steps" className="mt-2 pb-1 text-sm text-ink">
+            Tap <span className="font-semibold">Share</span> at the bottom of Safari, then{' '}
+            <span className="font-semibold">Add to Home Screen</span>.
+          </p>
         )}
       </div>
     </div>

@@ -2,20 +2,15 @@
 
 import { useState, useSyncExternalStore } from 'react'
 import { DownloadIcon } from '@/app/components/icons'
-import { getInstallEvent, isInstalled, isIOS, promptInstall, subscribeInstall } from '@/lib/install'
+import { getInstallEvent, installPlatform, promptInstall, subscribeInstall } from '@/lib/install'
 
 const subscribe = () => () => {}
-// 'installed' | 'ios' | 'other', worked out on the client only.
-function readPlatform() {
-  if (isInstalled()) return 'installed'
-  return isIOS() ? 'ios' : 'other'
-}
 
 // Landing page "Get the app" card. Always there when the phone or computer can install BukiFinds,
 // even after the install strip was closed. Hidden inside the installed app and in browsers that
 // can't install (then there's nothing useful to tap).
 export default function InstallAppCard({ className = '' }) {
-  const platform = useSyncExternalStore(subscribe, readPlatform, () => 'installed')
+  const platform = useSyncExternalStore(subscribe, installPlatform, () => 'installed')
   const installEvent = useSyncExternalStore(subscribeInstall, getInstallEvent, () => null)
   const [showSteps, setShowSteps] = useState(false)
 
