@@ -46,8 +46,9 @@ const subscribe = () => () => {}
 function Banner({ children, onDismiss, label }) {
   return (
     <div className="border-b border-primary/20 bg-primary-soft">
-      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2 sm:px-6">
-        {children}
+      <div className="mx-auto flex max-w-7xl items-start gap-3 px-4 py-2 sm:items-center sm:px-6">
+        {/* Phones: message, then the button under it. Wider screens: one row. */}
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">{children}</div>
         <button
           type="button"
           onClick={onDismiss}
@@ -86,7 +87,7 @@ export default function InstallPrompt() {
     }
     return (
       <Banner onDismiss={dismiss} label="Dismiss install banner">
-        <p className="min-w-0 flex-1 text-sm text-primary">Open BukiFinds from your home screen, like an app.</p>
+        <p className="min-w-0 text-sm text-primary sm:flex-1">Open BukiFinds from your home screen, like an app.</p>
         <button
           type="button"
           onClick={install}
@@ -101,7 +102,7 @@ export default function InstallPrompt() {
   if (showIosTip) {
     return (
       <Banner onDismiss={() => setClosed(true)} label="Dismiss install tip">
-        <p className="min-w-0 flex-1 text-sm text-primary">
+        <p className="min-w-0 text-sm text-primary sm:flex-1">
           <span className="font-semibold">Install BukiFinds:</span> tap Share, then Add to Home Screen.
         </p>
       </Banner>

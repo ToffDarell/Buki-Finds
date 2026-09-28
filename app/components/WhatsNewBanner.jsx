@@ -53,27 +53,31 @@ export default function WhatsNewBanner() {
   return (
     <div className="border-b border-accent/25 bg-accent-soft">
       <div className="mx-auto max-w-7xl px-4 py-2.5 sm:px-6">
-        <div className="flex items-center gap-3">
-          <p className="min-w-0 flex-1 text-sm text-accent-hover">
-            <span className="mr-1.5 inline-block rounded-sm bg-accent px-1.5 py-0.5 text-xs font-bold text-white">New</span>
-            <span className="font-semibold">Install BukiFinds on your phone.</span> It opens from your home screen, like an
-            app.
-          </p>
-          <button
-            type="button"
-            onClick={install}
-            aria-expanded={ios ? showSteps : undefined}
-            aria-controls={ios ? 'whats-new-steps' : undefined}
-            className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-md bg-accent px-3 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
-          >
-            <DownloadIcon className="h-4 w-4" />
-            Install Now
-          </button>
+        {/* Phones: the message on its own line, the button under it (large text sizes squeezed it
+            into a narrow column). Wider screens: one row. */}
+        <div className="flex items-start gap-3 sm:items-center">
+          <div className="flex min-w-0 flex-1 flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <p className="min-w-0 text-sm text-accent-hover sm:flex-1">
+              <span className="mr-1.5 inline-block rounded-sm bg-accent px-1.5 py-0.5 text-xs font-bold text-white">New</span>
+              <span className="font-semibold">Install BukiFinds on your phone.</span> It opens from your home screen,
+              like an app.
+            </p>
+            <button
+              type="button"
+              onClick={install}
+              aria-expanded={ios ? showSteps : undefined}
+              aria-controls={ios ? 'whats-new-steps' : undefined}
+              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-md bg-accent px-3 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
+            >
+              <DownloadIcon className="h-4 w-4" />
+              Install Now
+            </button>
+          </div>
           <button
             type="button"
             onClick={dismiss}
             aria-label="Dismiss what’s new"
-            className="-mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-accent-hover transition-colors hover:bg-accent/10"
+            className="-mr-1 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-accent-hover transition-colors hover:bg-accent/10 sm:mt-0"
           >
             <CloseIcon className="h-4 w-4" />
           </button>
