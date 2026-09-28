@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { BROWSE_STATUSES, LISTING_WITH_IMAGES, coverImage } from '@/lib/listings'
 import { BUKIDNON_SCHOOLS } from '@/lib/schools'
 import { FREE_ACTIVE_LISTINGS, PAYMENT_METHODS, SUBSCRIPTION_PRICE } from '@/lib/subscription'
+import InstallAppCard from '@/app/components/InstallAppCard'
 import LandingRack from '@/app/components/LandingRack'
 import VenturePartners from '@/app/components/VenturePartners'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
@@ -168,6 +169,8 @@ export default async function LandingPage() {
           <div className="mt-10 sm:mt-12">
             <LandingRack listings={rack} />
           </div>
+
+          <InstallAppCard className="mt-8" />
 
           {/* The old checkmark row, rewritten as ID-card fields: label over value. */}
           <dl className="mt-8 grid gap-px overflow-hidden rounded-[10px] border border-line bg-line sm:grid-cols-3">

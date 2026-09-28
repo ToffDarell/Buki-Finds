@@ -39,6 +39,12 @@ export const PlusIcon = (p) => (
   </Icon>
 )
 
+export const DownloadIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14" />
+  </Icon>
+)
+
 export const CloseIcon = (p) => (
   <Icon {...p}>
     <path d="M6 6l12 12M18 6 6 18" />

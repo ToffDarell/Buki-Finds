@@ -1,10 +1,12 @@
 'use client'
 
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { CloseIcon } from '@/app/components/icons'
+import { getInstallEvent, isInstalled, isIOS, promptInstall, subscribeInstall } from '@/lib/install'
 
-// "Install BukiFinds" on Android (Chrome's beforeinstallprompt) and a one-time "Add to Home Screen"
-// tip on iPhone/iPad, which has no install prompt. Neither shows inside the installed app.
+// "Install BukiFinds" strip on Android phones and a one-time "Add to Home Screen" tip on iPhone/iPad.
+// Closing it hides the strip for good; the Install button on the landing page stays available.
+// Neither shows inside the installed app.
 const DISMISSED_KEY = 'bukifinds:install-dismissed'
 const IOS_TIP_KEY = 'bukifinds:ios-install-tip-seen'
 
@@ -23,18 +25,6 @@ function saveFlag(key) {
   }
 }
 
-function isInstalled() {
-  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
-}
-
-// iPhone or iPad (iPadOS says it's a Mac with a touch screen). In-app browsers (Facebook,
-// Messenger, Instagram) can't add to the home screen, so no tip there.
-function isIOS() {
-  const ua = navigator.userAgent
-  const apple = /iPhone|iPad|iPod/.test(ua) || (ua.includes('Macintosh') && navigator.maxTouchPoints > 1)
-  return apple && !/FBAN|FBAV|FB_IAB|Instagram/.test(ua)
-}
-
 // Worked out once per page load and marked as seen straight away, so the tip shows on one visit
 // only and doesn't vanish mid-visit when something re-renders.
 let iosTip = null
@@ -45,8 +35,10 @@ function readIosTip() {
   }
   return iosTip
 }
-function readAndroidDismissed() {
-  return readFlag(DISMISSED_KEY) || isInstalled()
+// Android phones that haven't closed the strip. Desktop Chrome can install too, from the landing
+// page button, but gets no strip.
+function readAndroidBanner() {
+  return /Android/i.test(navigator.userAgent) && !readFlag(DISMISSED_KEY) && !isInstalled()
 }
 const subscribe = () => () => {}
 
@@ -70,46 +62,23 @@ function Banner({ children, onDismiss, label }) {
 
 export default function InstallPrompt() {
   // Server render and first paint: nothing, so nothing flashes for people who closed it.
-  const androidDismissed = useSyncExternalStore(subscribe, readAndroidDismissed, () => true)
+  const androidBanner = useSyncExternalStore(subscribe, readAndroidBanner, () => false)
   const showIosTip = useSyncExternalStore(subscribe, readIosTip, () => false)
-  const [installEvent, setInstallEvent] = useState(null)
+  const installEvent = useSyncExternalStore(subscribeInstall, getInstallEvent, () => null)
   const [closed, setClosed] = useState(false)
-
-  useEffect(() => {
-    function onPrompt(e) {
-      // Phones only, and not after "no thanks": then Chrome's own install option stays as it was.
-      if (!/Android/i.test(navigator.userAgent) || readFlag(DISMISSED_KEY)) return
-      e.preventDefault()
-      setInstallEvent(e)
-    }
-    function onInstalled() {
-      setInstallEvent(null)
-    }
-    window.addEventListener('beforeinstallprompt', onPrompt)
-    window.addEventListener('appinstalled', onInstalled)
-    return () => {
-      window.removeEventListener('beforeinstallprompt', onPrompt)
-      window.removeEventListener('appinstalled', onInstalled)
-    }
-  }, [])
 
   if (closed) return null
 
-  function dismiss() {
-    setClosed(true)
-    if (installEvent) saveFlag(DISMISSED_KEY)
-  }
-
-  async function install() {
-    installEvent.prompt()
-    const { outcome } = await installEvent.userChoice
-    // Installed, or said no in Chrome's dialog: either way, don't ask again.
-    saveFlag(DISMISSED_KEY)
-    setInstallEvent(null)
-    if (outcome !== 'accepted') setClosed(true)
-  }
-
-  if (installEvent && !androidDismissed) {
+  if (androidBanner && installEvent) {
+    const dismiss = () => {
+      saveFlag(DISMISSED_KEY)
+      setClosed(true)
+    }
+    const install = async () => {
+      // Installed, or said no in Chrome's dialog: either way, the strip doesn't ask again.
+      await promptInstall()
+      dismiss()
+    }
     return (
       <Banner onDismiss={dismiss} label="Dismiss install banner">
         <p className="min-w-0 flex-1 text-sm text-primary">Open BukiFinds from your home screen, like an app.</p>
@@ -126,7 +95,7 @@ export default function InstallPrompt() {
 
   if (showIosTip) {
     return (
-      <Banner onDismiss={dismiss} label="Dismiss install tip">
+      <Banner onDismiss={() => setClosed(true)} label="Dismiss install tip">
         <p className="min-w-0 flex-1 text-sm text-primary">
           <span className="font-semibold">Install BukiFinds:</span> tap Share, then Add to Home Screen.
         </p>
