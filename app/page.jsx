@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { BROWSE_STATUSES, LISTING_WITH_IMAGES, coverImage } from '@/lib/listings'
+import { BROWSE_STATUSES, LISTING_WITH_IMAGES, browseCutoff, coverImage } from '@/lib/listings'
 import { BUKIDNON_SCHOOLS } from '@/lib/schools'
 import { FREE_ACTIVE_LISTINGS, PAYMENT_METHODS, SUBSCRIPTION_PRICE } from '@/lib/subscription'
 import InstallAppCard from '@/app/components/InstallAppCard'
@@ -70,6 +70,7 @@ async function rackListings() {
     .from('listings')
     .select(LISTING_WITH_IMAGES)
     .in('status', BROWSE_STATUSES)
+    .gte('confirmed_at', browseCutoff())
     .order('created_at', { ascending: false })
     .limit(12)
   const real = (data ?? []).filter((l) => coverImage(l)).slice(0, RACK_SIZE)

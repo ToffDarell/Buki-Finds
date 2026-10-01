@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { disablePush } from '@/lib/push'
 import { fetchSubscription, subscriptionLabel } from '@/lib/subscription'
 import { avatarUrl, displayName } from '@/lib/avatar'
 import Avatar from '@/app/components/Avatar'
@@ -12,6 +13,7 @@ import { HeartIcon, ListingsIcon, LogOutIcon, PlusIcon, StarIcon, UserIcon } fro
 export function useLogout() {
   const router = useRouter()
   return async () => {
+    await disablePush() // this device stops getting this student's alerts
     await supabase.auth.signOut()
     router.push('/')
   }

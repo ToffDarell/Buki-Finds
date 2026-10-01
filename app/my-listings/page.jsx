@@ -15,6 +15,7 @@ import {
   priceOrSwap,
   purgeDateLabel,
   sortedImages,
+  staleState,
 } from '@/lib/listings'
 import { imageStoragePaths, thumbUrl } from '@/lib/images'
 import { freeLimitMessage, isFreeLimitError } from '@/lib/subscription'
@@ -105,6 +106,24 @@ export default function MyListingsPage() {
       .select('status, sold_at')
       .single()
     if (error) showAlert({ title: 'Couldn’t update the listing', body: isFreeLimitError(error.message) ? freeLimitMessage(error.message) : error.message })
+    else
+      setResult((prev) => ({
+        ...prev,
+        listings: prev.listings.map((l) => (l.id === listing.id ? { ...l, ...data } : l)),
+      }))
+    setBusyId(null)
+  }
+
+  // "Still available?": the database stamps the time itself (migration 019).
+  async function confirmAvailable(listing) {
+    setBusyId(listing.id)
+    const { data, error } = await supabase
+      .from('listings')
+      .update({ confirmed_at: new Date().toISOString() })
+      .eq('id', listing.id)
+      .select('confirmed_at')
+      .single()
+    if (error) showAlert({ title: 'Couldn’t update the listing', body: error.message })
     else
       setResult((prev) => ({
         ...prev,
@@ -213,6 +232,7 @@ export default function MyListingsPage() {
               const cover = coverImage(listing)
               const sold = listing.status === 'sold'
               const busy = busyId === listing.id
+              const stale = staleState(listing)
               return (
                 <li
                   key={listing.id}
@@ -258,7 +278,24 @@ export default function MyListingsPage() {
                       <p className="text-xs text-muted">Deletes automatically on {purgeDateLabel(listing)}</p>
                     )}
 
+                    {stale && (
+                      <p className={`text-xs ${stale === 'hidden' ? 'font-semibold text-ink' : 'text-muted'}`}>
+                        {stale === 'hidden' ? 'Hidden from Browse. Still have it? Tap Still Available.' : 'Still have this? Let buyers know.'}
+                      </p>
+                    )}
+
                     <div className="mt-auto flex flex-wrap gap-1.5 pt-2">
+                      {stale && (
+                        <button
+                          onClick={() => confirmAvailable(listing)}
+                          disabled={busy}
+                          className={`${action} bg-primary text-white hover:bg-primary-hover`}
+                        >
+                          <CheckIcon className="h-3.5 w-3.5" />
+                          Still Available
+                        </button>
+                      )}
+
                       <Link
                         href={`/item/${listing.id}/edit`}
                         className={`${action} text-primary hover:bg-primary-soft`}

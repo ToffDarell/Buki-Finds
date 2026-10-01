@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import {
   BROWSE_STATUSES,
+  browseCutoff,
   CATEGORIES,
   CONDITIONS,
   LISTING_TYPES,
@@ -62,6 +63,7 @@ function fetchListings(filters, search) {
     .from('listings')
     .select(LISTING_WITH_IMAGES)
     .in('status', BROWSE_STATUSES)
+    .gte('confirmed_at', browseCutoff()) // unconfirmed for too long: hidden until the seller says it's still there
     .order(sort.column, { ascending: sort.ascending, nullsFirst: false })
 
   if (filters.listingType) query = query.eq('listing_type', filters.listingType)
@@ -213,6 +215,7 @@ export default function BrowsePage({ searchParams }) {
       .from('listings')
       .select('size')
       .eq('status', 'available')
+      .gte('confirmed_at', browseCutoff())
       .not('size', 'is', null)
       .then(({ data }) => {
         const unique = [...new Set((data ?? []).map((row) => formatSize(row.size)).filter(Boolean))]
@@ -226,6 +229,7 @@ export default function BrowsePage({ searchParams }) {
       .from('listings')
       .select('brand')
       .in('status', BROWSE_STATUSES)
+      .gte('confirmed_at', browseCutoff())
       .not('brand', 'is', null)
       .then(({ data }) => {
         const counts = new Map()

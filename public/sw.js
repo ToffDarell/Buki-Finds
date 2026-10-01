@@ -1,4 +1,5 @@
-// BukiFinds service worker: caches static files only, so repeat visits load faster.
+// BukiFinds service worker: caches static files only, so repeat visits load faster, and shows
+// phone alerts (push notifications, at the bottom of this file).
 //
 // It answers ONLY same-site GET requests for:
 //   /_next/static/...  JS, CSS and fonts. Their file names change on every deploy, so a cached
@@ -61,6 +62,39 @@ self.addEventListener('fetch', (event) => {
         return cached
       }
       return fresh
+    })
+  )
+})
+
+// Phone alerts (migration 019). /api/push sends { title, body, url, tag }. The tag makes a newer
+// alert about the same listing replace the older one instead of stacking.
+self.addEventListener('push', (event) => {
+  let data = {}
+  try {
+    data = event.data ? event.data.json() : {}
+  } catch {
+    data = { body: event.data ? event.data.text() : '' }
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'BukiFinds', {
+      body: data.body || 'You have a new notification.',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag: data.tag,
+      data: { url: data.url || '/notifications' },
+    })
+  )
+})
+
+// Tapping an alert opens its page, reusing a BukiFinds tab or the installed app if one is open.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const target = new URL(event.notification.data?.url || '/notifications', self.location.origin).href
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      const open = windows.find((w) => new URL(w.url).origin === self.location.origin)
+      if (open) return open.focus().then((w) => (w && 'navigate' in w ? w.navigate(target) : w))
+      return self.clients.openWindow(target)
     })
   )
 })

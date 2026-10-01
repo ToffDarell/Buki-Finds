@@ -84,13 +84,17 @@ export default function PrivacyPage() {
                 username; we keep only the username, not the link.
               </li>
               <li>
-                <strong>Activity:</strong> listings you save, notifications (for example, who saved your listing),
-                reviews you give or receive (rating, comment, your first name and the item title), and reports you file
+                <strong>Activity:</strong> listings you save, notifications (for example, who saved your listing, or
+                that an item you saved got cheaper), reviews you give or receive (rating, comment, your first name and the item title), and reports you file
                 about a listing.
               </li>
               <li>
                 <strong>Subscription payments:</strong> the screenshot of your GCash or GoTyme payment you upload, the
                 amount, and the dates your request was sent, approved and expires.
+              </li>
+              <li>
+                <strong>Device alerts:</strong> if you turn on alerts, the address your browser gives us for sending
+                notifications to that device. Turning alerts off or logging out on that device removes it.
               </li>
               <li>
                 <strong>Technical data:</strong> your browser keeps a sign-in session so you stay logged in. Our hosting
@@ -157,6 +161,10 @@ export default function PrivacyPage() {
               <li>
                 <strong>Facebook, Messenger and Instagram</strong> receive the request when a buyer taps a message button,
                 or when our server looks up a link you pasted.
+              </li>
+              <li>
+                <strong>Your browser’s push service</strong> (for example Google for Chrome, or Apple for iPhone) carries
+                the alerts you turned on to your device.
               </li>
             </List>
             <p>

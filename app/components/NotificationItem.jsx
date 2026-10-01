@@ -4,12 +4,20 @@ import Link from 'next/link'
 import { timeAgo } from '@/lib/notifications'
 import Avatar from '@/app/components/Avatar'
 import Stars from '@/app/components/Stars'
-import { HeartIcon, StarIcon } from '@/app/components/icons'
+import { HIDE_AFTER_DAYS, STALE_AFTER_DAYS } from '@/lib/listings'
+import { ClockIcon, HeartIcon, PriceDownIcon, StarIcon } from '@/app/components/icons'
 
 // One notification. "saved": someone saved your listing. "review": a buyer reviewed you.
+// "price_drop": an item you saved got cheaper. "stale": BukiFinds asks if your item is still available.
 export default function NotificationItem({ n, userId, onNavigate }) {
   const unread = !n.read_at
   const review = n.type === 'review'
+  const badge = {
+    saved: ['text-red-500', <HeartIcon key="i" className="h-3 w-3" fill="currentColor" strokeWidth="2" />],
+    review: ['text-amber-500', <StarIcon key="i" className="h-3 w-3" fill="currentColor" strokeWidth="2" />],
+    price_drop: ['text-primary', <PriceDownIcon key="i" className="h-3 w-3" strokeWidth="2.5" />],
+    stale: ['text-primary', <ClockIcon key="i" className="h-3 w-3" strokeWidth="2.25" />],
+  }[n.type] ?? ['text-primary', null]
   const who = n.actor_id ? (
     <Link onClick={onNavigate} href={`/seller/${n.actor_id}`} className="font-semibold hover:underline">
       {n.actor_name}
@@ -35,16 +43,8 @@ export default function NotificationItem({ n, userId, onNavigate }) {
         ) : (
           <Avatar src={n.actor_avatar} name={n.actor_name} bg="bg-primary" className="h-11 w-11 text-base" />
         )}
-        <span
-          className={`absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-card ${
-            review ? 'text-amber-500' : 'text-red-500'
-          }`}
-        >
-          {review ? (
-            <StarIcon className="h-3 w-3" fill="currentColor" strokeWidth="2" />
-          ) : (
-            <HeartIcon className="h-3 w-3" fill="currentColor" strokeWidth="2" />
-          )}
+        <span className={`absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-card ${badge[0]}`}>
+          {badge[1]}
         </span>
       </div>
       <div className="min-w-0 flex-1 text-[15px] leading-snug text-ink">
@@ -60,6 +60,20 @@ export default function NotificationItem({ n, userId, onNavigate }) {
               </Link>
             </div>
             {n.detail && <p className="mt-1 line-clamp-2 text-sm text-muted">“{n.detail}”</p>}
+          </>
+        ) : n.type === 'price_drop' ? (
+          <>
+            <p>
+              {who} dropped the price of {item}
+            </p>
+            {n.detail && <p className="tabular mt-1 text-sm font-semibold text-primary">{n.detail}</p>}
+          </>
+        ) : n.type === 'stale' ? (
+          <>
+            <p>Is your {item} still available?</p>
+            <p className="mt-1 text-sm text-muted">
+              It’s been {STALE_AFTER_DAYS} days. Open it and tap Still Available, or it leaves Browse after {HIDE_AFTER_DAYS} days.
+            </p>
           </>
         ) : (
           <p>

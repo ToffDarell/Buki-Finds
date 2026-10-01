@@ -196,6 +196,37 @@ export const FlagIcon = (p) => (
   </Icon>
 )
 
+// Copy a ready-made Facebook post.
+export const CopyIcon = (p) => (
+  <Icon {...p}>
+    <rect x="8.5" y="8.5" width="11" height="11" rx="1.75" />
+    <path d="M15.5 8.5V6.25a1.75 1.75 0 0 0-1.75-1.75h-7.5A1.75 1.75 0 0 0 4.5 6.25v7.5a1.75 1.75 0 0 0 1.75 1.75H8.5" />
+  </Icon>
+)
+
+// Meet-up safety tips.
+export const ShieldIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 3.5 5 6.25v5.25c0 4.4 3 7.75 7 9 4-1.25 7-4.6 7-9V6.25Z" />
+    <path d="m9 12 2.25 2.25L15.5 10" />
+  </Icon>
+)
+
+// Price-drop notification.
+export const PriceDownIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 4.5v15M6.5 14 12 19.5 17.5 14" />
+  </Icon>
+)
+
+// "Still available?" notification.
+export const ClockIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="8" />
+    <path d="M12 7.5V12l3 2" />
+  </Icon>
+)
+
 // Pass fill="currentColor" for a filled star.
 export const StarIcon = (p) => (
   <Icon {...p}>

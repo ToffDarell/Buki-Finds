@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/useAuth'
 import { fetchNotifications, markAllRead } from '@/lib/notifications'
 import NotificationItem from '@/app/components/NotificationItem'
+import PushToggle from '@/app/components/PushToggle'
 import { BellIcon } from '@/app/components/icons'
 
 export default function NotificationsPage() {
@@ -38,7 +39,9 @@ export default function NotificationsPage() {
     <main className="flex-1 bg-surface py-6 sm:py-8">
       <div className="mx-auto w-full max-w-2xl px-4 sm:px-6">
         <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">Notifications</h1>
-        <p className="mt-1 text-xs text-muted sm:text-sm">When students save your listings or review you, you’ll see it here.</p>
+        <p className="mt-1 text-xs text-muted sm:text-sm">Saves, reviews, price drops on items you saved, and reminders about your listings.</p>
+
+        {user && <PushToggle />}
 
         {error && (
           <p role="alert" className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
@@ -62,7 +65,7 @@ export default function NotificationsPage() {
             </span>
             <p className="mt-4 text-lg font-bold text-ink">No notifications yet</p>
             <p className="mt-1 max-w-[40ch] text-sm text-muted">
-              When someone saves one of your listings or leaves you a review, you’ll see it here.
+              When someone saves one of your listings, reviews you, or an item you saved gets cheaper, you’ll see it here.
             </p>
             <Link href="/post" className="mt-5 text-sm font-semibold text-primary hover:underline">
               Post an item

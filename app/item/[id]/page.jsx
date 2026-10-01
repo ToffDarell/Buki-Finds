@@ -26,12 +26,17 @@ import {
   purgeDateLabel,
   sortedImages,
   formatSize,
+  staleState,
+  HIDE_AFTER_DAYS,
 } from '@/lib/listings'
 import { imageStoragePaths, thumbUrl } from '@/lib/images'
 import { freeLimitMessage, isFreeLimitError } from '@/lib/subscription'
 import { fetchSellerRating, formatRating, reviewLink } from '@/lib/reviews'
 import SaveButton from '@/app/components/SaveButton'
 import ShareButton from '@/app/components/ShareButton'
+import CopyPostButton from '@/app/components/CopyPostButton'
+import SafetyTips from '@/app/components/SafetyTips'
+import OfferDialog from '@/app/components/OfferDialog'
 import ReportDialog from '@/app/components/ReportDialog'
 import useDialog from '@/app/components/useDialog'
 import Stars from '@/app/components/Stars'
@@ -336,6 +341,20 @@ export default function ItemPage() {
     setBusy(false)
   }
 
+  // "Still available?": the database stamps the time itself (migration 019).
+  async function confirmAvailable() {
+    setBusy(true)
+    const { data, error } = await supabase
+      .from('listings')
+      .update({ confirmed_at: new Date().toISOString() })
+      .eq('id', listing.id)
+      .select(LISTING_WITH_IMAGES)
+      .single()
+    if (error) showAlert({ title: 'Couldn’t update the listing', body: error.message })
+    else setResult((prev) => ({ ...prev, listing: data }))
+    setBusy(false)
+  }
+
   async function handleDelete() {
     const ok = await confirm({
       title: `Delete “${listing.title}”?`,
@@ -391,6 +410,7 @@ export default function ItemPage() {
   const hasContact = Boolean(messengerUrl(listing.seller_facebook_username) || instagramUrl(listing.seller_instagram_username) || listing.seller_email)
   const showMobileBar = !isOwner && !isSold && hasContact
   const signedOut = !userLoading && !user
+  const stale = isOwner ? staleState(listing) : null
 
   return (
     <main className={`w-full flex-1 bg-surface ${showMobileBar ? 'pb-28 md:pb-10' : 'pb-10'}`}>
@@ -511,6 +531,24 @@ export default function ItemPage() {
 
               {isOwner ? (
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  {stale && (
+                    <div className="rounded-md border border-primary/25 bg-primary-soft px-3.5 py-3 sm:col-span-2">
+                      <p className="text-sm font-semibold text-ink">Is this still available?</p>
+                      <p className="mt-1 text-xs leading-relaxed text-muted">
+                        {stale === 'hidden'
+                          ? 'This listing is hidden from Browse because it wasn’t confirmed for a while. Tap Still Available to show it again, or mark it as sold.'
+                          : `Let buyers know it’s still there. Listings that aren’t confirmed leave Browse after ${HIDE_AFTER_DAYS} days.`}
+                      </p>
+                      <button
+                        onClick={confirmAvailable}
+                        disabled={busy}
+                        className="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-md bg-primary px-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+                      >
+                        <CheckIcon className="h-4 w-4" />
+                        Still Available
+                      </button>
+                    </div>
+                  )}
                   <Link
                     href={`/item/${listing.id}/edit`}
                     className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-white px-3 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-surface"
@@ -568,9 +606,15 @@ export default function ItemPage() {
               ) : hasContact ? (
                 <div className="mt-4">
                   <ContactAction listing={listing} number={number} signedOut={signedOut} />
+                  {!signedOut && (
+                    <div className="mt-2">
+                      <OfferDialog listing={listing} number={number} user={user} />
+                    </div>
+                  )}
                   <p className="mt-2 text-center text-xs text-muted">
                     Mention <span className="font-mono font-semibold text-ink">No. {number}</span> so the seller knows which item.
                   </p>
+                  <SafetyTips delivery={offersDelivery(listing)} className="mt-4" />
                 </div>
               ) : (
                 <p className="mt-3 text-sm text-muted">The seller hasn’t shared a way to contact them.</p>
@@ -587,6 +631,7 @@ export default function ItemPage() {
                   </span>
                 )}
                 <ShareButton title={listing.title} text={`${listing.title} · ${priceOrSwap(listing)} on BukiFinds`} />
+                {isOwner && !isSold && <CopyPostButton listing={listing} />}
                 {!isOwner && (
                   <span className="ml-auto">
                     <ReportDialog listingId={listing.id} user={user} />

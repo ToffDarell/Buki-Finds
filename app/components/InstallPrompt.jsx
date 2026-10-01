@@ -63,8 +63,8 @@ function Banner({ children, onDismiss, label }) {
 }
 
 export default function InstallPrompt() {
-  // Browse has its own install announcement (WhatsNewBanner), so no second prompt there. The iOS
-  // tip isn't even read on Browse, so it isn't used up there.
+  // Browse already carries the "What's new" strip (WhatsNewBanner), so no second strip there. The
+  // iOS tip isn't even read on Browse, so it isn't used up there.
   const onBrowse = usePathname() === '/browse'
   const never = () => false
   // Server render and first paint: nothing, so nothing flashes for people who closed it.
